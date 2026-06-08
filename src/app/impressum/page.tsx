@@ -1,38 +1,43 @@
 import type { Metadata } from "next";
-import { LegalShell, H2, P, PlaceholderNote } from "@/components/landing/LegalShell";
+import { LegalShell, H2, P } from "@/components/landing/LegalShell";
 
 export const metadata: Metadata = { title: "Impressum – KundenRadar" };
 
 export default function ImpressumPage() {
   return (
     <LegalShell title="Impressum">
-      <PlaceholderNote />
+      <H2>Angaben gemäß § 5 DDG</H2>
+      <P>Cihan Yildirim &amp; Salih Aygün GbR</P>
+      <P>Rathenaustraße 135<br />51373 Leverkusen<br />Deutschland</P>
 
-      <H2>Angaben gemäß § 5 TMG</H2>
-      <P>[Firmenname / Rechtsform, z. B. Muster Reinigung GmbH]</P>
-      <P>[Straße und Hausnummer]<br />[PLZ] [Ort]</P>
-
-      <H2>Vertreten durch</H2>
-      <P>[Geschäftsführer/in, z. B. Max Mustermann]</P>
+      <H2>Vertreten durch die Gesellschafter</H2>
+      <P>Cihan Yildirim<br />Salih Aygün</P>
 
       <H2>Kontakt</H2>
-      <P>Telefon: [Telefonnummer]<br />E-Mail: [E-Mail-Adresse]</P>
+      <P>Telefon: +49 15566 021171<br />E-Mail: personal@lupen-rhein.de</P>
 
-      <H2>Registereintrag</H2>
-      <P>Eintragung im Handelsregister.<br />Registergericht: [Amtsgericht]<br />Registernummer: [HRB …]</P>
+      <H2>Rechtsform</H2>
+      <P>Gesellschaft bürgerlichen Rechts (GbR). Die Gesellschaft ist nicht im Handelsregister eingetragen.</P>
 
-      <H2>Umsatzsteuer-ID</H2>
-      <P>Umsatzsteuer-Identifikationsnummer gemäß § 27 a Umsatzsteuergesetz: [DE…]</P>
+      <H2>Umsatzsteuer-Identifikationsnummer</H2>
+      <P>Eine Umsatzsteuer-Identifikationsnummer gemäß § 27 a Umsatzsteuergesetz wird nachgereicht, sobald sie vorliegt.</P>
 
       <H2>Verantwortlich für den Inhalt nach § 18 Abs. 2 MStV</H2>
-      <P>[Name]<br />[Anschrift wie oben]</P>
+      <P>Cihan Yildirim, Salih Aygün<br />Anschrift wie oben.</P>
+
+      <H2>Verbraucherstreitbeilegung / Universalschlichtungsstelle</H2>
+      <P>
+        Wir sind nicht bereit und nicht verpflichtet, an Streitbeilegungsverfahren vor einer
+        Verbraucherschlichtungsstelle teilzunehmen.
+      </P>
 
       <H2>Haftung für Inhalte</H2>
       <P>
-        Als Diensteanbieter sind wir gemäß § 7 Abs. 1 TMG für eigene Inhalte auf diesen Seiten nach den
-        allgemeinen Gesetzen verantwortlich. Nach §§ 8 bis 10 TMG sind wir als Diensteanbieter jedoch nicht
+        Als Diensteanbieter sind wir gemäß § 7 Abs. 1 DDG für eigene Inhalte auf diesen Seiten nach den
+        allgemeinen Gesetzen verantwortlich. Nach §§ 8 bis 10 DDG sind wir als Diensteanbieter jedoch nicht
         verpflichtet, übermittelte oder gespeicherte fremde Informationen zu überwachen. Verpflichtungen zur
-        Entfernung oder Sperrung der Nutzung von Informationen nach den allgemeinen Gesetzen bleiben hiervon unberührt.
+        Entfernung oder Sperrung der Nutzung von Informationen nach den allgemeinen Gesetzen bleiben hiervon
+        unberührt.
       </P>
 
       <H2>Haftung für Links</H2>
