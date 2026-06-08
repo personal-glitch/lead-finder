@@ -149,7 +149,7 @@ export default function PipelinePage() {
         }
       />
 
-      <div className="space-y-6 p-7">
+      <div className="space-y-6 p-4 sm:p-7">
         {/* Kennzahlen — bewusst auf Datenqualität statt nur Menge */}
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
           <StatCard label="Leads gesamt" value={stats.total} icon="pipeline" tone="blue" />

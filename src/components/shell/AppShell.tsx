@@ -146,11 +146,67 @@ function Sidebar({ flags }: { flags: FeatureFlags }) {
 }
 
 export function AppShell({ flags, children }: { flags: FeatureFlags; children: ReactNode }) {
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const pathname = usePathname();
+  // Drawer bei Seitenwechsel automatisch schließen.
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
+
   return (
     <FlagsContext.Provider value={flags}>
       <div className="flex h-screen overflow-hidden">
-        <Sidebar flags={flags} />
-        <main className="scroll-slim flex-1 overflow-y-auto">{children}</main>
+        {/* Sidebar: fest ab Tablet/Desktop … */}
+        <div className="hidden md:block">
+          <Sidebar flags={flags} />
+        </div>
+
+        {/* … und als einklappbares Menü auf dem Handy. */}
+        <div
+          className={cx("fixed inset-0 z-50 md:hidden", mobileOpen ? "pointer-events-auto" : "pointer-events-none")}
+          aria-hidden={!mobileOpen}
+        >
+          <div
+            className={cx("absolute inset-0 bg-black/50 transition-opacity", mobileOpen ? "opacity-100" : "opacity-0")}
+            onClick={() => setMobileOpen(false)}
+          />
+          <div
+            className={cx(
+              "absolute inset-y-0 left-0 w-64 max-w-[82%] shadow-2xl transition-transform duration-200",
+              mobileOpen ? "translate-x-0" : "-translate-x-full",
+            )}
+          >
+            <button
+              type="button"
+              onClick={() => setMobileOpen(false)}
+              aria-label="Menü schließen"
+              className="absolute right-2 top-3.5 z-10 grid h-9 w-9 place-items-center rounded-lg text-[var(--color-ink-2)] hover:bg-[var(--color-subtle)]"
+            >
+              <Icon name="x" size={18} />
+            </button>
+            <Sidebar flags={flags} />
+          </div>
+        </div>
+
+        <div className="flex min-w-0 flex-1 flex-col">
+          {/* Obere Leiste nur auf dem Handy mit Menü-Button. */}
+          <header className="flex items-center gap-3 border-b border-[var(--color-line)] bg-[var(--color-surface)] px-4 py-2.5 md:hidden">
+            <button
+              type="button"
+              onClick={() => setMobileOpen(true)}
+              aria-label="Menü öffnen"
+              className="grid h-9 w-9 place-items-center rounded-lg text-[var(--color-ink-2)] hover:bg-[var(--color-subtle)]"
+            >
+              <Icon name="menu" size={20} />
+            </button>
+            <span className="grid h-7 w-7 place-items-center rounded-lg bg-[var(--color-brand)] text-[var(--color-on-brand)]">
+              <Icon name="agents" size={15} strokeWidth={2.2} />
+            </span>
+            <span className="text-sm font-semibold">KundenRadar</span>
+          </header>
+
+          <main className="scroll-slim flex-1 overflow-y-auto">{children}</main>
+        </div>
       </div>
     </FlagsContext.Provider>
   );
@@ -168,7 +224,7 @@ export function PageHeader({
   back?: { href: string; label: string };
 }) {
   return (
-    <div className="sticky top-0 z-20 border-b border-[var(--color-line)] bg-[var(--color-canvas)]/80 px-7 py-5 backdrop-blur">
+    <div className="sticky top-0 z-20 border-b border-[var(--color-line)] bg-[var(--color-canvas)]/80 px-4 py-4 backdrop-blur sm:px-7 sm:py-5">
       {back && (
         <Link
           href={back.href}
@@ -179,10 +235,10 @@ export function PageHeader({
       )}
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
-          <h1 className="text-[22px] font-semibold tracking-[-0.01em]">{title}</h1>
+          <h1 className="text-lg font-semibold tracking-[-0.01em] sm:text-[22px]">{title}</h1>
           {subtitle && <p className="mt-1 text-sm text-[var(--color-muted)]">{subtitle}</p>}
         </div>
-        {actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
+        {actions && <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">{actions}</div>}
       </div>
     </div>
   );

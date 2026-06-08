@@ -140,7 +140,7 @@ export default function AgentDetailPage() {
   return (
     <>
       <PageHeader title={agent.name} back={{ href: "/agenten", label: "Zurück zu allen Agenten" }} />
-      <div className="space-y-5 p-7">
+      <div className="space-y-5 p-4 sm:p-7">
         {/* Profil-Kopf */}
         <Card className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-4">

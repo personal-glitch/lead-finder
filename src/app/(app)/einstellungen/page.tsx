@@ -178,14 +178,14 @@ export default function EinstellungenPage() {
   return (
     <>
       <PageHeader title="Einstellungen" subtitle="Ziele, Pipeline & Versand" />
-      <div className="grid max-w-3xl gap-6 p-7">
+      <div className="grid max-w-3xl gap-6 p-4 sm:p-7">
         {/* Paket */}
         <Card className="space-y-4 p-5">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-semibold">Paket</h2>
             <Badge tone="brand">Aktuell: {planOf(plan).name}</Badge>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Usage label="Agenten" used={usage.agents} max={planOf(plan).maxAgents} />
             <Usage label="Kontakte" used={usage.leads} max={planOf(plan).maxLeads} />
           </div>
@@ -227,7 +227,7 @@ export default function EinstellungenPage() {
         {/* Ziele & Versand */}
         <Card className="space-y-4 p-5">
           <h2 className="text-sm font-semibold">Ziele & Versand</h2>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="Anruf-Ziel pro Tag" hint="Fortschritt in Sidebar & Dashboard.">
               <TextInput type="number" min={1} value={callGoal} onChange={(e) => setCallGoal(Number(e.target.value) || 0)} />
             </Field>
@@ -251,7 +251,7 @@ export default function EinstellungenPage() {
             Hinterlege deine eigene Mailadresse – dann verschickst du Angebote direkt aus dem Tool, aus deinem Postfach.
             Das Passwort wird verschlüsselt gespeichert.
           </p>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="Absender-Name"><TextInput value={senderName} onChange={(e) => setSenderName(e.target.value)} placeholder="Max Mustermann" /></Field>
             <Field label="Absender-E-Mail"><TextInput type="email" value={senderEmail} onChange={(e) => setSenderEmail(e.target.value)} placeholder="kontakt@deinefirma.de" /></Field>
           </div>
@@ -265,11 +265,11 @@ export default function EinstellungenPage() {
               {Object.keys(SMTP_PRESETS).map((n) => <option key={n} value={n}>{n}</option>)}
             </select>
           </Field>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="SMTP-Server"><TextInput value={smtpHost} onChange={(e) => setSmtpHost(e.target.value)} placeholder="smtp.deinanbieter.de" /></Field>
             <Field label="Port" hint="587 (STARTTLS) oder 465 (SSL)."><TextInput type="number" value={smtpPort} onChange={(e) => setSmtpPort(e.target.value)} placeholder="587" /></Field>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="SMTP-Benutzer" hint="Meist deine E-Mail-Adresse."><TextInput value={smtpUser} onChange={(e) => setSmtpUser(e.target.value)} placeholder="kontakt@deinefirma.de" /></Field>
             <Field label="Passwort / App-Passwort" hint={smtpPassSet ? "Gespeichert – leer lassen = unverändert." : "Bei Gmail/GMX/Outlook: App-Passwort verwenden."}>
               <TextInput type="password" value={smtpPass} onChange={(e) => setSmtpPass(e.target.value)} placeholder={smtpPassSet ? "•••••••• (gespeichert)" : "App-Passwort"} />

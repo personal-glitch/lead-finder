@@ -55,7 +55,7 @@ export default function KontaktePage() {
   return (
     <>
       <PageHeader title="Kontakte" subtitle={`${kontakte.length} Ansprechpartner`} />
-      <div className="space-y-4 p-7">
+      <div className="space-y-4 p-4 sm:p-7">
         <div className="flex flex-wrap items-center gap-2">
           <div className="relative">
             <span className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--color-faint)]"><Icon name="search" size={15} /></span>
@@ -77,8 +77,8 @@ export default function KontaktePage() {
             <div className="mt-4"><Link href="/unternehmen"><Button><Icon name="building" size={16} /> Zu den Unternehmen</Button></Link></div>
           </EmptyState>
         ) : (
-          <Card className="overflow-hidden">
-            <table className="w-full text-sm">
+          <Card className="overflow-x-auto">
+            <table className="w-full min-w-[640px] text-sm">
               <thead>
                 <tr className="border-b border-[var(--color-line)] text-left text-[11px] uppercase tracking-[0.05em] text-[var(--color-muted)]">
                   <th className="px-3 py-2.5 font-medium">Name</th>

@@ -85,7 +85,7 @@ function Templates({ notify }: { notify: (m: string) => void }) {
   if (loading) return <div className="flex items-center gap-2 text-[var(--color-muted)]"><Spinner /> Lädt …</div>;
 
   return (
-    <div className="grid grid-cols-[230px_1fr] gap-5">
+    <div className="grid grid-cols-1 gap-5 sm:grid-cols-[230px_1fr]">
       <Card className="h-fit p-2">
         {list.map((t) => (
           <button key={t.id} onClick={() => loadInto(t)}

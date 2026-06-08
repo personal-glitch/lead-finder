@@ -92,7 +92,7 @@ export default function DashboardPage() {
   return (
     <>
       <PageHeader title="Dashboard" subtitle="Dein Tagesüberblick" />
-      <div className="space-y-6 p-7">
+      <div className="space-y-6 p-4 sm:p-7">
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
           <Kpi label="Leads gesamt" value={leads.length} icon="pipeline" tone={T.blue} />
           <Kpi label="Anrufe heute" value={stats ? `${stats.anrufeHeute}` : "0"} sub={stats ? `Ziel ${stats.ziel}` : undefined} icon="phone" tone={T.brand} />

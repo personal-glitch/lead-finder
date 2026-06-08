@@ -109,7 +109,7 @@ export default function SuchePage() {
   return (
     <>
       <PageHeader title="Suche" subtitle="Direkt passende Firmen finden – ohne gespeicherten Agenten" />
-      <div className="space-y-5 p-7">
+      <div className="space-y-5 p-4 sm:p-7">
         <Card className="space-y-4 p-5">
           <div className="grid grid-cols-[1fr_auto] gap-4">
             <Field label="PLZ / Ort" required>

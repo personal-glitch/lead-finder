@@ -63,7 +63,7 @@ export default function UnternehmenPage() {
   return (
     <>
       <PageHeader title="Unternehmen" subtitle={`${leads.length} Firmen im Bestand`} />
-      <div className="space-y-4 p-7">
+      <div className="space-y-4 p-4 sm:p-7">
         {/* Filterleiste */}
         <div className="flex flex-wrap items-center gap-2">
           <div className="relative">

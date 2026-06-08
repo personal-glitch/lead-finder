@@ -100,7 +100,7 @@ export default function AufgabenPage() {
     <>
       <PageHeader title="Aufgaben" subtitle="Wiedervorlagen & To-dos"
         actions={<Button onClick={() => setAdding((v) => !v)}><Icon name="plus" size={16} /> Neue Aufgabe</Button>} />
-      <div className="space-y-5 p-7">
+      <div className="space-y-5 p-4 sm:p-7">
         {adding && (
           <Card className="flex flex-wrap items-end gap-3 p-4">
             <div className="min-w-[240px] flex-1">
