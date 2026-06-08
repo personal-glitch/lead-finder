@@ -1,0 +1,117 @@
+@import "tailwindcss";
+
+@theme {
+  /* ── Dunkle Neutraltöne (leicht grün-stichig, wie im Werbe-Look) ── */
+  --color-canvas: #0b0f0c;
+  --color-surface: #161d18;
+  --color-elevated: #202a24;
+  --color-subtle: #232c26;
+  --color-line: #2a332c;
+  --color-line-strong: #3a443c;
+
+  --color-ink: #e9f0e6;
+  --color-ink-2: #b7c2b5;
+  --color-muted: #899389;
+  --color-faint: #5e685f;
+
+  /* ── Marke: Neon-Grün ── */
+  --color-brand: #a8e83a;
+  --color-brand-ink: #93d128;
+  --color-brand-tint: rgba(168, 232, 58, 0.14);
+  /* Textfarbe AUF grünem Grund (Buttons/Badges) */
+  --color-on-brand: #0a0f06;
+
+  /* Dunkles „Pill"-Grün für aktive Zustände (Fallback) */
+  --color-nav-active: #202a24;
+
+  /* ── Semantisch (dunkle Tints) ── */
+  --color-success: #5fd98a;
+  --color-success-tint: rgba(95, 217, 138, 0.16);
+  --color-warn: #e2b54a;
+  --color-warn-tint: rgba(226, 181, 74, 0.16);
+  --color-danger: #f0697f;
+  --color-danger-tint: rgba(240, 105, 127, 0.16);
+  --color-info: #5aa6f0;
+  --color-info-tint: rgba(90, 166, 240, 0.16);
+
+  --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background-color: var(--color-canvas);
+  /* dezenter grüner Schimmer oben – Anlehnung an die Werbung */
+  background-image: radial-gradient(
+    900px 420px at 50% -120px,
+    rgba(168, 232, 58, 0.08),
+    transparent 70%
+  );
+  background-attachment: fixed;
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+.tnum {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-muted);
+}
+
+.scroll-slim {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-line-strong) transparent;
+}
+.scroll-slim::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.scroll-slim::-webkit-scrollbar-thumb {
+  background: var(--color-line-strong);
+  border-radius: 999px;
+}
+.scroll-slim::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.dragging-cursor * {
+  cursor: grabbing !important;
+}
+
+/* Landingpage: sanftes Einblenden für die Hero-Vorschau */
+@keyframes lf-fade {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+.lf-fade {
+  animation: lf-fade 0.5s ease both;
+}
+@keyframes lf-pop {
+  0% { opacity: 0; transform: translateY(6px) scale(0.98); }
+  100% { opacity: 1; transform: none; }
+}
+.lf-row {
+  animation: lf-pop 0.45s ease both;
+}
+@keyframes lf-progress {
+  from { width: 0%; }
+  to { width: 100%; }
+}
+.lf-progress {
+  animation: lf-progress 4s linear both;
+}
+

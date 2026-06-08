@@ -1,0 +1,217 @@
+"use client";
+import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import type { Activity, ActivityType, Lead, PipelineStage, Task } from "@/lib/types";
+import { api } from "@/lib/client";
+import { PageHeader, refreshStats } from "@/components/shell/AppShell";
+import { Icon, type IconName } from "@/components/icons";
+import { Badge, Button, Card, EmptyState, Spinner } from "@/components/ui";
+
+const ACT_ICON: Record<ActivityType, IconName> = {
+  created: "plus", enriched: "search", stage_changed: "pipeline",
+  call: "phone", email: "mail", task: "tasks", note: "pencil",
+};
+
+interface Stats { anrufeHeute: number; ziel: number; offeneAufgaben: number; faelligHeute: number }
+
+function Kpi({ label, value, sub, icon, tone }: { label: string; value: string | number; sub?: string; icon: IconName; tone: { bg: string; fg: string } }) {
+  return (
+    <Card className="flex items-center gap-4 px-5 py-4">
+      <span className="grid h-10 w-10 place-items-center rounded-xl" style={{ background: tone.bg, color: tone.fg }}>
+        <Icon name={icon} size={19} />
+      </span>
+      <div>
+        <div className="eyebrow">{label}</div>
+        <div className="text-[26px] font-semibold leading-tight tnum">{value}</div>
+        {sub && <div className="text-xs text-[var(--color-muted)]">{sub}</div>}
+      </div>
+    </Card>
+  );
+}
+
+const T = {
+  brand: { bg: "var(--color-brand-tint)", fg: "var(--color-brand)" },
+  blue: { bg: "var(--color-info-tint)", fg: "var(--color-info)" },
+  amber: { bg: "var(--color-warn-tint)", fg: "var(--color-warn)" },
+  green: { bg: "var(--color-success-tint)", fg: "var(--color-success)" },
+};
+
+function fmt(iso: string | null) {
+  if (!iso) return "";
+  return new Date(iso).toLocaleString("de-DE", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
+}
+
+export default function DashboardPage() {
+  const [leads, setLeads] = useState<Lead[]>([]);
+  const [stages, setStages] = useState<PipelineStage[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [activities, setActivities] = useState<Activity[]>([]);
+  const [stats, setStats] = useState<Stats | null>(null);
+  const [setup, setSetup] = useState<{ emailReady: boolean; agents: number }>({ emailReady: false, agents: 0 });
+  const [loading, setLoading] = useState(true);
+
+  const load = async () => {
+    try {
+      const [l, s, t, a, st, cfg] = await Promise.all([
+        api<{ leads: Lead[] }>("/api/leads"),
+        api<{ stages: PipelineStage[] }>("/api/stages"),
+        api<{ tasks: Task[] }>("/api/tasks?done=false"),
+        api<{ activities: Activity[] }>("/api/activities?limit=14"),
+        api<Stats>("/api/stats"),
+        api<{ settings: { emailReady: boolean }; usage: { agents: number } }>("/api/settings"),
+      ]);
+      setLeads(l.leads); setStages(s.stages); setTasks(t.tasks); setActivities(a.activities); setStats(st);
+      setSetup({ emailReady: cfg.settings.emailReady, agents: cfg.usage.agents });
+    } finally { setLoading(false); }
+  };
+  useEffect(() => { load(); }, []);
+
+  const leadName = (id: string | null) => (id ? leads.find((l) => l.id === id)?.name ?? "Firma" : null);
+
+  const funnel = useMemo(() => {
+    const counts = stages.map((s) => ({ name: s.name, n: leads.filter((l) => l.stageId === s.id).length }));
+    const max = Math.max(1, ...counts.map((c) => c.n));
+    return { counts, max };
+  }, [stages, leads]);
+
+  const gewonnen = useMemo(() => {
+    const stage = stages.find((s) => /kunde|gewonnen/i.test(s.name));
+    return stage ? leads.filter((l) => l.stageId === stage.id).length : 0;
+  }, [stages, leads]);
+
+  const heute = useMemo(() => {
+    const end = new Date(); end.setHours(23, 59, 59, 999);
+    return tasks.filter((t) => !t.dueAt || t.dueAt <= end.toISOString());
+  }, [tasks]);
+
+  const completeTask = async (id: string) => {
+    setTasks((p) => p.filter((t) => t.id !== id));
+    try { await api(`/api/tasks/${id}`, { method: "PATCH", json: { done: true } }); refreshStats(); } catch { load(); }
+  };
+
+  return (
+    <>
+      <PageHeader title="Dashboard" subtitle="Dein Tagesüberblick" />
+      <div className="space-y-6 p-7">
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+          <Kpi label="Leads gesamt" value={leads.length} icon="pipeline" tone={T.blue} />
+          <Kpi label="Anrufe heute" value={stats ? `${stats.anrufeHeute}` : "0"} sub={stats ? `Ziel ${stats.ziel}` : undefined} icon="phone" tone={T.brand} />
+          <Kpi label="Offene Aufgaben" value={stats?.offeneAufgaben ?? 0} sub={stats ? `${stats.faelligHeute} heute fällig` : undefined} icon="tasks" tone={T.amber} />
+          <Kpi label="Gewonnen" value={gewonnen} icon="check" tone={T.green} />
+        </div>
+
+        {!loading && (() => {
+          const steps = [
+            { done: setup.agents > 0, t: "Ersten Agenten anlegen", d: "Such-Profil für deine Zielbranchen – einmal, dann jederzeit.", href: "/agenten", cta: "Agent anlegen" },
+            { done: leads.length > 0, t: "Kontakte finden", d: "PLZ + Branchen wählen und in die Pipeline übernehmen.", href: "/suche", cta: "Zur Suche" },
+            { done: setup.emailReady, t: "Absender-E-Mail einrichten", d: "Damit du Angebote direkt aus dem Tool versendest.", href: "/einstellungen", cta: "Einrichten" },
+          ];
+          if (steps.every((s) => s.done)) return null;
+          const doneCount = steps.filter((s) => s.done).length;
+          return (
+            <Card className="space-y-4 p-5">
+              <div className="flex items-center justify-between">
+                <h2 className="text-sm font-semibold">Erste Schritte</h2>
+                <span className="text-xs text-[var(--color-muted)] tnum">{doneCount}/{steps.length} erledigt</span>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-3">
+                {steps.map((s, i) => (
+                  <div key={s.t} className={`rounded-xl border p-4 ${s.done ? "border-[var(--color-line)] opacity-60" : "border-[var(--color-brand)]/40 bg-[var(--color-brand-tint)]/20"}`}>
+                    <div className="flex items-center gap-2">
+                      <span className={`grid h-6 w-6 shrink-0 place-items-center rounded-full text-xs font-semibold ${s.done ? "bg-[var(--color-brand)] text-[var(--color-on-brand)]" : "border border-[var(--color-line-strong)] text-[var(--color-muted)]"}`}>
+                        {s.done ? <Icon name="check" size={13} /> : i + 1}
+                      </span>
+                      <span className="text-sm font-medium">{s.t}</span>
+                    </div>
+                    <p className="mt-2 text-xs text-[var(--color-muted)]">{s.d}</p>
+                    {!s.done && <Link href={s.href} className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-[var(--color-brand)] hover:underline">{s.cta} <Icon name="chevronRight" size={13} /></Link>}
+                  </div>
+                ))}
+              </div>
+            </Card>
+          );
+        })()}
+
+        {loading ? (
+          <div className="flex items-center gap-2 text-[var(--color-muted)]"><Spinner /> Lädt …</div>
+        ) : leads.length === 0 ? (
+          <EmptyState icon="home" title="Noch nichts los">
+            Leg einen Agenten an, finde passende Firmen und übernimm sie in die Pipeline – hier siehst du dann deinen Tagesüberblick.
+            <div className="mt-4"><Link href="/agenten"><Button><Icon name="agents" size={16} /> Zu den Agenten</Button></Link></div>
+          </EmptyState>
+        ) : (
+          <div className="grid gap-6 lg:grid-cols-2">
+            {/* Heute zu erledigen + Funnel */}
+            <div className="space-y-6">
+              <Card className="p-5">
+                <div className="mb-3 flex items-center justify-between">
+                  <h2 className="text-sm font-semibold">Heute zu erledigen</h2>
+                  <Link href="/aufgaben" className="text-xs text-[var(--color-muted)] hover:text-[var(--color-ink)]">alle Aufgaben →</Link>
+                </div>
+                {heute.length === 0 ? (
+                  <p className="text-sm text-[var(--color-muted)]">Nichts fällig – sauber. 🎉</p>
+                ) : (
+                  <ul className="space-y-2">
+                    {heute.slice(0, 8).map((t) => (
+                      <li key={t.id} className="flex items-center gap-2.5">
+                        <button onClick={() => completeTask(t.id)} title="Erledigt"
+                          className="grid h-5 w-5 shrink-0 place-items-center rounded-md border border-[var(--color-line-strong)] text-transparent transition-colors hover:border-[var(--color-brand)] hover:text-[var(--color-brand)]">
+                          <Icon name="check" size={13} />
+                        </button>
+                        <div className="min-w-0 flex-1">
+                          <div className="truncate text-sm">{t.title}</div>
+                          {leadName(t.leadId) && <div className="truncate text-xs text-[var(--color-muted)]">{leadName(t.leadId)}</div>}
+                        </div>
+                        {t.dueAt && <span className="shrink-0 text-[11px] text-[var(--color-faint)] tnum">{fmt(t.dueAt)}</span>}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </Card>
+
+              <Card className="p-5">
+                <h2 className="mb-3 text-sm font-semibold">Pipeline-Funnel</h2>
+                <ul className="space-y-2">
+                  {funnel.counts.map((c) => (
+                    <li key={c.name} className="flex items-center gap-3">
+                      <span className="w-32 shrink-0 truncate text-xs text-[var(--color-ink-2)]">{c.name}</span>
+                      <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-[var(--color-subtle)]">
+                        <div className="h-full rounded-full bg-[var(--color-brand)]" style={{ width: `${(c.n / funnel.max) * 100}%` }} />
+                      </div>
+                      <span className="w-7 shrink-0 text-right text-xs font-medium tnum">{c.n}</span>
+                    </li>
+                  ))}
+                </ul>
+              </Card>
+            </div>
+
+            {/* Letzte Aktivitäten */}
+            <Card className="p-5">
+              <h2 className="mb-3 text-sm font-semibold">Letzte Aktivitäten</h2>
+              {activities.length === 0 ? (
+                <p className="text-sm text-[var(--color-muted)]">Noch keine Aktivität.</p>
+              ) : (
+                <ul className="space-y-3">
+                  {activities.map((a) => (
+                    <li key={a.id} className="flex gap-2.5 text-xs">
+                      <span className="mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full bg-[var(--color-subtle)] text-[var(--color-muted)]">
+                        <Icon name={ACT_ICON[a.type]} size={13} />
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <div className="text-[var(--color-ink)]">{a.summary}</div>
+                        <div className="flex items-center gap-1.5 text-[var(--color-faint)]">
+                          {leadName(a.leadId) && <span className="truncate">{leadName(a.leadId)}</span>}
+                          <span className="tnum">· {fmt(a.createdAt)}</span>
+                        </div>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </Card>
+          </div>
+        )}
+      </div>
+    </>
+  );
+}
