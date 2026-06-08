@@ -1,9 +1,13 @@
 // Punkt 1: searchLeads(location, radiusKm, branchen)
 //   PLZ/Ort → Geocoding (Nominatim, Fallback Photon) → Overpass-Query mit allen
 //   Branchen-Tags → Mirror-Rotation (4 Server, in overpass.ts) → Lead-Liste.
+//
+// buildLeadQuery() und mapElements() sind ausgelagert, damit die Overpass-Abfrage
+// auch CLIENT-seitig (im Browser, mit Wohn-IP) laufen kann: Server baut die Query,
+// Browser holt die Daten, Server parst die Elemente. Siehe /api/leads/search/{plan,map}.
 import { config } from "@/lib/config";
 import { AppError } from "@/lib/errors";
-import { geocode } from "@/lib/osm/geocode";
+import { geocode, type GeoPoint } from "@/lib/osm/geocode";
 import { runOverpass, type OverpassElement } from "@/lib/osm/overpass";
 import { brancheSelectors, brancheForTags, isBrancheKey, type BrancheKey } from "./branchen";
 
@@ -74,6 +78,42 @@ function cleanKeyword(kw: string): string {
   return kw.trim().replace(/["\\]/g, "").replace(/[.*+?^${}()|[\]]/g, "\\$&");
 }
 
+/** Baut die Overpass-QL-Query (Branchen-Tags + optionaler Namens-Stichwort-Joker). */
+export function buildLeadQuery(
+  point: GeoPoint,
+  radiusKm: number,
+  branchen: BrancheKey[],
+  keywords: string[] = [],
+): string {
+  const selected = branchen.filter(isBrancheKey);
+  const kws = keywords.map((k) => k.trim()).filter(Boolean);
+  const radiusM = Math.round(Math.min(Math.max(radiusKm, 0.5), 50) * 1000);
+  const around = `(around:${radiusM},${point.lat},${point.lon})`;
+  const selectors = [...brancheSelectors(selected)];
+  if (kws.length) {
+    const alt = kws.map(cleanKeyword).filter(Boolean).join("|");
+    if (alt) selectors.push(`nwr["name"~"${alt}",i]`);
+  }
+  const body = selectors.map((sel) => `  ${sel}${around};`).join("\n");
+  return `[out:json][timeout:${config.osm.overpassTimeoutSec}];\n(\n${body}\n);\nout center tags;`;
+}
+
+/** Parsed Overpass-Elemente → Lead-Liste (ohne Namen verworfen, stabil sortiert). */
+export function mapElements(
+  elements: OverpassElement[],
+  branchen: BrancheKey[],
+  keywords: string[] = [],
+): GeneratedLead[] {
+  const selected = branchen.filter(isBrancheKey);
+  const kws = keywords.map((k) => k.trim()).filter(Boolean);
+  const leads: GeneratedLead[] = [];
+  for (const el of elements) {
+    const lead = elementToLead(el, selected, kws);
+    if (lead) leads.push(lead);
+  }
+  return leads.sort((a, b) => a.companyName.localeCompare(b.companyName, "de"));
+}
+
 export async function searchLeads(
   location: string,
   radiusKm: number,
@@ -91,26 +131,12 @@ export async function searchLeads(
   const point = await geocode(location);
   if (!point) throw new AppError("no_geocode", `Für „${location}" kein Ort gefunden.`);
 
-  // 2) Overpass-Query: Branchen-Tags + optionaler Namens-Stichwort-Joker
-  const radiusM = Math.round(Math.min(Math.max(radiusKm, 0.5), 50) * 1000);
-  const around = `(around:${radiusM},${point.lat},${point.lon})`;
-  const selectors = [...brancheSelectors(selected)];
-  if (kws.length) {
-    const alt = kws.map(cleanKeyword).filter(Boolean).join("|");
-    if (alt) selectors.push(`nwr["name"~"${alt}",i]`);
-  }
-  const body = selectors.map((sel) => `  ${sel}${around};`).join("\n");
-  const query = `[out:json][timeout:${config.osm.overpassTimeoutSec}];\n(\n${body}\n);\nout center tags;`;
+  // 2) Overpass-Query bauen
+  const query = buildLeadQuery(point, radiusKm, selected, kws);
 
   // 3) Overpass mit Mirror-Rotation (overpass-api.de → kumi → fr → mail.ru)
   const elements = await runOverpass(query);
 
-  // 4) Parsen → Lead-Liste (ohne Namen verworfen, Branche/Stichwort zugeordnet)
-  const leads: GeneratedLead[] = [];
-  for (const el of elements) {
-    const lead = elementToLead(el, selected, kws);
-    if (lead) leads.push(lead);
-  }
-  // Stabile, lesbare Sortierung
-  return leads.sort((a, b) => a.companyName.localeCompare(b.companyName, "de"));
+  // 4) Parsen → Lead-Liste
+  return mapElements(elements, selected, kws);
 }

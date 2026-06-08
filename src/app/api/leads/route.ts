@@ -30,8 +30,8 @@ const LeadInputSchema = z.object({
   ansprechpartner: z.string().nullish(),
   website: z.string().nullish(),
   openingHours: z.string().nullish(),
-  source: z.enum(["osm", "impressum", "manual"]).optional(),
-  enrichmentSource: z.enum(["impressum"]).nullish(),
+  source: z.enum(["osm", "impressum", "manual", "recherche"]).optional(),
+  enrichmentSource: z.enum(["impressum", "web"]).nullish(),
   enrichedAt: z.string().nullish(),
   osmId: z.string().nullish(),
 });

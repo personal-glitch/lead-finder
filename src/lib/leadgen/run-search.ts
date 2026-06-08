@@ -20,7 +20,7 @@ const DEMO_NOTE =
   "Es werden BEISPIEL-Treffer angezeigt, damit du den Ablauf testen kannst. Im Live-Betrieb " +
   "liefert die Suche echte Firmen aus den gewählten Branchen.";
 
-function toLeadInput(g: GeneratedLead): LeadInput {
+export function toLeadInput(g: GeneratedLead): LeadInput {
   const parsed = g.phone ? firstGermanPhone(g.phone) : null;
   return {
     name: g.companyName,
