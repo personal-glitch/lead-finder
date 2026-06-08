@@ -15,7 +15,7 @@ export default function KuendigungPage() {
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [done, setDone] = useState<string | null>(null);
+  const [done, setDone] = useState<{ receivedAt: string; subscriptionsCancelled: number } | null>(null);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,10 +23,10 @@ export default function KuendigungPage() {
     if (!email.trim()) { setError("Bitte gib die E-Mail-Adresse deines Kontos an."); return; }
     setBusy(true);
     try {
-      const res = await api<{ receivedAt: string }>("/api/kuendigung", {
+      const res = await api<{ receivedAt: string; subscriptionsCancelled: number }>("/api/kuendigung", {
         json: { name: name.trim() || undefined, email: email.trim(), contractRef: contractRef.trim() || undefined, kind, desiredDate: desiredDate.trim() || undefined, message: message.trim() || undefined },
       });
-      setDone(res.receivedAt);
+      setDone(res);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Kündigung fehlgeschlagen. Bitte per E-Mail an personal@lupen-rhein.de kündigen.");
     } finally {
@@ -38,12 +38,23 @@ export default function KuendigungPage() {
     return (
       <LegalShell title="Kündigung eingegangen">
         <div className="rounded-xl border border-[var(--color-success-tint)] bg-[var(--color-success-tint)] px-5 py-4 text-sm text-[var(--color-success)]">
-          Deine Kündigung ist bei uns eingegangen am {new Date(done).toLocaleString("de-DE")}.
+          Deine Kündigung ist bei uns eingegangen am {new Date(done.receivedAt).toLocaleString("de-DE")}.
         </div>
+        {done.subscriptionsCancelled > 0 ? (
+          <P>
+            Dein laufendes Abonnement wurde bei unserem Zahlungsdienstleister gekündigt – es erfolgt
+            <strong> keine weitere Abbuchung</strong>. Bei einer ordentlichen Kündigung bleibt der Zugang bis zum Ende
+            des bereits bezahlten Zeitraums bestehen.
+          </P>
+        ) : (
+          <P>
+            Falls unter der angegebenen E-Mail-Adresse ein Abonnement besteht, beenden wir es zum nächstmöglichen
+            Zeitpunkt, sodass keine weitere Abbuchung erfolgt. Bitte gib im Zweifel die E-Mail-Adresse deines Kontos an.
+          </P>
+        )}
         <P>
-          Du erhältst eine Bestätigung an die angegebene E-Mail-Adresse. Die Kündigung wird zum nächstmöglichen
-          Zeitpunkt wirksam; bei einer außerordentlichen Kündigung prüfen wir den angegebenen Grund. Bei Fragen
-          erreichst du uns unter personal@lupen-rhein.de.
+          Du erhältst zusätzlich eine Bestätigung an die angegebene E-Mail-Adresse. Bei Fragen erreichst du uns unter
+          personal@lupen-rhein.de.
         </P>
       </LegalShell>
     );
