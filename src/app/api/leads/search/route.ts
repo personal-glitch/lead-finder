@@ -3,6 +3,9 @@ import { jsonOk, jsonError } from "@/lib/api";
 import { runBrancheSearch } from "@/lib/leadgen/run-search";
 import { isBrancheKey, type BrancheKey } from "@/lib/leadgen/branchen";
 
+// Mehrere Nominatim-Abfragen (1/Sek.) brauchen ggf. etwas länger als der Default.
+export const maxDuration = 30;
+
 const Body = z.object({
   // PLZ oder Ort (Alias "location" laut Spec ebenfalls akzeptiert).
   plz: z.string().min(1).optional(),

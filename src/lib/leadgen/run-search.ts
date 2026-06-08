@@ -4,7 +4,8 @@ import { AppError } from "@/lib/errors";
 import { geocode, type GeoPoint } from "@/lib/osm/geocode";
 import { firstGermanPhone } from "@/lib/phone/parse-de";
 import type { LeadInput } from "@/lib/types";
-import { searchLeads, type GeneratedLead } from "./search-leads";
+import { type GeneratedLead } from "./search-leads";
+import { searchLeadsNominatim } from "@/lib/osm/nominatim-search";
 import type { BrancheKey } from "./branchen";
 
 export interface BrancheSearchResult {
@@ -82,16 +83,21 @@ export async function runBrancheSearch(
   branchen: BrancheKey[],
   keywords: string[] = [],
 ): Promise<BrancheSearchResult> {
+  // Geocoding zuerst (Nominatim klappt auch von Vercel/Cloud-IPs).
+  const center = await geocode(plz);
+  if (!center) throw new AppError("no_geocode", `Für „${plz}" wurde kein Ort gefunden.`);
+
   try {
-    const leads = (await searchLeads(plz, radiusKm, branchen, keywords)).map(toLeadInput);
-    const center = (await geocode(plz)) ?? { lat: 0, lon: 0, displayName: plz };
-    return { center, radiusKm, leads, notes: [], demo: false };
+    // Echte Firmen über Nominatim (kostenlos, ohne Key, von Vercel erreichbar).
+    const leads = (await searchLeadsNominatim(center, radiusKm, branchen, keywords)).map(toLeadInput);
+    const notes = leads.length === 0
+      ? ["Keine Treffer in diesem Umkreis – Umkreis vergrößern oder andere Branche/Stichwort wählen."]
+      : [];
+    return { center, radiusKm, leads, notes, demo: false };
   } catch (err) {
     const code = err instanceof AppError ? err.code : "upstream";
-    // Nur bei Overpass-Erreichbarkeit auf Demo ausweichen.
+    // Nur bei Upstream-/Timeout-/Rate-Limit-Fehlern auf Beispieldaten ausweichen.
     if (!["upstream", "timeout", "rate_limited"].includes(code)) throw err;
-    const center = await geocode(plz);
-    if (!center) throw err; // kein Geocoding → echter Fehler
     return { center, radiusKm, leads: buildDemoLeads(center, radiusKm, branchen, keywords), notes: [DEMO_NOTE], demo: true };
   }
 }
