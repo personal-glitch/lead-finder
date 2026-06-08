@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import type { Agent, AgentInput, LeadInput, PipelineStage } from "@/lib/types";
 import { api } from "@/lib/client";
@@ -26,10 +26,15 @@ export default function AgentDetailPage() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [taken, setTaken] = useState<Set<string>>(new Set());
   const [enrichingKey, setEnrichingKey] = useState<string | null>(null);
+  const [enrichingAll, setEnrichingAll] = useState(false);
+  const [enrichProgress, setEnrichProgress] = useState<{ done: number; total: number } | null>(null);
+  const [autoEnrich, setAutoEnrich] = useState(true);
   const [editOpen, setEditOpen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  const stopRef = useRef(false);
 
   useEffect(() => {
+    try { const v = localStorage.getItem("kr-auto-enrich"); if (v !== null) setAutoEnrich(v === "1"); } catch {}
     (async () => {
       try {
         const [{ agent }, { stages }] = await Promise.all([
@@ -57,6 +62,8 @@ export default function AgentDetailPage() {
       setSelected(new Set(result.leads.map(dedupeKey)));
       setTaken(new Set());
       setPhase("done");
+      // Automatisch anreichern (Hintergrund), außer bei Beispieldaten.
+      if (autoEnrich && !result.demo) void runEnrich(result.leads, true);
     } catch (e) {
       setToast(e instanceof Error ? e.message : "Suche fehlgeschlagen.");
       setPhase("idle");
@@ -76,6 +83,13 @@ export default function AgentDetailPage() {
       return next;
     });
 
+  const applyEnrichment = (key: string, e: Record<string, string | null>) =>
+    setResult((r) => r ? { ...r, leads: r.leads.map((l) => dedupeKey(l) === key ? {
+      ...l, phone: e.phone ?? l.phone, phoneE164: e.phoneE164 ?? l.phoneE164,
+      email: e.email ?? l.email, ansprechpartner: e.ansprechpartner ?? l.ansprechpartner,
+      enrichmentSource: (e.enrichmentSource as "web") ?? l.enrichmentSource,
+    } : l) } : r);
+
   const enrich = async (input: LeadInput) => {
     if (!input.website) return;
     const key = dedupeKey(input);
@@ -84,31 +98,48 @@ export default function AgentDetailPage() {
       const { enrichment } = await api<{ enrichment: Record<string, string | null> }>("/api/leads/enrich", {
         json: { website: input.website, branche: input.objektTyp },
       });
-      setResult((r) =>
-        r
-          ? {
-              ...r,
-              leads: r.leads.map((l) =>
-                dedupeKey(l) === key
-                  ? {
-                      ...l,
-                      phone: enrichment.phone ?? l.phone,
-                      phoneE164: enrichment.phoneE164 ?? l.phoneE164,
-                      email: enrichment.email ?? l.email,
-                      ansprechpartner: enrichment.ansprechpartner ?? l.ansprechpartner,
-                      enrichmentSource: (enrichment.enrichmentSource as "impressum") ?? l.enrichmentSource,
-                    }
-                  : l,
-              ),
-            }
-          : r,
-      );
+      applyEnrichment(key, enrichment);
     } catch (e) {
       setToast(e instanceof Error ? e.message : "Anreicherung fehlgeschlagen.");
     } finally {
       setEnrichingKey(null);
     }
   };
+
+  // Alle Treffer mit Website anreichern – parallelisiert, abbrechbar. Wird manuell
+  // oder automatisch nach dem Agentenlauf aufgerufen.
+  const runEnrich = async (leads: LeadInput[], silent = false) => {
+    const targets = leads.filter((l) => l.website && !l.enrichmentSource);
+    if (targets.length === 0) {
+      if (!silent) setToast("Nichts anzureichern – kein Treffer mit Website (oder alle bereits angereichert).");
+      return;
+    }
+    setEnrichingAll(true); stopRef.current = false;
+    setEnrichProgress({ done: 0, total: targets.length });
+    let done = 0, found = 0, idx = 0;
+    const worker = async () => {
+      while (idx < targets.length && !stopRef.current) {
+        const input = targets[idx++]; const key = dedupeKey(input);
+        try {
+          const { enrichment } = await api<{ enrichment: Record<string, string | null> }>("/api/leads/enrich", { json: { website: input.website, branche: input.objektTyp } });
+          applyEnrichment(key, enrichment);
+          if (enrichment.phone || enrichment.email || enrichment.ansprechpartner) found++;
+        } catch { /* einzelne Fehler überspringen */ }
+        setEnrichProgress({ done: ++done, total: targets.length });
+      }
+    };
+    await Promise.all(Array.from({ length: Math.min(3, targets.length) }, worker));
+    setEnrichingAll(false); setEnrichProgress(null);
+    if (!stopRef.current) setToast(`Anreicherung fertig: ${found} von ${targets.length} mit Kontaktdaten gefunden.`);
+  };
+
+  const enrichAll = () => { if (result && !enrichingAll) runEnrich(result.leads); };
+  const stopEnrich = () => { stopRef.current = true; };
+  const toggleAuto = () => setAutoEnrich((v) => {
+    const nv = !v;
+    try { localStorage.setItem("kr-auto-enrich", nv ? "1" : "0"); } catch {}
+    return nv;
+  });
 
   const takeSelected = async () => {
     if (!result) return;
@@ -191,7 +222,22 @@ export default function AgentDetailPage() {
                 <span className="font-medium text-[var(--color-ink)] tnum">{result.leads.length}</span> Treffer um {result.center.displayName.split(",")[0]} · {result.radiusKm} km
                 {result.demo && <Badge tone="amber">Beispieldaten</Badge>}
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  className={cx("inline-flex items-center gap-1 rounded-md border px-2.5 py-1 text-xs",
+                    autoEnrich ? "border-[var(--color-brand)] text-[var(--color-brand)]" : "border-[var(--color-line)] text-[var(--color-muted)] hover:text-[var(--color-ink)]")}
+                  onClick={toggleAuto} title="Treffer nach jedem Lauf automatisch anreichern">
+                  <Icon name="bolt" size={13} /> Auto {autoEnrich ? "an" : "aus"}
+                </button>
+                {enrichingAll ? (
+                  <Button variant="ghost" size="sm" onClick={stopEnrich}>
+                    <Spinner size={13} /> {enrichProgress?.done}/{enrichProgress?.total} · Stopp
+                  </Button>
+                ) : (
+                  <Button variant="ghost" size="sm" onClick={enrichAll}>
+                    <Icon name="bolt" size={14} /> Alle anreichern
+                  </Button>
+                )}
                 <button
                   className="text-xs text-[var(--color-muted)] hover:text-[var(--color-ink)]"
                   onClick={() =>

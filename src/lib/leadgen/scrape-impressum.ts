@@ -190,13 +190,21 @@ export async function scrapeImpressum(
   if (!impressum && home && isImpressum(home, base)) impressum = { url: base, html: home };
   if (!impressum?.html) return EMPTY;
 
+  const brancheKey = branche ?? "Büro & Unternehmen";
   const text = toText(impressum.html);
-  const phone = pickBestPhone(extractPhoneNumbers(text))?.normalized ?? null;
-  let contact = findBestContact(text, branche ?? "Büro & Unternehmen");
+  let phone = pickBestPhone(extractPhoneNumbers(text))?.normalized ?? null;
+  let email = extractEmail(text);
+  let contact = findBestContact(text, brancheKey);
 
-  // Fallback: Ansprechperson steht oft nicht im (rein rechtlichen) Impressum,
-  // sondern auf einer Kontakt-/Team-/Über-uns-Seite. Nur nachladen, wenn nötig.
-  if (!contact) {
+  // Startseite ist oft die beste Quelle für Telefon (steht prominent im Header/Footer).
+  if (home && (!phone || !email)) {
+    const htext = toText(home);
+    if (!phone) phone = pickBestPhone(extractPhoneNumbers(htext))?.normalized ?? null;
+    if (!email) email = extractEmail(htext);
+  }
+
+  // Fehlt noch etwas (Name/Telefon/E-Mail), Kontakt-/Team-/Über-uns-Seiten nachladen.
+  if (!contact || !phone || !email) {
     const more: string[] = [];
     if (home) {
       const h = findHref(home, base, "kontakt|team|ueber-uns|über-uns|ansprechpartner|unternehmen");
@@ -207,15 +215,18 @@ export async function scrapeImpressum(
     const extraPages = await Promise.all(extra.map((u) => fetchText(u)));
     for (const h of extraPages) {
       if (!h) continue;
-      const c = findBestContact(toText(h), branche ?? "Büro & Unternehmen");
-      if (c) { contact = c; break; }
+      const t2 = toText(h);
+      if (!contact) contact = findBestContact(t2, brancheKey);
+      if (!phone) phone = pickBestPhone(extractPhoneNumbers(t2))?.normalized ?? null;
+      if (!email) email = extractEmail(t2);
+      if (contact && phone && email) break;
     }
   }
 
   return {
     impressumUrl: impressum.url,
     phone,
-    email: extractEmail(text),
+    email,
     contactName: contact?.name ?? null,
     contactRole: contact?.role ?? null,
   };
