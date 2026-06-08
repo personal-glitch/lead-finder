@@ -23,6 +23,9 @@ export default function SuchePage() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [taken, setTaken] = useState<Set<string>>(new Set());
   const [enrichingKey, setEnrichingKey] = useState<string | null>(null);
+  const [enrichingAll, setEnrichingAll] = useState(false);
+  const [enrichProgress, setEnrichProgress] = useState<{ done: number; total: number } | null>(null);
+  const [onlyWithContact, setOnlyWithContact] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
 
   useEffect(() => {
@@ -59,18 +62,42 @@ export default function SuchePage() {
     finally { setSearching(false); }
   };
 
+  const applyEnrichment = (key: string, e: Record<string, string | null>) =>
+    setResult((r) => r ? { ...r, leads: r.leads.map((l) => dedupeKey(l) === key ? {
+      ...l, phone: e.phone ?? l.phone, phoneE164: e.phoneE164 ?? l.phoneE164,
+      email: e.email ?? l.email, ansprechpartner: e.ansprechpartner ?? l.ansprechpartner,
+      enrichmentSource: (e.enrichmentSource as "web") ?? l.enrichmentSource,
+    } : l) } : r);
+
   const enrich = async (input: LeadInput) => {
     if (!input.website) return;
     const key = dedupeKey(input); setEnrichingKey(key);
     try {
       const { enrichment } = await api<{ enrichment: Record<string, string | null> }>("/api/leads/enrich", { json: { website: input.website, branche: input.objektTyp } });
-      setResult((r) => r ? { ...r, leads: r.leads.map((l) => dedupeKey(l) === key ? {
-        ...l, phone: enrichment.phone ?? l.phone, phoneE164: enrichment.phoneE164 ?? l.phoneE164,
-        email: enrichment.email ?? l.email, ansprechpartner: enrichment.ansprechpartner ?? l.ansprechpartner,
-        enrichmentSource: (enrichment.enrichmentSource as "web") ?? l.enrichmentSource,
-      } : l) } : r);
+      applyEnrichment(key, enrichment);
     } catch (e) { setToast(e instanceof Error ? e.message : "Anreicherung fehlgeschlagen."); }
     finally { setEnrichingKey(null); }
+  };
+
+  // Ein Klick: alle Treffer mit Website der Reihe nach anreichern (Impressum-Scrape,
+  // serverseitig & kostenlos). Schon angereicherte werden übersprungen.
+  const enrichAll = async () => {
+    if (!result || enrichingAll) return;
+    const targets = result.leads.filter((l) => l.website && !l.enrichmentSource);
+    if (targets.length === 0) { setToast("Nichts anzureichern – kein Treffer mit Website (oder alle bereits angereichert)."); return; }
+    setEnrichingAll(true); setEnrichProgress({ done: 0, total: targets.length });
+    let found = 0;
+    for (let i = 0; i < targets.length; i++) {
+      const input = targets[i]; const key = dedupeKey(input);
+      try {
+        const { enrichment } = await api<{ enrichment: Record<string, string | null> }>("/api/leads/enrich", { json: { website: input.website, branche: input.objektTyp } });
+        applyEnrichment(key, enrichment);
+        if (enrichment.phone || enrichment.email || enrichment.ansprechpartner) found++;
+      } catch { /* einzelne Fehler überspringen, Lauf nicht abbrechen */ }
+      setEnrichProgress({ done: i + 1, total: targets.length });
+    }
+    setEnrichingAll(false); setEnrichProgress(null);
+    setToast(`Anreicherung fertig: ${found} von ${targets.length} mit Kontaktdaten gefunden.`);
   };
 
   const take = async () => {
@@ -85,7 +112,14 @@ export default function SuchePage() {
   };
 
   const toggle = (k: string) => setSelected((p) => { const n = new Set(p); n.has(k) ? n.delete(k) : n.add(k); return n; });
-  const selectableCount = useMemo(() => result ? result.leads.filter((l) => !taken.has(dedupeKey(l))).length : 0, [result, taken]);
+  const hasContact = (l: LeadInput) => Boolean(l.phone || l.email || l.website || l.ansprechpartner);
+  // Sichtbare Treffer: optional ohne Kontaktlose (kein Web/Tel/E-Mail/Ansprechpartner).
+  const displayLeads = useMemo(() => {
+    if (!result) return [] as LeadInput[];
+    return onlyWithContact ? result.leads.filter(hasContact) : result.leads;
+  }, [result, onlyWithContact]);
+  const hiddenCount = result ? result.leads.length - displayLeads.length : 0;
+  const selectableCount = useMemo(() => displayLeads.filter((l) => !taken.has(dedupeKey(l))).length, [displayLeads, taken]);
   const canSearch = plz.trim().length > 0 && (branchen.size > 0 || keywordList.length > 0) && !searching;
 
   return (
@@ -118,13 +152,25 @@ export default function SuchePage() {
             ))}
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="text-sm text-[var(--color-muted)]">
-                <span className="font-medium text-[var(--color-ink)] tnum">{result.leads.length}</span> Treffer um {result.center.displayName.split(",")[0]} · {result.radiusKm} km
+                <span className="font-medium text-[var(--color-ink)] tnum">{displayLeads.length}</span> Treffer um {result.center.displayName.split(",")[0]} · {result.radiusKm} km
+                {onlyWithContact && hiddenCount > 0 && <span className="text-[var(--color-faint)]"> · {hiddenCount} ohne Kontakt ausgeblendet</span>}
                 {result.demo && <Badge tone="amber">Beispieldaten</Badge>}
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  className={cx("inline-flex items-center gap-1 rounded-md border px-2.5 py-1 text-xs",
+                    onlyWithContact ? "border-[var(--color-brand)] text-[var(--color-brand)]" : "border-[var(--color-line)] text-[var(--color-muted)] hover:text-[var(--color-ink)]")}
+                  onClick={() => setOnlyWithContact((v) => !v)}>
+                  <Icon name="filter" size={13} /> Nur mit Kontakt
+                </button>
+                <Button variant="ghost" size="sm" onClick={enrichAll} disabled={enrichingAll}>
+                  {enrichingAll
+                    ? <><Spinner size={13} /> Anreichern {enrichProgress?.done}/{enrichProgress?.total}</>
+                    : <><Icon name="bolt" size={14} /> Alle anreichern</>}
+                </Button>
                 <button className="text-xs text-[var(--color-muted)] hover:text-[var(--color-ink)]"
-                  onClick={() => setSelected((p) => p.size === result.leads.length ? new Set() : new Set(result.leads.map(dedupeKey)))}>
-                  {selected.size === result.leads.length ? "Auswahl aufheben" : "Alle auswählen"}
+                  onClick={() => setSelected((p) => p.size >= displayLeads.length && displayLeads.length > 0 ? new Set() : new Set(displayLeads.map(dedupeKey)))}>
+                  {selected.size >= displayLeads.length && displayLeads.length > 0 ? "Auswahl aufheben" : "Alle auswählen"}
                 </button>
                 <Button onClick={take} disabled={selected.size === 0 || selectableCount === 0}>
                   <Icon name="check" size={15} /> {selected.size} übernehmen
@@ -132,11 +178,17 @@ export default function SuchePage() {
               </div>
             </div>
 
-            {result.leads.length === 0 ? (
-              <EmptyState icon="search" title="Keine Treffer">Umkreis vergrößern oder andere Branchen wählen.</EmptyState>
+            {displayLeads.length === 0 ? (
+              onlyWithContact && result.leads.length > 0 ? (
+                <EmptyState icon="filter" title="Alle ohne Kontakt ausgeblendet">
+                  Kein Treffer hat Web/Tel/E-Mail. „Alle anreichern" versuchen oder den Filter „Nur mit Kontakt" deaktivieren.
+                </EmptyState>
+              ) : (
+                <EmptyState icon="search" title="Keine Treffer">Umkreis vergrößern oder andere Branchen wählen.</EmptyState>
+              )
             ) : (
               <Card className="overflow-hidden">
-                {result.leads.map((l, i) => {
+                {displayLeads.map((l, i) => {
                   const key = dedupeKey(l); const isTaken = taken.has(key); const host = hostFromUrl(l.website);
                   return (
                     <div key={key} className={cx("flex items-center gap-3 px-4 py-3", i > 0 && "border-t border-[var(--color-line)]", isTaken && "bg-[var(--color-success-tint)]/30")}>
