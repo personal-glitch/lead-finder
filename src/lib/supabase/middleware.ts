@@ -10,6 +10,9 @@ const PUBLIC_PREFIXES = [
   "/auth",
   "/impressum",
   "/datenschutz",
+  "/agb",
+  "/widerruf",
+  "/preise",
   "/kontakt",
   "/abmelden",
 ];
