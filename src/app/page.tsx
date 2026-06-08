@@ -161,8 +161,8 @@ export default function Landing() {
             <a href="#faq" className="hover:text-[var(--color-ink)]">FAQ</a>
           </nav>
           <div className="flex items-center gap-3">
-            <Link href={loginHref} className="hidden text-sm font-medium text-[var(--color-ink-2)] hover:text-[var(--color-ink)] sm:block">Anmelden</Link>
-            <Link href={signupHref} className="rounded-lg bg-[var(--color-brand)] px-3.5 py-2 text-sm font-semibold text-[var(--color-on-brand)] hover:bg-[var(--color-brand-ink)]">Kostenlos starten</Link>
+            <Link href={loginHref} className="rounded-lg border border-[var(--color-line-strong)] px-3 py-2 text-sm font-medium text-[var(--color-ink-2)] hover:bg-[var(--color-subtle)] hover:text-[var(--color-ink)]">Anmelden</Link>
+            <Link href={signupHref} className="rounded-lg bg-[var(--color-brand)] px-3.5 py-2 text-sm font-semibold text-[var(--color-on-brand)] hover:bg-[var(--color-brand-ink)]"><span className="sm:hidden">Starten</span><span className="hidden sm:inline">Kostenlos starten</span></Link>
           </div>
         </div>
       </header>
