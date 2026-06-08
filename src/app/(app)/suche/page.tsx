@@ -4,7 +4,6 @@ import type { LeadInput, PipelineStage } from "@/lib/types";
 import { api } from "@/lib/client";
 import { dedupeKey, hostFromUrl } from "@/lib/dedupe";
 import { type BrancheKey } from "@/lib/leadgen/branchen-catalog";
-import { runOverpassBrowser } from "@/lib/osm/overpass-browser";
 import { PageHeader, refreshStats } from "@/components/shell/AppShell";
 import { TargetPicker } from "@/components/agents/TargetPicker";
 import { Icon } from "@/components/icons";
@@ -41,22 +40,7 @@ export default function SuchePage() {
     setSearching(true); setResult(null);
     const payload = { plz: plz.trim(), radiusKm, branchen: [...branchen], keywords: keywordList };
     try {
-      let res: SearchResult;
-      try {
-        // Echte Treffer: Server baut die Query, der BROWSER holt die OSM-Daten
-        // (Wohn-IP wird nicht geblockt), der Server parst sie.
-        const plan = await api<{ center: { lat: number; lon: number; displayName: string }; radiusKm: number; query: string }>(
-          "/api/leads/search/plan", { json: payload },
-        );
-        const elements = await runOverpassBrowser(plan.query);
-        res = await api<SearchResult>("/api/leads/search/map", {
-          json: { center: plan.center, radiusKm: plan.radiusKm, elements, branchen: [...branchen], keywords: keywordList },
-        });
-      } catch {
-        // Notfall-Fallback: serverseitige Suche (kann Beispiel-Treffer liefern,
-        // falls Overpass auch im Browser scheitert – z. B. ohne Internet).
-        res = await api<SearchResult>("/api/leads/search", { json: payload });
-      }
+      const res = await api<SearchResult>("/api/leads/search", { json: payload });
       setResult(res); setSelected(new Set(res.leads.map(dedupeKey))); setTaken(new Set());
     } catch (e) { setToast(e instanceof Error ? e.message : "Suche fehlgeschlagen."); }
     finally { setSearching(false); }
