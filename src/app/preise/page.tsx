@@ -11,8 +11,8 @@ export default function PreisePage() {
     >
       <H2>Preis</H2>
       <UL items={[
-        "KundenRadar kostet 49 € pro Monat.",
-        "Umsatzsteuer: Wendet der Anbieter die Kleinunternehmerregelung (§ 19 UStG) an, wird keine Umsatzsteuer ausgewiesen; andernfalls verstehen sich die Preise zzgl. der gesetzlichen Umsatzsteuer.",
+        "KundenRadar kostet 49 € pro Monat – das ist der Gesamtpreis (Endpreis), den du zahlst.",
+        "Umsatzsteuer: Als Kleinunternehmer im Sinne des § 19 UStG weist der Anbieter keine Umsatzsteuer aus. Gilt Regelbesteuerung, ist die gesetzliche Umsatzsteuer im genannten Preis bereits enthalten – der zu zahlende Betrag bleibt 49 €.",
         "Es fallen keine Einrichtungs- oder versteckten Gebühren an.",
       ]} />
 

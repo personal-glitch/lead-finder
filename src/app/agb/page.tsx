@@ -50,8 +50,8 @@ export default function AgbPage() {
 
       <H2>§ 5 Preise &amp; Zahlung</H2>
       <UL items={[
-        "Das Abonnement kostet 49 € pro Monat.",
-        "Umsatzsteuer: Sofern der Anbieter die Kleinunternehmerregelung nach § 19 UStG anwendet, wird keine Umsatzsteuer ausgewiesen; andernfalls verstehen sich die Preise zzgl. der jeweils gesetzlichen Umsatzsteuer.",
+        "Das Abonnement kostet 49 € pro Monat (Gesamtpreis/Endpreis).",
+        "Umsatzsteuer: Als Kleinunternehmer (§ 19 UStG) weist der Anbieter keine Umsatzsteuer aus; bei Regelbesteuerung ist die gesetzliche Umsatzsteuer im Preis bereits enthalten. Der zu zahlende Betrag bleibt 49 € pro Monat.",
         "Die Abrechnung erfolgt im Voraus für den jeweiligen Abrechnungszeitraum (monatlich).",
         "Die Zahlungsabwicklung erfolgt über den Zahlungsdienstleister Stripe; es gelten zusätzlich dessen Bedingungen. Der Nutzer hält eine gültige Zahlungsmethode vor.",
         "Bei Zahlungsverzug kann der Zugang bis zum Ausgleich gesperrt werden.",
