@@ -94,12 +94,23 @@ function toText(html: string): string {
 }
 
 const EMAIL_RE = /[\w.+-]+@[\w-]+(?:\.[\w-]+)+/g;
+// Generische Postfächer (keine konkrete Person) – nachrangig.
+const GENERIC_LOCAL =
+  /^(?:info|kontakt|contact|office|mail|e?mail|post|service|hallo|hello|welcome|team|zentrale|empfang|sekretariat|buchhaltung|rechnung|newsletter|no-?reply|noreply|webmaster|admin|support|praxis|kanzlei)\b/i;
+function emailScore(e: string): number {
+  const local = e.split("@")[0];
+  if (GENERIC_LOCAL.test(local)) return 0; // info@, kontakt@ …
+  if (/[._-]/.test(local)) return 2; // vorname.nachname@ – wahrscheinlich Person
+  return 1;
+}
 function extractEmail(text: string): string | null {
   const all = text.match(EMAIL_RE) ?? [];
   const good = all
     .map((e) => e.toLowerCase())
-    .filter((e) => !/(example\.|sentry|wixpress|\.png|\.jpe?g|@2x|@sentry)/.test(e));
-  return good[0] ?? null;
+    .filter((e) => !/(example\.|sentry|wixpress|\.png|\.jpe?g|@2x|@sentry|\.gif)/.test(e));
+  if (good.length === 0) return null;
+  // Persönliche Adressen bevorzugen; bei Gleichstand erste Fundstelle (stabil).
+  return [...new Set(good)].sort((a, b) => emailScore(b) - emailScore(a))[0] ?? null;
 }
 
 function cleanName(raw: string): string | null {

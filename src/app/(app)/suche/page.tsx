@@ -98,8 +98,8 @@ export default function SuchePage() {
         setEnrichProgress({ done: ++done, total: targets.length });
       }
     };
-    // Schonende Nebenläufigkeit: max. 3 Firmen gleichzeitig.
-    await Promise.all(Array.from({ length: Math.min(3, targets.length) }, worker));
+    // Schonende Nebenläufigkeit: max. 5 Firmen gleichzeitig.
+    await Promise.all(Array.from({ length: Math.min(5, targets.length) }, worker));
     setEnrichingAll(false); setEnrichProgress(null);
     if (!stopRef.current) setToast(`Anreicherung fertig: ${found} von ${targets.length} mit Kontaktdaten gefunden.`);
   };

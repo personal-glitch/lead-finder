@@ -3,6 +3,7 @@ import { jsonOk, jsonError } from "@/lib/api";
 import { AppError } from "@/lib/errors";
 import { getStore, getOwnerId } from "@/lib/db";
 import { scrapeImpressum } from "@/lib/leadgen/scrape-impressum";
+import { cacheDomain, getCachedEnrichment, putCachedEnrichment } from "@/lib/leadgen/enrich-cache";
 import { isBrancheKey, type BrancheKey } from "@/lib/leadgen/branchen";
 import { firstGermanPhone } from "@/lib/phone/parse-de";
 import type { Lead } from "@/lib/types";
@@ -34,7 +35,13 @@ export async function POST(req: Request) {
     }
     if (!url) throw new AppError("bad_request", "Keine Website zum Anreichern vorhanden.");
 
-    const imp = await scrapeImpressum(url, brancheKey);
+    // Cache zuerst – spart erneutes Scrapen derselben Domain.
+    const domain = cacheDomain(url);
+    let imp = domain ? await getCachedEnrichment(domain) : null;
+    if (!imp) {
+      imp = await scrapeImpressum(url, brancheKey);
+      if (domain) await putCachedEnrichment(domain, imp);
+    }
     const e164 = imp.phone ? firstGermanPhone(imp.phone)?.e164 ?? null : null;
     const ansprechpartner = imp.contactName
       ? imp.contactRole
