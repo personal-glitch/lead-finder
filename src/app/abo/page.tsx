@@ -42,8 +42,12 @@ export default function AboPage() {
           disabled={busy}
           className="mt-6 flex w-full items-center justify-center gap-2 rounded-lg bg-[var(--color-brand)] py-2.5 text-sm font-semibold text-[var(--color-on-brand)] hover:bg-[var(--color-brand-ink)] disabled:opacity-60"
         >
-          {busy ? "…" : <>Jetzt {TRIAL_DAYS} Tage gratis starten <Icon name="chevronRight" size={15} /></>}
+          {busy ? "…" : <>Zahlungspflichtig abonnieren <Icon name="chevronRight" size={15} /></>}
         </button>
+        <p className="mt-2 text-[11px] leading-relaxed text-[var(--color-faint)]">
+          {TRIAL_DAYS} Tage kostenlos, danach 49 €/Monat. Das Abonnement verlängert sich monatlich und ist jederzeit
+          zum Ende des Abrechnungszeitraums kündbar.
+        </p>
         <form action="/auth/signout" method="post" className="mt-4">
           <button type="submit" className="text-xs text-[var(--color-muted)] hover:text-[var(--color-ink)]">Abmelden</button>
         </form>

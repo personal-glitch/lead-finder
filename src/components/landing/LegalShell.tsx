@@ -41,6 +41,7 @@ export function LegalShell({
             <Link href="/agb" className="hover:text-[var(--color-ink)]">AGB</Link>
             <Link href="/widerruf" className="hover:text-[var(--color-ink)]">Widerruf</Link>
             <Link href="/preise" className="hover:text-[var(--color-ink)]">Preise</Link>
+            <Link href="/kuendigung" className="hover:text-[var(--color-ink)]">Verträge hier kündigen</Link>
             <Link href="/kontakt" className="hover:text-[var(--color-ink)]">Kontakt</Link>
           </div>
         </div>

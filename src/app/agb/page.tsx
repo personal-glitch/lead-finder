@@ -97,10 +97,12 @@ export default function AgbPage() {
 
       <H2>§ 11 Änderungen der AGB</H2>
       <P>
-        Der Anbieter kann diese AGB mit Wirkung für die Zukunft ändern, soweit dies sachlich gerechtfertigt ist
-        (z. B. geänderte Rechtslage oder Funktionsumfang). Über Änderungen wird der Nutzer in Textform informiert;
-        widerspricht er nicht innerhalb einer angemessenen Frist bzw. nutzt er den Dienst weiter, gelten die
-        geänderten AGB als angenommen.
+        Änderungen dieser AGB bedürfen der Zustimmung des Nutzers. Der Anbieter bietet Änderungen mindestens
+        30 Tage vor dem geplanten Wirksamwerden in Textform an und weist dabei auf die geplanten Änderungen sowie auf
+        das Zustimmungs- bzw. Kündigungsrecht gesondert hin. Stimmt der Nutzer den Änderungen nicht zu, kann jede
+        Partei den Vertrag zum geplanten Änderungstermin kündigen; bis zur Beendigung gelten die bisherigen
+        Bedingungen fort. Eine Änderung wesentlicher Vertragsbestandteile (insbesondere Preis und Hauptleistung)
+        erfolgt ausschließlich mit ausdrücklicher Zustimmung des Nutzers.
       </P>
 
       <H2>§ 12 Schlussbestimmungen</H2>

@@ -13,6 +13,7 @@ const PUBLIC_PREFIXES = [
   "/agb",
   "/widerruf",
   "/preise",
+  "/kuendigung",
   "/kontakt",
   "/abmelden",
 ];

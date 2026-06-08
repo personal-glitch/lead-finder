@@ -21,7 +21,8 @@ const ERROR_DE: Record<string, string> = {
   "Invalid login credentials": "E-Mail oder Passwort ist falsch.",
   "Email not confirmed": "Bitte bestätige zuerst deine E-Mail-Adresse.",
   "User already registered": "Diese E-Mail ist bereits registriert. Melde dich an.",
-  "Password should be at least 6 characters": "Das Passwort muss mindestens 6 Zeichen haben.",
+  "Password should be at least 6 characters": "Das Passwort muss mindestens 8 Zeichen haben.",
+  "Password should be at least 8 characters": "Das Passwort muss mindestens 8 Zeichen haben.",
 };
 
 export function AuthForm({
@@ -61,8 +62,8 @@ export function AuthForm({
         setError("Bitte alle Felder ausfüllen.");
         return;
       }
-      if (password.length < 6) { setError("Das Passwort muss mindestens 6 Zeichen haben."); return; }
-      if (!consent) { setError("Bitte stimme Datenschutz & AGB zu."); return; }
+      if (password.length < 8) { setError("Das Passwort muss mindestens 8 Zeichen haben."); return; }
+      if (!consent) { setError("Bitte bestätige die Unternehmereigenschaft sowie AGB und Datenschutz."); return; }
     } else if (!email.trim() || !password) {
       setError("Bitte E-Mail und Passwort eingeben.");
       return;
@@ -182,7 +183,7 @@ export function AuthForm({
       {isSignup && (
         <label className="flex cursor-pointer items-start gap-2 text-xs text-[var(--color-muted)]">
           <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-0.5 h-4 w-4 shrink-0 accent-[var(--color-brand)]" />
-          <span>Ich akzeptiere die <Link href="/agb" target="_blank" className="text-[var(--color-brand)] hover:underline">AGB</Link> und die <Link href="/datenschutz" target="_blank" className="text-[var(--color-brand)] hover:underline">Datenschutzerklärung</Link>.</span>
+          <span>Ich handle als Unternehmer (gewerblich oder selbstständig) und akzeptiere die <Link href="/agb" target="_blank" className="text-[var(--color-brand)] hover:underline">AGB</Link> und die <Link href="/datenschutz" target="_blank" className="text-[var(--color-brand)] hover:underline">Datenschutzerklärung</Link>.</span>
         </label>
       )}
 
