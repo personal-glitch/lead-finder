@@ -423,9 +423,12 @@ export default function Landing() {
             <span className="grid h-6 w-6 place-items-center rounded-md bg-[var(--color-brand)] text-[var(--color-on-brand)]"><Icon name="agents" size={13} strokeWidth={2.2} /></span>
             <span>© {new Date().getFullYear()} KundenRadar</span>
           </div>
-          <div className="flex items-center gap-5">
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
             <Link href="/impressum" className="hover:text-[var(--color-ink)]">Impressum</Link>
             <Link href="/datenschutz" className="hover:text-[var(--color-ink)]">Datenschutz</Link>
+            <Link href="/agb" className="hover:text-[var(--color-ink)]">AGB</Link>
+            <Link href="/widerruf" className="hover:text-[var(--color-ink)]">Widerruf</Link>
+            <Link href="/preise" className="hover:text-[var(--color-ink)]">Preise</Link>
             <Link href="/kontakt" className="hover:text-[var(--color-ink)]">Kontakt</Link>
           </div>
         </div>

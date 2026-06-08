@@ -7,7 +7,7 @@ export default function ImpressumPage() {
   return (
     <LegalShell title="Impressum">
       <H2>Angaben gemäß § 5 DDG</H2>
-      <P>Cihan Yildirim &amp; Salih Aygün GbR</P>
+      <P>Seciora GbR i.G. (in Gründung)</P>
       <P>Rathenaustraße 135<br />51373 Leverkusen<br />Deutschland</P>
 
       <H2>Vertreten durch die Gesellschafter</H2>

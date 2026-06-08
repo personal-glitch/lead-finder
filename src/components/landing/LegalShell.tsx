@@ -35,9 +35,12 @@ export function LegalShell({
       <footer className="border-t border-[var(--color-line)]">
         <div className="mx-auto flex max-w-3xl flex-wrap items-center justify-between gap-3 px-6 py-8 text-xs text-[var(--color-muted)]">
           <span>© {new Date().getFullYear()} KundenRadar</span>
-          <div className="flex items-center gap-5">
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
             <Link href="/impressum" className="hover:text-[var(--color-ink)]">Impressum</Link>
             <Link href="/datenschutz" className="hover:text-[var(--color-ink)]">Datenschutz</Link>
+            <Link href="/agb" className="hover:text-[var(--color-ink)]">AGB</Link>
+            <Link href="/widerruf" className="hover:text-[var(--color-ink)]">Widerruf</Link>
+            <Link href="/preise" className="hover:text-[var(--color-ink)]">Preise</Link>
             <Link href="/kontakt" className="hover:text-[var(--color-ink)]">Kontakt</Link>
           </div>
         </div>

@@ -8,8 +8,8 @@ export default function DatenschutzPage() {
     <LegalShell title="Datenschutzerklärung" intro="Wir nehmen den Schutz personenbezogener Daten ernst. Nachfolgend informieren wir über Art, Umfang und Zweck der Verarbeitung.">
       <H2>1. Verantwortlicher</H2>
       <P>
-        Cihan Yildirim &amp; Salih Aygün GbR, Rathenaustraße 135, 51373 Leverkusen ·
-        Telefon: +49 15566 021171 · E-Mail: personal@lupen-rhein.de. Die vollständigen Angaben findest du im{" "}
+        Seciora GbR i.G. (in Gründung), vertreten durch Cihan Yildirim und Salih Aygün, Rathenaustraße 135,
+        51373 Leverkusen · Telefon: +49 15566 021171 · E-Mail: personal@lupen-rhein.de. Die vollständigen Angaben findest du im{" "}
         <a href="/impressum" className="text-[var(--color-brand)] hover:underline">Impressum</a>.
       </P>
 

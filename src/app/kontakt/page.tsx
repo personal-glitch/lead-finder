@@ -12,11 +12,11 @@ export default function KontaktPage() {
         <div className="space-y-4">
           <H2>So erreichst du uns</H2>
           <div className="space-y-2 text-sm text-[var(--color-muted)]">
-            <p className="flex items-center gap-2"><Icon name="mail" size={15} /> [E-Mail-Adresse]</p>
-            <p className="flex items-center gap-2"><Icon name="phone" size={15} /> [Telefonnummer]</p>
-            <p className="flex items-center gap-2"><Icon name="pin" size={15} /> [Straße, PLZ Ort]</p>
+            <p className="flex items-center gap-2"><Icon name="mail" size={15} /> personal@lupen-rhein.de</p>
+            <p className="flex items-center gap-2"><Icon name="phone" size={15} /> +49 15566 021171</p>
+            <p className="flex items-center gap-2"><Icon name="pin" size={15} /> Rathenaustraße 135, 51373 Leverkusen</p>
           </div>
-          <P>Mo–Fr, 9–17 Uhr. Für rechtliche Angaben siehe Impressum.</P>
+          <P>Anbieter: Seciora GbR i.G. (in Gründung). Mo–Fr, 9–17 Uhr. Für rechtliche Angaben siehe <a href="/impressum" className="text-[var(--color-brand)] hover:underline">Impressum</a>.</P>
         </div>
         <ContactForm />
       </div>
