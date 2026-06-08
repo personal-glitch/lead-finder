@@ -3,8 +3,10 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { api } from "@/lib/client";
 import { Icon } from "@/components/icons";
+import { Spinner, Toast } from "@/components/ui";
 
 interface Customer {
+  id: string;
   email: string;
   name: string | null;
   company: string | null;
@@ -36,13 +38,29 @@ export default function AdminPage() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState<string | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
 
-  useEffect(() => {
+  const load = () =>
     api<Stats>("/api/admin/stats")
       .then(setStats)
       .catch((e) => setError(e instanceof Error ? e.message : "Kein Zugriff."))
       .finally(() => setLoading(false));
-  }, []);
+
+  useEffect(() => { load(); }, []);
+
+  const extendTrial = async (ownerId: string, days: number) => {
+    setBusy(ownerId);
+    try {
+      await api("/api/admin/customer", { json: { ownerId, days } });
+      await load();
+      setToast(`Testphase um ${days} Tage verlängert.`);
+    } catch (e) {
+      setToast(e instanceof Error ? e.message : "Verlängern fehlgeschlagen.");
+    } finally {
+      setBusy(null);
+    }
+  };
 
   const cards = stats
     ? [
@@ -99,11 +117,12 @@ export default function AdminPage() {
                     <th className="px-4 py-2.5 font-medium">Status</th>
                     <th className="px-4 py-2.5 font-medium">Registriert</th>
                     <th className="px-4 py-2.5 font-medium">Nächste Zahlung</th>
+                    <th className="px-4 py-2.5 font-medium text-right">Test verlängern</th>
                   </tr>
                 </thead>
                 <tbody>
                   {stats.customers.length === 0 ? (
-                    <tr><td colSpan={7} className="px-4 py-6 text-center text-[var(--color-muted)]">Noch keine Kunden.</td></tr>
+                    <tr><td colSpan={8} className="px-4 py-6 text-center text-[var(--color-muted)]">Noch keine Kunden.</td></tr>
                   ) : stats.customers.map((c) => (
                     <tr key={c.email} className="border-b border-[var(--color-line)] last:border-0">
                       <td className="px-4 py-2.5 font-medium">{c.company ?? "–"}</td>
@@ -113,6 +132,24 @@ export default function AdminPage() {
                       <td className="px-4 py-2.5"><StatusBadge s={c.status} /></td>
                       <td className="px-4 py-2.5 text-[var(--color-muted)] tnum">{fmt(c.createdAt)}</td>
                       <td className="px-4 py-2.5 text-[var(--color-muted)] tnum">{c.status === "canceled" ? "–" : fmt(c.renewsAt)}</td>
+                      <td className="px-4 py-2.5">
+                        <div className="flex items-center justify-end gap-1.5">
+                          {busy === c.id ? (
+                            <Spinner size={14} />
+                          ) : (
+                            [7, 14, 30].map((d) => (
+                              <button
+                                key={d}
+                                onClick={() => extendTrial(c.id, d)}
+                                className="rounded-md border border-[var(--color-line)] px-2 py-1 text-xs text-[var(--color-muted)] hover:border-[var(--color-brand)] hover:text-[var(--color-brand)]"
+                                title={`Testphase um ${d} Tage verlängern`}
+                              >
+                                +{d}d
+                              </button>
+                            ))
+                          )}
+                        </div>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -121,6 +158,7 @@ export default function AdminPage() {
           </>
         ) : null}
       </main>
+      {toast && <Toast message={toast} onClose={() => setToast(null)} />}
     </div>
   );
 }

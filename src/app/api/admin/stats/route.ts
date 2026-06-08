@@ -35,6 +35,7 @@ export async function GET() {
         const st = byOwner.get(u.id);
         const m = (u.user_metadata ?? {}) as Record<string, string>;
         return {
+          id: u.id,
           email: u.email ?? "",
           name: [m.first_name, m.last_name].filter(Boolean).join(" ") || null,
           company: m.company ?? null,
