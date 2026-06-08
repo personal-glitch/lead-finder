@@ -26,6 +26,13 @@ const STANDARD_PATHS = [
   "/kontakt/impressum", "/footer/impressum",
 ];
 
+// Kontakt-/Team-Seiten, auf denen Ansprechpersonen oft stehen (Fallback, wenn
+// das Impressum keinen Namen hergibt).
+const CONTACT_PATHS = [
+  "/kontakt", "/kontakt/", "/team", "/ueber-uns", "/ueber-uns/",
+  "/ansprechpartner", "/unternehmen", "/ueber-mich",
+];
+
 const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 function normalizeUrl(url: string): string | null {
@@ -54,10 +61,14 @@ async function fetchText(url: string, timeoutMs = config.enrich.fetchTimeoutMs):
   }
 }
 
-function findImpressumHref(html: string, base: string): string | null {
-  const m = html.match(/href=["']([^"']*(?:impressum|imprint)[^"']*)["']/i);
+/** Ersten Link finden, dessen href den Suchbegriff (Regex-Alternation) enthält. */
+function findHref(html: string, base: string, pattern: string): string | null {
+  const m = html.match(new RegExp(`href=["']([^"']*(?:${pattern})[^"']*)["']`, "i"));
   if (!m) return null;
   try { return new URL(m[1], base).toString(); } catch { return null; }
+}
+function findImpressumHref(html: string, base: string): string | null {
+  return findHref(html, base, "impressum|imprint");
 }
 
 function isImpressum(html: string, url: string): boolean {
@@ -104,11 +115,26 @@ function cleanName(raw: string): string | null {
   return s;
 }
 
-const GENERIC_FALLBACK = ["Geschäftsführer", "Geschäftsführung", "vertreten durch", "Inhaber", "Praxisinhaber"];
+// Generische Rollen (weibliche/spezifische Form zuerst, damit „…in" nicht
+// fälschlich abgeschnitten wird). Werden nach den branchenspezifischen Tiers
+// versucht; „Kontakt" ganz zuletzt als schwächstes Signal.
+const GENERIC_FALLBACK = [
+  "Ansprechpartnerin", "Ansprechpartner",
+  "Geschäftsführerin", "Geschäftsführer", "Geschäftsführung",
+  "Inhaberin", "Inhaber", "Praxisinhaberin", "Praxisinhaber",
+  "Geschäftsinhaberin", "Geschäftsinhaber",
+  "Eigentümerin", "Eigentümer",
+  "Gesellschafterin", "Gesellschafter",
+  "Niederlassungsleiterin", "Niederlassungsleiter", "Betriebsleiterin", "Betriebsleiter",
+  "vertreten durch",
+];
+
+// Mehrwort-Name (Vor- + Nachname, optional weitere Bestandteile).
+const NAME_CORE = "[A-ZÄÖÜ][\\wäöüß.'-]+(?:\\s+[A-ZÄÖÜ][\\wäöüß.'-]+){1,3}";
 
 /**
- * Wendet die Rollen-Priorität der Branche an: sucht Tier für Tier nach einer
- * Rolle und greift den unmittelbar folgenden Namen ab. Erster Treffer gewinnt.
+ * Wendet die Rollen-Priorität der Branche an. Für jede Rolle werden zwei
+ * Schreibweisen geprüft: „Rolle: Name" und „Name, Rolle". Erster Treffer gewinnt.
  */
 export function findBestContact(
   text: string,
@@ -116,19 +142,19 @@ export function findBestContact(
 ): { name: string; role: string } | null {
   // branche kann auch ein freies Stichwort (Joker) sein → dann nur generische Rollen.
   const def = BRANCHEN[branche as BrancheKey];
-  const tiers = [...(def?.roleTiers ?? []), GENERIC_FALLBACK];
+  const tiers = [...(def?.roleTiers ?? []), GENERIC_FALLBACK, ["Kontakt"]];
   for (const tier of tiers) {
     for (const role of tier) {
-      // Rolle, dann (auf gleicher Zeile oder direkt darunter) ein Name.
-      const re = new RegExp(
-        `${escapeRe(role)}[ \\t:.\\-]*\\n?[ \\t]*([A-ZÄÖÜ][\\wäöüß.\\-' ]{2,80})`,
-        "i",
-      );
-      const m = text.match(re);
-      if (m) {
-        const name = cleanName(m[1]);
-        if (name) return { name, role };
+      const r = escapeRe(role);
+      // (a) Rolle vor dem Namen: „Geschäftsführer: Max Mustermann"
+      let m = text.match(new RegExp(`${r}[ \\t:.\\-–]*\\n?[ \\t]*([A-ZÄÖÜ][\\wäöüß.\\-' ]{2,80})`, "i"));
+      let name = m ? cleanName(m[1]) : null;
+      // (b) Name vor der Rolle: „Max Mustermann, Geschäftsführer" / „… (Inhaber)"
+      if (!name) {
+        const m2 = text.match(new RegExp(`(${NAME_CORE})\\s*[,(\\-–]+\\s*${r}\\b`, "i"));
+        name = m2 ? cleanName(m2[1]) : null;
       }
+      if (name) return { name, role };
     }
   }
   return null;
@@ -166,7 +192,25 @@ export async function scrapeImpressum(
 
   const text = toText(impressum.html);
   const phone = pickBestPhone(extractPhoneNumbers(text))?.normalized ?? null;
-  const contact = findBestContact(text, branche ?? "Büro & Unternehmen");
+  let contact = findBestContact(text, branche ?? "Büro & Unternehmen");
+
+  // Fallback: Ansprechperson steht oft nicht im (rein rechtlichen) Impressum,
+  // sondern auf einer Kontakt-/Team-/Über-uns-Seite. Nur nachladen, wenn nötig.
+  if (!contact) {
+    const more: string[] = [];
+    if (home) {
+      const h = findHref(home, base, "kontakt|team|ueber-uns|über-uns|ansprechpartner|unternehmen");
+      if (h) more.push(h);
+    }
+    for (const p of CONTACT_PATHS) more.push(origin + p);
+    const extra = [...new Set(more)].filter((u) => u !== impressum.url).slice(0, 3);
+    const extraPages = await Promise.all(extra.map((u) => fetchText(u)));
+    for (const h of extraPages) {
+      if (!h) continue;
+      const c = findBestContact(toText(h), branche ?? "Büro & Unternehmen");
+      if (c) { contact = c; break; }
+    }
+  }
 
   return {
     impressumUrl: impressum.url,
