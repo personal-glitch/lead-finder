@@ -36,6 +36,9 @@ export async function POST() {
       line_items: [{ price: config.stripe.priceId!, quantity: 1 }],
       success_url: `${config.appUrl}/dashboard?abo=ok`,
       cancel_url: `${config.appUrl}/abo?abo=abbruch`,
+      // ownerId auch auf Session-Ebene, damit checkout.session.completed zuordnen kann.
+      metadata: { ownerId },
+      client_reference_id: ownerId,
       // Gratis-Testphase; Zahlungsmethode wird trotzdem hinterlegt (= Anti-Missbrauch).
       // Zahlarten (Karte, PayPal, …) steuerst du im Stripe-Dashboard – Checkout zeigt sie automatisch.
       subscription_data: { metadata: { ownerId }, trial_period_days: TRIAL_DAYS },

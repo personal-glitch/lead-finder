@@ -21,7 +21,15 @@ export default async function AppGroupLayout({ children }: { children: React.Rea
     if (config.stripe.enabled && !isAdmin) {
       const { getStore } = await import("@/lib/db");
       const s = await getStore().getSettings(user.id);
-      if (!["active", "trialing"].includes(s.subscriptionStatus ?? "")) redirect("/abo");
+      let ok = ["active", "trialing"].includes(s.subscriptionStatus ?? "");
+      // Fällt Supabase (noch) negativ aus, direkt beim Zahlungsdienstleister prüfen –
+      // so sperrt ein verzögerter/fehlerhafter Webhook keinen echten Abonnenten aus.
+      if (!ok) {
+        const { verifyAndSyncSubscription } = await import("@/lib/billing/access");
+        const status = await verifyAndSyncSubscription(user.id, user.email ?? undefined, s.stripeCustomerId ?? null);
+        ok = ["active", "trialing"].includes(status ?? "");
+      }
+      if (!ok) redirect("/abo");
     }
   }
   return <AppShell flags={featureFlags()}>{children}</AppShell>;
