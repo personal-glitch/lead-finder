@@ -5,7 +5,6 @@ import { Icon, type IconName } from "@/components/icons";
 import { PLANS } from "@/lib/plans";
 import { config } from "@/lib/config";
 import { ALLE_BRANCHEN, BRANCHEN_KATEGORIEN } from "@/lib/leadgen/branchen-catalog";
-import { HeroPreview } from "@/components/landing/HeroPreview";
 import { Kalkulator } from "@/components/Kalkulator";
 import { ExplainerVideo } from "@/components/landing/ExplainerVideo";
 import { StatStrip, Reveal } from "@/components/landing/anim";
@@ -171,19 +170,32 @@ export default function Landing() {
       </header>
 
       {/* Hero */}
-      <section className="mx-auto grid max-w-6xl items-center gap-12 px-6 py-16 lg:grid-cols-2 lg:py-24">
-        <div>
+      <section id="kalkulator" className="mx-auto grid max-w-6xl items-start gap-10 px-6 py-14 lg:grid-cols-2 lg:py-20">
+        <div className="lg:pt-6">
           <div className="flex flex-wrap items-center gap-2">
             <span className="eyebrow rounded-full border border-[var(--color-line-strong)] px-3 py-1">Für Dienstleister</span>
             <span className="rounded-full border border-[var(--color-brand)]/40 bg-[var(--color-brand-tint)]/40 px-3 py-1 text-xs font-medium text-[var(--color-brand)]">{BRANCHEN_N}+ Branchen</span>
           </div>
+          {/* Painpoint → Lösung */}
           <h1 className="mt-5 text-4xl font-semibold leading-[1.1] tracking-[-0.02em] sm:text-5xl">
-            Dein kompletter Vertrieb – in <span className="text-[var(--color-brand)]">einem Tool</span>.
+            Neue Kunden finden – <span className="text-[var(--color-brand)]">ohne stundenlanges Googeln</span>.
           </h1>
           <p className="mt-5 max-w-xl text-lg text-[var(--color-muted)]">
-            Finde anrufbare Firmen mit Telefon & Ansprechpartner, arbeite sie in Pipeline, Anrufen und Aufgaben ab –
-            Schluss mit Excel, Google-Suche und Zettelwirtschaft.
+            KundenRadar liefert dir anrufbare Firmen mit Telefon & Ansprechpartner und bündelt Pipeline, Anrufe,
+            Aufgaben & E-Mail in einem Tool.
           </p>
+          {/* Benefit */}
+          <ul className="mt-6 space-y-2.5">
+            {[
+              "Echte Durchwahlen & Ansprechpartner – keine Karteileichen",
+              "Pipeline, Anrufe, Aufgaben & E-Mail an einem Ort",
+              "Gratis-Preisrechner inklusive – gleich hier testen",
+            ].map((b) => (
+              <li key={b} className="flex items-start gap-2 text-sm text-[var(--color-ink-2)]">
+                <span className="mt-0.5 shrink-0 text-[var(--color-brand)]"><Icon name="check" size={16} /></span>{b}
+              </li>
+            ))}
+          </ul>
           <div className="mt-7 flex flex-wrap items-center gap-3">
             <Link href={signupHref} className="inline-flex items-center gap-2 rounded-lg bg-[var(--color-brand)] px-5 py-3 text-sm font-semibold text-[var(--color-on-brand)] shadow-[0_0_0_1px_rgba(168,232,58,0.25),0_8px_24px_-6px_rgba(168,232,58,0.5)] transition-transform hover:-translate-y-0.5 hover:bg-[var(--color-brand-ink)]">
               Kostenlos starten <Icon name="chevronRight" size={16} />
@@ -194,8 +206,12 @@ export default function Landing() {
           </div>
           <p className="mt-4 text-xs text-[var(--color-faint)]">Keine Kreditkarte · DSGVO-konform · Daten aus öffentlichen Quellen</p>
         </div>
-        <div className="flex justify-center lg:justify-end">
-          <HeroPreview />
+        {/* Interaktiver Köder direkt im Hero */}
+        <div>
+          <div className="mb-2 flex items-center gap-1.5 text-xs font-medium text-[var(--color-brand)]">
+            <Icon name="calculator" size={14} /> Gratis-Rechner – sofort testen
+          </div>
+          <Kalkulator teaser compact />
         </div>
       </section>
 
@@ -209,20 +225,6 @@ export default function Landing() {
       </section>
 
       <StatStrip />
-
-      {/* Interaktiver Kalkulator – direkt ausprobieren (Köder) */}
-      <section id="kalkulator" className="mx-auto max-w-6xl px-6 py-16 sm:py-20">
-        <div className="text-center">
-          <span className="eyebrow rounded-full border border-[var(--color-line-strong)] px-3 py-1">Gratis-Rechner</span>
-          <h2 className="mx-auto mt-4 max-w-2xl text-3xl font-semibold tracking-[-0.02em] sm:text-4xl">Was solltest du verlangen?</h2>
-          <p className="mx-auto mt-3 max-w-xl text-[var(--color-muted)]">
-            Angebotspreis, Stundenverrechnungssatz & Marge für Reinigung, Handwerk oder Dienstleistung – direkt hier ausrechnen.
-          </p>
-        </div>
-        <div className="mt-8">
-          <Kalkulator teaser />
-        </div>
-      </section>
 
       {/* Vorher / Nachher */}
       <section className="mx-auto max-w-6xl px-6 py-16">

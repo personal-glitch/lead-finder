@@ -58,7 +58,7 @@ const DEF_R = { flaecheM2: 500, reinigungsart: "unterhalt", objektart: "buero", 
 const DEF_H = { gewerk: "elektro", lohnProStd: 28, gemein: "mittel", region: "schnitt", gewinnProzent: 10 };
 const DEF_A = { disziplin: "web", senior: "mid", abrechnung: "stunde", zielJahresgewinn: 60000, abrechenbareStundenProMonat: 120, auslastungProzent: 65, gemeinkostenProMonat: 2500 };
 
-export function Kalkulator({ teaser = false }: { teaser?: boolean }) {
+export function Kalkulator({ teaser = false, compact = false }: { teaser?: boolean; compact?: boolean }) {
   const [modus, setModus] = useState<KalkModus>("reinigung");
   const [r, setR] = useState(DEF_R);
   const [h, setH] = useState(DEF_H);
@@ -129,7 +129,7 @@ export function Kalkulator({ teaser = false }: { teaser?: boolean }) {
   }, [modus, r, h, a]);
 
   return (
-    <div className="grid gap-5 lg:grid-cols-[1fr_380px]">
+    <div className={cx(compact ? "space-y-4" : "grid gap-5 lg:grid-cols-[1fr_380px]")}>
       <Card className="space-y-4 p-5">
         {/* Modus */}
         <div className="grid grid-cols-3 gap-2">
