@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { Icon, type IconName } from "@/components/icons";
 import { Card, cx } from "@/components/ui";
+import { ReinigungWizard } from "@/components/ReinigungWizard";
 import {
   calcReinigung, calcHandwerk, calcAgentur, eur, type KalkModus,
   LEISTUNGEN, REINIGUNG_ABRECHNUNG, VERSCHMUTZUNG, LOHNBASIS, FREQUENZEN,
@@ -99,6 +100,7 @@ export function Kalkulator({ teaser = false, compact = false, defaultModus }: { 
   const [adv, setAdv] = useState(false);
   const [brutto, setBrutto] = useState(false);
   const [showFormel, setShowFormel] = useState(false);
+  const [gefuehrt, setGefuehrt] = useState(teaser);
   const money = (n: number) => eur(brutto ? n * 1.19 : n);
   const updatePos = (idx: number, patch: Partial<{ leistung: string; flaeche: number; anzahl: number }>) =>
     setR((s) => ({ ...s, positionen: s.positionen.map((p, i) => (i === idx ? { ...p, ...patch } : p)) }));
@@ -195,21 +197,31 @@ export function Kalkulator({ teaser = false, compact = false, defaultModus }: { 
   }, [modus, r, h, a, brutto]);
 
   return (
-    <div className={cx(compact ? "space-y-4" : "grid gap-5 lg:grid-cols-[1fr_380px]")}>
-      <Card className="space-y-4 p-5">
-        {/* Modus */}
-        <div className="grid grid-cols-3 gap-2">
-          {MODI.map((m) => (
-            <button key={m.key} type="button" onClick={() => setModus(m.key)}
-              className={cx("flex flex-col items-center gap-1.5 rounded-xl border px-2 py-3 text-center text-xs font-medium transition-colors",
-                modus === m.key ? "border-[var(--color-brand)] bg-[var(--color-brand-tint)] text-[var(--color-brand)]" : "border-[var(--color-line)] text-[var(--color-ink-2)] hover:bg-[var(--color-subtle)]")}>
-              <Icon name={m.icon} size={20} strokeWidth={modus === m.key ? 2 : 1.6} />
-              {m.label}
-            </button>
-          ))}
-        </div>
+    <div className="space-y-4">
+      {/* Modus */}
+      <div className="grid grid-cols-3 gap-2">
+        {MODI.map((m) => (
+          <button key={m.key} type="button" onClick={() => setModus(m.key)}
+            className={cx("flex flex-col items-center gap-1.5 rounded-xl border px-2 py-3 text-center text-xs font-medium transition-colors",
+              modus === m.key ? "border-[var(--color-brand)] bg-[var(--color-brand-tint)] text-[var(--color-brand)]" : "border-[var(--color-line)] text-[var(--color-ink-2)] hover:bg-[var(--color-subtle)]")}>
+            <Icon name={m.icon} size={20} strokeWidth={modus === m.key ? 2 : 1.6} />
+            {m.label}
+          </button>
+        ))}
+      </div>
 
-        {/* Netto / Brutto */}
+      {modus === "reinigung" && (
+        <div className="flex justify-center">
+          <Seg options={[{ key: "gefuehrt", label: "🪄 Geführt" }, { key: "profi", label: "⚙ Profi-Rechner" }]} value={gefuehrt ? "gefuehrt" : "profi"} onChange={(v) => setGefuehrt(v === "gefuehrt")} />
+        </div>
+      )}
+
+      {modus === "reinigung" && gefuehrt ? (
+        <ReinigungWizard teaser={teaser} />
+      ) : (
+      <div className={cx(compact ? "space-y-4" : "grid gap-5 lg:grid-cols-[1fr_380px]")}>
+        <Card className="space-y-4 p-5">
+          {/* Netto / Brutto */}
         <div className="flex items-center justify-between gap-2">
           <span className="text-xs text-[var(--color-muted)]">Preisanzeige</span>
           <Seg options={[{ key: "netto", label: "netto" }, { key: "brutto", label: "inkl. 19 % MwSt" }]} value={brutto ? "brutto" : "netto"} onChange={(v) => setBrutto(v === "brutto")} />
@@ -378,7 +390,9 @@ export function Kalkulator({ teaser = false, compact = false, defaultModus }: { 
         ) : (
           <p className="px-1 text-[11px] text-[var(--color-faint)]">Richtwerte (u. a. Tariflohn 2026, RAL-Flächenleistungen) – ersetzt keine individuelle Kalkulation. Ohne Gewähr.</p>
         )}
+        </div>
       </div>
+      )}
     </div>
   );
 }
