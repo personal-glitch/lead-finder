@@ -13,7 +13,7 @@ export default function Page() {
       modus="reinigung"
       eyebrow="Gebäudereinigung · Gratis-Rechner"
       h1="Reinigungskosten berechnen – Angebotspreis pro Einsatz & m²"
-      intro="Reinigungsart, Objektart und Fläche wählen – und du siehst sofort einen realistischen Angebotspreis pro Einsatz, pro Monat und pro Quadratmeter. Basierend auf dem Tariflohn 2026 und RAL-Flächenleistungen."
+      intro="Mehrere Flächen erfassen – Büro, Treppenhaus, Sanitär, Fenster & Rahmen, Glas und mehr – Häufigkeit wählen und sofort einen realistischen Angebotspreis pro Einsatz, pro Monat und pro m² sehen. Wahlweise kalkuliert (Stundenverrechnungssatz) oder als Pauschalpreis. Basis: Tariflohn 2026 und RAL-Flächenleistungen."
       content={[
         { title: "So berechnest du den Reinigungspreis", text: "Die Grundformel lautet: Fläche ÷ Flächenleistung (m²/h) = benötigte Stunden. Diese Stunden multiplizierst du mit deinem Selbstkosten-Stundensatz (Lohn plus Lohnnebenkosten und Gemeinkosten), addierst Anfahrt und Material und schlägst deine Gewinnmarge auf. Der Rechner macht das automatisch und zeigt zusätzlich den Preis pro m² – die übliche Vergleichsgröße bei Ausschreibungen." },
         { title: "Tariflohn & Flächenleistung als Basis", text: "Seit 1. Januar 2026 gilt in der Gebäudereinigung ein Branchen-Mindestlohn von 15,00 €/h (Lohngruppe 1), für Glas- und Fassadenreinigung 18,40 €/h (Lohngruppe 6). Die Flächenleistung hängt stark von Objektart und Verschmutzung ab – Büroflächen lassen sich schneller reinigen als Sanitärbereiche. Der Rechner nutzt dafür Richtwerte der RAL-Gütegemeinschaft." },

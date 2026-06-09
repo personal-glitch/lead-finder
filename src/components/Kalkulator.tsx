@@ -5,7 +5,7 @@ import { Icon, type IconName } from "@/components/icons";
 import { Card, cx } from "@/components/ui";
 import {
   calcReinigung, calcHandwerk, calcAgentur, eur, type KalkModus,
-  REINIGUNGSARTEN, OBJEKTARTEN, VERSCHMUTZUNG, LOHNBASIS, FREQUENZEN,
+  LEISTUNGEN, REINIGUNG_ABRECHNUNG, VERSCHMUTZUNG, LOHNBASIS, FREQUENZEN,
   GEWERKE, HANDWERK_GEMEINKOSTEN, HANDWERK_REGION,
   DISZIPLINEN, SENIORITAET, ABRECHNUNG,
 } from "@/lib/kalkulator";
@@ -80,7 +80,14 @@ const FORMEL: Record<KalkModus, string> = {
   agentur: "Empfehlung aus Marktspanne (Disziplin × Erfahrung). „Nötig fürs Ziel“ = (Jahresziel ÷ 12 + Fixkosten) ÷ effektiv fakturierbare Stunden.",
 };
 
-const DEF_R = { flaecheM2: 500, reinigungsart: "unterhalt", objektart: "buero", verschmutzung: "mittel", lohnbasis: "tarif1", eigenerLohn: 18, zuschlagProzent: 70, margeProzent: 15, frequenz: "w5", anfahrtProEinsatz: 0, materialProEinsatz: 0 };
+const DEF_R = {
+  positionen: [
+    { leistung: "unterhalt_buero", flaeche: 300, anzahl: 1 },
+    { leistung: "sanitaer", flaeche: 30, anzahl: 1 },
+  ],
+  verschmutzung: "mittel", lohnbasis: "tarif1", eigenerLohn: 18, zuschlagProzent: 70, margeProzent: 15,
+  frequenz: "w5", anfahrtProEinsatz: 0, materialProEinsatz: 0, abrechnung: "kalk", pauschalPreis: 0,
+};
 const DEF_H = { gewerk: "elektro", lohnProStd: 28, gemein: "mittel", region: "schnitt", gewinnProzent: 10 };
 const DEF_A = { disziplin: "web", senior: "mid", abrechnung: "stunde", zielJahresgewinn: 60000, abrechenbareStundenProMonat: 120, auslastungProzent: 65, gemeinkostenProMonat: 2500 };
 
@@ -93,36 +100,57 @@ export function Kalkulator({ teaser = false, compact = false, defaultModus }: { 
   const [brutto, setBrutto] = useState(false);
   const [showFormel, setShowFormel] = useState(false);
   const money = (n: number) => eur(brutto ? n * 1.19 : n);
+  const updatePos = (idx: number, patch: Partial<{ leistung: string; flaeche: number; anzahl: number }>) =>
+    setR((s) => ({ ...s, positionen: s.positionen.map((p, i) => (i === idx ? { ...p, ...patch } : p)) }));
+  const addPos = () => setR((s) => ({ ...s, positionen: [...s.positionen, { leistung: "unterhalt_buero", flaeche: 100, anzahl: 1 }] }));
+  const removePos = (idx: number) => setR((s) => ({ ...s, positionen: s.positionen.filter((_, i) => i !== idx) }));
 
   const out = useMemo(() => {
     const m = (n: number) => eur(brutto ? n * 1.19 : n);
     const mwst = brutto ? " (brutto)" : " (netto)";
     if (modus === "reinigung") {
-      const ra = REINIGUNGSARTEN.find((x) => x.key === r.reinigungsart) ?? REINIGUNGSARTEN[0];
-      const oa = OBJEKTARTEN.find((x) => x.key === r.objektart) ?? OBJEKTARTEN[0];
       const vs = VERSCHMUTZUNG.find((x) => x.key === r.verschmutzung) ?? VERSCHMUTZUNG[1];
       const lb = LOHNBASIS.find((x) => x.key === r.lohnbasis) ?? LOHNBASIS[0];
       const fr = FREQUENZEN.find((x) => x.key === r.frequenz) ?? FREQUENZEN[0];
       const lohn = lb.lohn ?? r.eigenerLohn;
+      const pauschal = r.abrechnung === "pauschal";
+      const positionen = r.positionen.map((p) => {
+        const L = LEISTUNGEN.find((x) => x.key === p.leistung) ?? LEISTUNGEN[0];
+        return { leistungM2h: L.leistung, flaeche: p.flaeche, anzahl: p.anzahl, marktMin: L.marktMin, marktMax: L.marktMax };
+      });
       const res = calcReinigung({
-        flaecheM2: r.flaecheM2, objektLeistung: oa.leistung, reinigungsartFactor: ra.factor, verschmutzungFactor: vs.factor,
-        lohnProStd: lohn, zuschlagProzent: r.zuschlagProzent, margeProzent: r.margeProzent,
-        einsaetzeProWoche: fr.proWoche, anfahrtProEinsatz: r.anfahrtProEinsatz, materialProEinsatz: r.materialProEinsatz,
-        marktMinM2: ra.marktMinM2, marktMaxM2: ra.marktMaxM2,
+        positionen, verschmutzungFactor: vs.factor, lohnProStd: lohn, zuschlagProzent: r.zuschlagProzent,
+        margeProzent: r.margeProzent, einsaetzeProWoche: fr.proWoche, anfahrtProEinsatz: r.anfahrtProEinsatz,
+        materialProEinsatz: r.materialProEinsatz, pauschal, pauschalPreis: r.pauschalPreis,
       });
       return {
-        headline: { label: `Angebotspreis pro Einsatz${mwst}`, value: `${m(res.preisMin)} – ${m(res.preisMax)}` },
+        headline: {
+          label: `${pauschal ? "Pauschalpreis" : "Angebotspreis"} pro Einsatz${mwst}`,
+          value: pauschal ? m(res.preisProEinsatz) : `${m(res.preisMin)} – ${m(res.preisMax)}`,
+        },
         sub: `${m(res.preisProM2)} / m² · ≈ ${m(res.preisProMonat)} / Monat`,
         hint: `Marktüblich ${m(res.marktMin)}–${m(res.marktMax)} / m² je Reinigung`,
         gauge: { min: res.marktMin, max: res.marktMax, value: res.preisProM2, unit: "/m²" },
-        warn: lohn < 15 ? `Achtung: ${eur(lohn)}/h liegt unter dem Tariflohn 2026 (15,00 €).` : null,
-        breakdown: [
-          { label: "Arbeitszeit pro Einsatz", value: `${res.stundenProEinsatz} h` },
-          { label: "Flächenleistung", value: `${res.leistung} m²/h` },
-          { label: "Selbstkosten je Stunde", value: m(res.selbstkostenProStd) },
-          { label: "Kosten pro Einsatz", value: m(res.kostenProEinsatz) },
-          { label: "Pro Jahr", value: m(res.preisProJahr) },
-        ],
+        warn: lohn < 15
+          ? `Achtung: ${eur(lohn)}/h liegt unter dem Tariflohn 2026 (15,00 €).`
+          : pauschal && res.impliedMarge < 0
+          ? `Achtung: dein Pauschalpreis liegt unter den Kosten (${eur(res.kostenProEinsatz)}).`
+          : null,
+        breakdown: pauschal
+          ? [
+              { label: "Gesamtfläche", value: `${res.totalFlaeche} m²` },
+              { label: "Arbeitszeit gesamt", value: `${res.totalStunden} h` },
+              { label: "Kosten pro Einsatz", value: m(res.kostenProEinsatz) },
+              { label: "Daraus Stundensatz", value: `${m(res.impliedStundensatz)} / h` },
+              { label: "Deine Marge", value: `${res.impliedMarge} %` },
+            ]
+          : [
+              { label: "Gesamtfläche", value: `${res.totalFlaeche} m²` },
+              { label: "Arbeitszeit gesamt", value: `${res.totalStunden} h` },
+              { label: "Selbstkosten je Stunde", value: m(res.selbstkostenProStd) },
+              { label: "Kosten pro Einsatz", value: m(res.kostenProEinsatz) },
+              { label: "Pro Jahr", value: m(res.preisProJahr) },
+            ],
       };
     }
     if (modus === "handwerk") {
@@ -189,15 +217,44 @@ export function Kalkulator({ teaser = false, compact = false, defaultModus }: { 
 
         {modus === "reinigung" && (
           <div className="space-y-3.5">
-            <Field label="Reinigungsart"><Seg options={REINIGUNGSARTEN} value={r.reinigungsart} onChange={(v) => setR({ ...r, reinigungsart: v })} /></Field>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <Field label="Objektart"><Drop options={OBJEKTARTEN} value={r.objektart} onChange={(v) => setR({ ...r, objektart: v })} /></Field>
-              <Num label="Fläche" value={r.flaecheM2} onChange={(v) => setR({ ...r, flaecheM2: v })} suffix="m²" step={10} />
+            <Field label="Abrechnung"><Seg options={REINIGUNG_ABRECHNUNG} value={r.abrechnung} onChange={(v) => setR({ ...r, abrechnung: v })} /></Field>
+
+            <div className="space-y-2">
+              <span className="block text-xs text-[var(--color-muted)]">Flächen / Positionen</span>
+              {r.positionen.map((p, idx) => (
+                <div key={idx} className="space-y-2 rounded-lg border border-[var(--color-line)] p-2.5">
+                  <Drop options={LEISTUNGEN} value={p.leistung} onChange={(v) => updatePos(idx, { leistung: v })} />
+                  <div className="flex items-center gap-2">
+                    <div className="flex flex-1 items-center rounded-lg border border-[var(--color-line-strong)] bg-[var(--color-surface)] focus-within:border-[var(--color-brand)]">
+                      <input type="number" min={0} step={10} value={Number.isFinite(p.flaeche) ? p.flaeche : ""} onChange={(e) => updatePos(idx, { flaeche: e.target.value === "" ? 0 : Number(e.target.value) })}
+                        className="w-full bg-transparent px-2.5 py-2 text-sm outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none" />
+                      <span className="px-2 text-xs text-[var(--color-muted)]">m²</span>
+                    </div>
+                    <span className="text-xs text-[var(--color-muted)]">×</span>
+                    <div className="flex w-20 items-center rounded-lg border border-[var(--color-line-strong)] bg-[var(--color-surface)] focus-within:border-[var(--color-brand)]">
+                      <input type="number" min={1} step={1} value={Number.isFinite(p.anzahl) ? p.anzahl : ""} onChange={(e) => updatePos(idx, { anzahl: e.target.value === "" ? 1 : Number(e.target.value) })}
+                        className="w-full bg-transparent px-2.5 py-2 text-sm outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none" />
+                    </div>
+                    {r.positionen.length > 1 && (
+                      <button type="button" onClick={() => removePos(idx)} aria-label="Position entfernen"
+                        className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-[var(--color-muted)] hover:bg-[var(--color-subtle)] hover:text-[var(--color-danger)]">
+                        <Icon name="trash" size={15} />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+              <button type="button" onClick={addPos} className="inline-flex items-center gap-1.5 text-xs font-medium text-[var(--color-brand)] hover:underline">
+                <Icon name="plus" size={13} /> Fläche / Raum hinzufügen
+              </button>
+              <p className="text-[11px] text-[var(--color-faint)]">„×" = Anzahl gleicher Räume (z. B. 5 Büros × 25 m²).</p>
             </div>
+
             <Field label="Verschmutzungsgrad"><Seg options={VERSCHMUTZUNG} value={r.verschmutzung} onChange={(v) => setR({ ...r, verschmutzung: v })} /></Field>
             <Field label="Häufigkeit"><Seg options={FREQUENZEN} value={r.frequenz} onChange={(v) => setR({ ...r, frequenz: v })} /></Field>
             <Field label="Lohnbasis"><Seg options={LOHNBASIS} value={r.lohnbasis} onChange={(v) => setR({ ...r, lohnbasis: v })} /></Field>
             {r.lohnbasis === "eigen" && <Num label="Eigener Stundenlohn" value={r.eigenerLohn} onChange={(v) => setR({ ...r, eigenerLohn: v })} suffix="€/h" />}
+            {r.abrechnung === "pauschal" && <Num label="Dein Pauschalpreis pro Einsatz" value={r.pauschalPreis} onChange={(v) => setR({ ...r, pauschalPreis: v })} suffix="€" step={5} />}
             {out.warn && <p className="rounded-lg bg-[var(--color-warn-tint)] px-3 py-2 text-xs text-[var(--color-warn)]">⚠ {out.warn}</p>}
 
             <button type="button" onClick={() => setAdv(!adv)} className="inline-flex items-center gap-1 text-xs font-medium text-[var(--color-muted)] hover:text-[var(--color-ink)]">

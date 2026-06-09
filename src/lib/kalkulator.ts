@@ -15,22 +15,25 @@ const clampNum = (n: unknown, fallback = 0) => {
 // ───────────────────────── Gebäudereinigung ─────────────────────────
 // Auswahllisten (klickbar im UI). Flächenleistung = Richtwert m²/h bei mittlerer
 // Verschmutzung; wird mit Reinigungsart- und Verschmutzungsfaktor verrechnet.
-export const REINIGUNGSARTEN = [
-  { key: "unterhalt", label: "Unterhaltsreinigung", factor: 1.0, marktMinM2: 0.2, marktMaxM2: 0.5 },
-  { key: "grund", label: "Grundreinigung", factor: 0.38, marktMinM2: 1.5, marktMaxM2: 4.0 },
-  { key: "glas", label: "Glas & Fassade", factor: 0.45, marktMinM2: 0.8, marktMaxM2: 2.5 },
-  { key: "bauend", label: "Bauend-/Baustellenreinigung", factor: 0.5, marktMinM2: 1.0, marktMaxM2: 3.0 },
+// Leistungs-Katalog: jede Position hat eine Flächenleistung (m²/h bei mittlerer
+// Verschmutzung) und eine marktübliche €/m²-Spanne je Reinigung.
+export const LEISTUNGEN = [
+  { key: "unterhalt_buero", label: "Unterhaltsreinigung · Büro", leistung: 200, marktMin: 0.2, marktMax: 0.45 },
+  { key: "unterhalt_praxis", label: "Unterhaltsreinigung · Praxis/Kanzlei", leistung: 170, marktMin: 0.25, marktMax: 0.55 },
+  { key: "unterhalt_schule", label: "Unterhaltsreinigung · Schule/Kita", leistung: 180, marktMin: 0.2, marktMax: 0.5 },
+  { key: "treppenhaus", label: "Treppenhausreinigung", leistung: 220, marktMin: 0.15, marktMax: 0.4 },
+  { key: "sanitaer", label: "Sanitärreinigung", leistung: 90, marktMin: 0.4, marktMax: 1.0 },
+  { key: "fenster", label: "Fenster- & Rahmenreinigung", leistung: 70, marktMin: 0.8, marktMax: 2.5 },
+  { key: "glas_fassade", label: "Glas-/Fassadenreinigung", leistung: 80, marktMin: 0.8, marktMax: 2.5 },
+  { key: "verkauf", label: "Verkaufsfläche / Laden", leistung: 230, marktMin: 0.2, marktMax: 0.5 },
+  { key: "industrie", label: "Industrie- / Hallenreinigung", leistung: 300, marktMin: 0.1, marktMax: 0.35 },
+  { key: "grund", label: "Grundreinigung (einmalig)", leistung: 70, marktMin: 1.5, marktMax: 4.0 },
+  { key: "bauend", label: "Bauend-/Baustellenreinigung", leistung: 90, marktMin: 1.0, marktMax: 3.0 },
 ] as const;
 
-export const OBJEKTARTEN = [
-  { key: "buero", label: "Büro", leistung: 200 },
-  { key: "praxis", label: "Praxis / Kanzlei", leistung: 170 },
-  { key: "treppenhaus", label: "Treppenhaus / Wohnhaus", leistung: 220 },
-  { key: "schule", label: "Schule / Kita", leistung: 180 },
-  { key: "laden", label: "Verkaufsfläche / Laden", leistung: 230 },
-  { key: "industrie", label: "Industrie / Halle", leistung: 300 },
-  { key: "sanitaer", label: "Sanitärbereich", leistung: 90 },
-  { key: "fitness", label: "Fitness / Studio", leistung: 200 },
+export const REINIGUNG_ABRECHNUNG = [
+  { key: "kalk", label: "Kalkuliert (SVS)" },
+  { key: "pauschal", label: "Pauschalpreis" },
 ] as const;
 
 export const VERSCHMUTZUNG = [
@@ -54,39 +57,49 @@ export const FREQUENZEN = [
   { key: "m1", label: "1×/Monat", proWoche: 0.23 },
 ] as const;
 
+export interface ReinigungPosition { leistungM2h: number; flaeche: number; anzahl: number; marktMin: number; marktMax: number }
 export interface ReinigungInput {
-  flaecheM2: number;
-  objektLeistung: number;      // m²/h Basis (aus Objektart)
-  reinigungsartFactor: number; // aus Reinigungsart
-  verschmutzungFactor: number; // aus Verschmutzung
-  lohnProStd: number;          // Lohnbasis (€/h)
-  zuschlagProzent: number;     // Lohnnebenkosten + Gemeinkosten %
-  margeProzent: number;        // Gewinnaufschlag %
+  positionen: ReinigungPosition[];
+  verschmutzungFactor: number;
+  lohnProStd: number;
+  zuschlagProzent: number;
+  margeProzent: number;
   einsaetzeProWoche: number;
   anfahrtProEinsatz: number;
   materialProEinsatz: number;
-  marktMinM2: number;          // Marktspanne €/m² je Reinigung (aus Reinigungsart)
-  marktMaxM2: number;
+  pauschal: boolean;
+  pauschalPreis: number; // Pauschalpreis pro Einsatz (nur wenn pauschal)
 }
 export interface ReinigungResult {
-  leistung: number; stundenProEinsatz: number; selbstkostenProStd: number;
+  totalFlaeche: number; totalStunden: number; selbstkostenProStd: number;
   kostenProEinsatz: number; preisProEinsatz: number; preisMin: number; preisMax: number;
   preisProMonat: number; preisProJahr: number; preisProM2: number;
   marktMin: number; marktMax: number;
+  impliedMarge: number; impliedStundensatz: number; pauschal: boolean;
 }
 export function calcReinigung(i: ReinigungInput): ReinigungResult {
-  const flaeche = clampNum(i.flaecheM2);
-  const leistung = Math.max(10, clampNum(i.objektLeistung, 200) * clampNum(i.reinigungsartFactor, 1) * clampNum(i.verschmutzungFactor, 1));
-  const stundenProEinsatz = flaeche / leistung;
+  const vf = clampNum(i.verschmutzungFactor, 1) || 1;
+  let totalFlaeche = 0, totalStunden = 0, marktMinSum = 0, marktMaxSum = 0;
+  for (const p of i.positionen ?? []) {
+    const fl = clampNum(p.flaeche) * Math.max(1, clampNum(p.anzahl, 1));
+    const leistung = Math.max(10, clampNum(p.leistungM2h, 200) * vf);
+    totalFlaeche += fl;
+    totalStunden += fl / leistung;
+    marktMinSum += fl * clampNum(p.marktMin);
+    marktMaxSum += fl * clampNum(p.marktMax);
+  }
   const lohn = clampNum(i.lohnProStd, 15);
   const selbstkostenProStd = lohn * (1 + clampNum(i.zuschlagProzent, 70) / 100);
-  const kostenProEinsatz = stundenProEinsatz * selbstkostenProStd + clampNum(i.anfahrtProEinsatz) + clampNum(i.materialProEinsatz);
-  const preisProEinsatz = kostenProEinsatz * (1 + clampNum(i.margeProzent, 15) / 100);
+  const kostenProEinsatz = totalStunden * selbstkostenProStd + clampNum(i.anfahrtProEinsatz) + clampNum(i.materialProEinsatz);
+  const kalkPreis = kostenProEinsatz * (1 + clampNum(i.margeProzent, 15) / 100);
+  const preisProEinsatz = i.pauschal ? clampNum(i.pauschalPreis) : kalkPreis;
   const einsaetze = clampNum(i.einsaetzeProWoche, 5);
   const preisProMonat = preisProEinsatz * einsaetze * 4.33;
+  const impliedMarge = kostenProEinsatz > 0 ? ((preisProEinsatz - kostenProEinsatz) / kostenProEinsatz) * 100 : 0;
+  const impliedStundensatz = totalStunden > 0 ? preisProEinsatz / totalStunden : 0;
   return {
-    leistung: round2(leistung),
-    stundenProEinsatz: round2(stundenProEinsatz),
+    totalFlaeche: round2(totalFlaeche),
+    totalStunden: round2(totalStunden),
     selbstkostenProStd: round2(selbstkostenProStd),
     kostenProEinsatz: round2(kostenProEinsatz),
     preisProEinsatz: round2(preisProEinsatz),
@@ -94,9 +107,12 @@ export function calcReinigung(i: ReinigungInput): ReinigungResult {
     preisMax: round2(preisProEinsatz * 1.1),
     preisProMonat: round2(preisProMonat),
     preisProJahr: round2(preisProMonat * 12),
-    preisProM2: flaeche > 0 ? round2(preisProEinsatz / flaeche) : 0,
-    marktMin: clampNum(i.marktMinM2),
-    marktMax: clampNum(i.marktMaxM2),
+    preisProM2: totalFlaeche > 0 ? round2(preisProEinsatz / totalFlaeche) : 0,
+    marktMin: totalFlaeche > 0 ? round2(marktMinSum / totalFlaeche) : 0,
+    marktMax: totalFlaeche > 0 ? round2(marktMaxSum / totalFlaeche) : 0,
+    impliedMarge: round2(impliedMarge),
+    impliedStundensatz: round2(impliedStundensatz),
+    pauschal: i.pauschal,
   };
 }
 
