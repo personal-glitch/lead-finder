@@ -28,7 +28,7 @@ export default function KuendigungPage() {
       });
       setDone(res);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Kündigung fehlgeschlagen. Bitte per E-Mail an personal@lupen-rhein.de kündigen.");
+      setError(err instanceof Error ? err.message : "Kündigung fehlgeschlagen. Bitte per E-Mail an kontakt@seciora.de kündigen.");
     } finally {
       setBusy(false);
     }
@@ -54,7 +54,7 @@ export default function KuendigungPage() {
         )}
         <P>
           Du erhältst zusätzlich eine Bestätigung an die angegebene E-Mail-Adresse. Bei Fragen erreichst du uns unter
-          personal@lupen-rhein.de.
+          kontakt@seciora.de.
         </P>
       </LegalShell>
     );
@@ -112,7 +112,7 @@ export default function KuendigungPage() {
         </button>
         <P>
           Nach dem Klick erhältst du eine Eingangsbestätigung. Alternativ kannst du jederzeit formlos per E-Mail an
-          personal@lupen-rhein.de kündigen.
+          kontakt@seciora.de kündigen.
         </P>
       </form>
     </LegalShell>

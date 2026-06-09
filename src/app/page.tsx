@@ -185,9 +185,9 @@ export default function Landing() {
             <Link href={signupHref} className="inline-flex items-center gap-2 rounded-lg bg-[var(--color-brand)] px-5 py-3 text-sm font-semibold text-[var(--color-on-brand)] shadow-[0_0_0_1px_rgba(168,232,58,0.25),0_8px_24px_-6px_rgba(168,232,58,0.5)] transition-transform hover:-translate-y-0.5 hover:bg-[var(--color-brand-ink)]">
               Kostenlos starten <Icon name="chevronRight" size={16} />
             </Link>
-            <a href="#funktionen" className="inline-flex items-center gap-2 rounded-lg border border-[var(--color-line-strong)] px-5 py-3 text-sm font-medium text-[var(--color-ink-2)] hover:bg-[var(--color-subtle)]">
-              Funktionen ansehen
-            </a>
+            <Link href="/check" className="inline-flex items-center gap-2 rounded-lg border border-[var(--color-line-strong)] px-5 py-3 text-sm font-medium text-[var(--color-ink-2)] hover:bg-[var(--color-subtle)]">
+              <Icon name="search" size={15} /> Neukunden gratis prüfen
+            </Link>
           </div>
           <p className="mt-4 text-xs text-[var(--color-faint)]">Keine Kreditkarte · DSGVO-konform · Daten aus öffentlichen Quellen</p>
         </div>

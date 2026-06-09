@@ -8,6 +8,7 @@ const PUBLIC_PREFIXES = [
   "/login",
   "/registrieren",
   "/auth",
+  "/check",
   "/impressum",
   "/datenschutz",
   "/agb",

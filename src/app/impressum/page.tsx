@@ -14,7 +14,7 @@ export default function ImpressumPage() {
       <P>Cihan Yildirim<br />Salih Aygün</P>
 
       <H2>Kontakt</H2>
-      <P>Telefon: +49 15566 021171<br />E-Mail: personal@lupen-rhein.de</P>
+      <P>Telefon: +49 15566 021171<br />E-Mail: kontakt@seciora.de</P>
 
       <H2>Rechtsform</H2>
       <P>Gesellschaft bürgerlichen Rechts (GbR). Die Gesellschaft ist nicht im Handelsregister eingetragen.</P>
