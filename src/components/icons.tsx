@@ -30,6 +30,7 @@ export type IconName =
   | "refresh"
   | "external"
   | "menu"
+  | "calculator"
   // Agent-Kategorien
   | "box"
   | "health"
@@ -145,6 +146,13 @@ const P: Record<IconName, ReactNode> = {
   x: <path d="M6 6l12 12M18 6 6 18" />,
   filter: <path d="M3 5h18l-7 8v6l-4-2v-4z" />,
   menu: <path d="M4 7h16M4 12h16M4 17h16" />,
+  calculator: (
+    <>
+      <rect x="5" y="3" width="14" height="18" rx="2" />
+      <path d="M8 7h8" />
+      <path d="M8 11h.01M12 11h.01M16 11h.01M8 15h.01M12 15h.01M16 15h.01M8 18h4" />
+    </>
+  ),
   refresh: (
     <>
       <path d="M3 12a9 9 0 0 1 15.5-6.2L21 8" />

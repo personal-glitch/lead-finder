@@ -83,6 +83,7 @@ const FEATURES: { icon: IconName; title: string; text: string }[] = [
   { icon: "template", title: "E-Mail-Vorlagen", text: "Personalisierte Ansprache mit Platzhaltern – inkl. Pflicht-Impressum & Abmeldelink." },
   { icon: "user", title: "Kontakte & Unternehmen", text: "Alle Firmen & Ansprechpartner sauber gespeichert – filter-, sortier- und durchsuchbar." },
   { icon: "settings", title: "Eine Logik – alles verknüpft", text: "Ein Anruf bewegt die Pipeline, erzeugt Aufgaben und aktualisiert dein Dashboard. Automatisch." },
+  { icon: "calculator", title: "Preis-Kalkulator", text: "Angebotspreis, Stundenverrechnungssatz & Marge für Reinigung, Handwerk und Dienstleistung – in Sekunden." },
 ];
 
 // Vorher / Nachher
@@ -158,6 +159,7 @@ export default function Landing() {
             <a href="#ablauf" className="hover:text-[var(--color-ink)]">Ablauf</a>
             <a href="#zielgruppe" className="hover:text-[var(--color-ink)]">Für wen?</a>
             <a href="#preise" className="hover:text-[var(--color-ink)]">Preise</a>
+            <Link href="/rechner" className="hover:text-[var(--color-ink)]">Rechner</Link>
             <a href="#faq" className="hover:text-[var(--color-ink)]">FAQ</a>
           </nav>
           <div className="flex items-center gap-3">
