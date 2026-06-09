@@ -54,40 +54,74 @@ function Num({ label, value, onChange, suffix, step = 1 }: { label: string; valu
   );
 }
 
+// Visueller Markt-Vergleich: zeigt, wo der eigene Preis in der Marktspanne liegt.
+function Gauge({ min, max, value, unit, money }: { min: number; max: number; value: number; unit: string; money: (n: number) => string }) {
+  const span = Math.max(0.0001, max - min);
+  const pos = Math.max(0, Math.min(1, (value - min) / span)) * 100;
+  const status = value < min ? "unter Markt" : value > max ? "über Markt" : "im Markt";
+  const tone = value < min || value > max ? "text-[var(--color-warn)]" : "text-[var(--color-brand)]";
+  return (
+    <div className="mt-3">
+      <div className="relative h-2 rounded-full" style={{ background: "linear-gradient(90deg, color-mix(in srgb, var(--color-warn) 45%, transparent), color-mix(in srgb, var(--color-brand) 55%, transparent), color-mix(in srgb, var(--color-warn) 45%, transparent))" }}>
+        <div className="absolute -top-1 h-4 w-1.5 -translate-x-1/2 rounded-full bg-[var(--color-ink)] ring-2 ring-[var(--color-surface)]" style={{ left: `${pos}%` }} />
+      </div>
+      <div className="mt-1.5 flex items-center justify-between text-[11px] text-[var(--color-muted)]">
+        <span>{money(min)}{unit}</span>
+        <span className={cx("font-medium", tone)}>dein Preis · {status}</span>
+        <span>{money(max)}{unit}</span>
+      </div>
+    </div>
+  );
+}
+
+const FORMEL: Record<KalkModus, string> = {
+  reinigung: "Fläche ÷ Flächenleistung (RAL-Richtwert) = Stunden. × Selbstkosten/h (Lohn × (1+Zuschlag)) + Anfahrt/Material, plus Gewinnaufschlag. Tariflohn 2026 = 15,00 €.",
+  handwerk: "Stundensatz = Lohn × (1 + Gemeinkostenzuschlag) × (1 + Gewinn). Marktspanne je Gewerk, regional angepasst (HWK-Methode).",
+  agentur: "Empfehlung aus Marktspanne (Disziplin × Erfahrung). „Nötig fürs Ziel“ = (Jahresziel ÷ 12 + Fixkosten) ÷ effektiv fakturierbare Stunden.",
+};
+
 const DEF_R = { flaecheM2: 500, reinigungsart: "unterhalt", objektart: "buero", verschmutzung: "mittel", lohnbasis: "tarif1", eigenerLohn: 18, zuschlagProzent: 70, margeProzent: 15, frequenz: "w5", anfahrtProEinsatz: 0, materialProEinsatz: 0 };
 const DEF_H = { gewerk: "elektro", lohnProStd: 28, gemein: "mittel", region: "schnitt", gewinnProzent: 10 };
 const DEF_A = { disziplin: "web", senior: "mid", abrechnung: "stunde", zielJahresgewinn: 60000, abrechenbareStundenProMonat: 120, auslastungProzent: 65, gemeinkostenProMonat: 2500 };
 
-export function Kalkulator({ teaser = false, compact = false }: { teaser?: boolean; compact?: boolean }) {
-  const [modus, setModus] = useState<KalkModus>("reinigung");
+export function Kalkulator({ teaser = false, compact = false, defaultModus }: { teaser?: boolean; compact?: boolean; defaultModus?: KalkModus }) {
+  const [modus, setModus] = useState<KalkModus>(defaultModus ?? "reinigung");
   const [r, setR] = useState(DEF_R);
   const [h, setH] = useState(DEF_H);
   const [a, setA] = useState(DEF_A);
   const [adv, setAdv] = useState(false);
+  const [brutto, setBrutto] = useState(false);
+  const [showFormel, setShowFormel] = useState(false);
+  const money = (n: number) => eur(brutto ? n * 1.19 : n);
 
   const out = useMemo(() => {
+    const m = (n: number) => eur(brutto ? n * 1.19 : n);
+    const mwst = brutto ? " (brutto)" : " (netto)";
     if (modus === "reinigung") {
       const ra = REINIGUNGSARTEN.find((x) => x.key === r.reinigungsart) ?? REINIGUNGSARTEN[0];
       const oa = OBJEKTARTEN.find((x) => x.key === r.objektart) ?? OBJEKTARTEN[0];
       const vs = VERSCHMUTZUNG.find((x) => x.key === r.verschmutzung) ?? VERSCHMUTZUNG[1];
       const lb = LOHNBASIS.find((x) => x.key === r.lohnbasis) ?? LOHNBASIS[0];
       const fr = FREQUENZEN.find((x) => x.key === r.frequenz) ?? FREQUENZEN[0];
+      const lohn = lb.lohn ?? r.eigenerLohn;
       const res = calcReinigung({
         flaecheM2: r.flaecheM2, objektLeistung: oa.leistung, reinigungsartFactor: ra.factor, verschmutzungFactor: vs.factor,
-        lohnProStd: lb.lohn ?? r.eigenerLohn, zuschlagProzent: r.zuschlagProzent, margeProzent: r.margeProzent,
+        lohnProStd: lohn, zuschlagProzent: r.zuschlagProzent, margeProzent: r.margeProzent,
         einsaetzeProWoche: fr.proWoche, anfahrtProEinsatz: r.anfahrtProEinsatz, materialProEinsatz: r.materialProEinsatz,
         marktMinM2: ra.marktMinM2, marktMaxM2: ra.marktMaxM2,
       });
       return {
-        headline: { label: "Angebotspreis pro Einsatz", value: `${eur(res.preisMin)} – ${eur(res.preisMax)}` },
-        sub: `${eur(res.preisProM2)} / m² · ≈ ${eur(res.preisProMonat)} / Monat`,
-        hint: `Marktüblich ${eur(res.marktMin)}–${eur(res.marktMax)} / m² je Reinigung`,
+        headline: { label: `Angebotspreis pro Einsatz${mwst}`, value: `${m(res.preisMin)} – ${m(res.preisMax)}` },
+        sub: `${m(res.preisProM2)} / m² · ≈ ${m(res.preisProMonat)} / Monat`,
+        hint: `Marktüblich ${m(res.marktMin)}–${m(res.marktMax)} / m² je Reinigung`,
+        gauge: { min: res.marktMin, max: res.marktMax, value: res.preisProM2, unit: "/m²" },
+        warn: lohn < 15 ? `Achtung: ${eur(lohn)}/h liegt unter dem Tariflohn 2026 (15,00 €).` : null,
         breakdown: [
           { label: "Arbeitszeit pro Einsatz", value: `${res.stundenProEinsatz} h` },
           { label: "Flächenleistung", value: `${res.leistung} m²/h` },
-          { label: "Selbstkosten je Stunde", value: eur(res.selbstkostenProStd) },
-          { label: "Kosten pro Einsatz", value: eur(res.kostenProEinsatz) },
-          { label: "Pro Jahr", value: eur(res.preisProJahr) },
+          { label: "Selbstkosten je Stunde", value: m(res.selbstkostenProStd) },
+          { label: "Kosten pro Einsatz", value: m(res.kostenProEinsatz) },
+          { label: "Pro Jahr", value: m(res.preisProJahr) },
         ],
       };
     }
@@ -97,13 +131,15 @@ export function Kalkulator({ teaser = false, compact = false }: { teaser?: boole
       const rg = HANDWERK_REGION.find((g) => g.key === h.region) ?? HANDWERK_REGION[0];
       const res = calcHandwerk({ lohnProStd: h.lohnProStd, gemeinZuschlagProzent: gk.zuschlag, gewinnProzent: h.gewinnProzent, marktMin: gw.marktMin, marktMax: gw.marktMax, regionFactor: rg.factor });
       return {
-        headline: { label: "Empfohlener Stundensatz (netto)", value: eur(res.verrechnungssatz) },
-        sub: `Selbstkosten ${eur(res.selbstkostenProStd)} / h`,
-        hint: `Marktüblich ${eur(res.marktMin)}–${eur(res.marktMax)} / h`,
+        headline: { label: `Empfohlener Stundensatz${mwst}`, value: m(res.verrechnungssatz) },
+        sub: `Selbstkosten ${m(res.selbstkostenProStd)} / h`,
+        hint: `Marktüblich ${m(res.marktMin)}–${m(res.marktMax)} / h`,
+        gauge: { min: res.marktMin, max: res.marktMax, value: res.verrechnungssatz, unit: "/h" },
+        warn: null as string | null,
         breakdown: [
-          { label: "Lohnkosten je Stunde", value: eur(h.lohnProStd) },
+          { label: "Lohnkosten je Stunde", value: m(h.lohnProStd) },
           { label: "+ Gemeinkostenzuschlag", value: `${gk.zuschlag} %` },
-          { label: "Selbstkosten je Stunde", value: eur(res.selbstkostenProStd) },
+          { label: "Selbstkosten je Stunde", value: m(res.selbstkostenProStd) },
         ],
       };
     }
@@ -115,18 +151,20 @@ export function Kalkulator({ teaser = false, compact = false }: { teaser?: boole
     const istTag = a.abrechnung === "tag";
     return {
       headline: {
-        label: istTag ? "Empfohlener Tagessatz" : "Empfohlener Stundensatz",
-        value: istTag ? `${eur(mMin * 8)} – ${eur(mMax * 8)}` : `${eur(mMin)} – ${eur(mMax)}`,
+        label: `Empfohlener ${istTag ? "Tagessatz" : "Stundensatz"}${mwst}`,
+        value: istTag ? `${m(mMin * 8)} – ${m(mMax * 8)}` : `${m(mMin)} – ${m(mMax)}`,
       },
-      sub: istTag ? `Stundensatz ${eur(mMin)}–${eur(mMax)}` : `Tagessatz ${eur(mMin * 8)}–${eur(mMax * 8)}`,
-      hint: `Für dein Einkommensziel nötig: ${eur(res.stundensatz)} / h`,
+      sub: istTag ? `Stundensatz ${m(mMin)}–${m(mMax)}` : `Tagessatz ${m(mMin * 8)}–${m(mMax * 8)}`,
+      hint: `Für dein Einkommensziel nötig: ${m(res.stundensatz)} / h`,
+      gauge: { min: mMin, max: mMax, value: res.stundensatz, unit: "/h" },
+      warn: null as string | null,
       breakdown: [
         { label: "Effektiv fakturierbare Std./Monat", value: `${res.effektivStundenProMonat} h` },
-        { label: "Nötiger Umsatz pro Monat", value: eur(res.benoetigterUmsatzProMonat) },
-        { label: "Nötiger Stundensatz (dein Ziel)", value: eur(res.stundensatz) },
+        { label: "Nötiger Umsatz pro Monat", value: m(res.benoetigterUmsatzProMonat) },
+        { label: "Nötiger Stundensatz (dein Ziel)", value: m(res.stundensatz) },
       ],
     };
-  }, [modus, r, h, a]);
+  }, [modus, r, h, a, brutto]);
 
   return (
     <div className={cx(compact ? "space-y-4" : "grid gap-5 lg:grid-cols-[1fr_380px]")}>
@@ -143,6 +181,12 @@ export function Kalkulator({ teaser = false, compact = false }: { teaser?: boole
           ))}
         </div>
 
+        {/* Netto / Brutto */}
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-xs text-[var(--color-muted)]">Preisanzeige</span>
+          <Seg options={[{ key: "netto", label: "netto" }, { key: "brutto", label: "inkl. 19 % MwSt" }]} value={brutto ? "brutto" : "netto"} onChange={(v) => setBrutto(v === "brutto")} />
+        </div>
+
         {modus === "reinigung" && (
           <div className="space-y-3.5">
             <Field label="Reinigungsart"><Seg options={REINIGUNGSARTEN} value={r.reinigungsart} onChange={(v) => setR({ ...r, reinigungsart: v })} /></Field>
@@ -154,6 +198,7 @@ export function Kalkulator({ teaser = false, compact = false }: { teaser?: boole
             <Field label="Häufigkeit"><Seg options={FREQUENZEN} value={r.frequenz} onChange={(v) => setR({ ...r, frequenz: v })} /></Field>
             <Field label="Lohnbasis"><Seg options={LOHNBASIS} value={r.lohnbasis} onChange={(v) => setR({ ...r, lohnbasis: v })} /></Field>
             {r.lohnbasis === "eigen" && <Num label="Eigener Stundenlohn" value={r.eigenerLohn} onChange={(v) => setR({ ...r, eigenerLohn: v })} suffix="€/h" />}
+            {out.warn && <p className="rounded-lg bg-[var(--color-warn-tint)] px-3 py-2 text-xs text-[var(--color-warn)]">⚠ {out.warn}</p>}
 
             <button type="button" onClick={() => setAdv(!adv)} className="inline-flex items-center gap-1 text-xs font-medium text-[var(--color-muted)] hover:text-[var(--color-ink)]">
               <Icon name={adv ? "chevronLeft" : "chevronRight"} size={13} /> {adv ? "Weniger" : "Feineinstellung"}
@@ -221,6 +266,7 @@ export function Kalkulator({ teaser = false, compact = false }: { teaser?: boole
             <div className="mt-1 text-3xl font-semibold tracking-[-0.02em] text-[var(--color-brand)] tnum sm:text-[2rem]">{out.headline.value}</div>
             <div className="mt-1 text-xs text-[var(--color-muted)]">{out.sub}</div>
             {out.hint && <div className="mt-2 inline-block rounded-full bg-[var(--color-surface)] px-2.5 py-1 text-[11px] text-[var(--color-ink-2)]">{out.hint}</div>}
+            {out.gauge && <Gauge min={out.gauge.min} max={out.gauge.max} value={out.gauge.value} unit={out.gauge.unit} money={money} />}
           </div>
           <div className="relative px-5 py-3">
             <div className={cx(teaser && "pointer-events-none select-none blur-[6px]")}>
@@ -240,6 +286,15 @@ export function Kalkulator({ teaser = false, compact = false }: { teaser?: boole
             )}
           </div>
         </Card>
+
+        {/* Transparenz + Stand */}
+        <div className="flex flex-wrap items-center justify-between gap-2 px-1">
+          <button type="button" onClick={() => setShowFormel(!showFormel)} className="inline-flex items-center gap-1 text-[11px] text-[var(--color-muted)] hover:text-[var(--color-ink)]">
+            <Icon name={showFormel ? "chevronLeft" : "chevronRight"} size={12} /> So rechnen wir
+          </button>
+          <span className="rounded-full bg-[var(--color-subtle)] px-2 py-0.5 text-[10px] text-[var(--color-faint)]">Richtwerte Stand 2026</span>
+        </div>
+        {showFormel && <p className="px-1 text-[11px] leading-relaxed text-[var(--color-faint)]">{FORMEL[modus]}</p>}
 
         {teaser ? (
           compact ? (
