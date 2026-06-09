@@ -170,8 +170,8 @@ export default function Landing() {
       </header>
 
       {/* Hero */}
-      <section id="kalkulator" className="mx-auto grid max-w-6xl items-start gap-10 px-6 py-14 lg:grid-cols-2 lg:py-20">
-        <div className="lg:pt-6">
+      <section id="kalkulator" className="mx-auto grid max-w-6xl items-center gap-10 px-6 py-14 lg:grid-cols-2 lg:py-20">
+        <div>
           <div className="flex flex-wrap items-center gap-2">
             <span className="eyebrow rounded-full border border-[var(--color-line-strong)] px-3 py-1">Für Dienstleister</span>
             <span className="rounded-full border border-[var(--color-brand)]/40 bg-[var(--color-brand-tint)]/40 px-3 py-1 text-xs font-medium text-[var(--color-brand)]">{BRANCHEN_N}+ Branchen</span>
