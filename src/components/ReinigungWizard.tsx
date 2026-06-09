@@ -24,6 +24,16 @@ const WIZ_FREQ = [
 const LOHN = 15, ZUSCHLAG = 70, MARGE = 15;
 const HOURLY_MIN = 25, HOURLY_MAX = 40; // marktüblicher Kundenpreis €/h (Reinigung)
 
+function BigBtn({ active, onClick, children }: { active?: boolean; onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button type="button" onClick={onClick}
+      className={cx("rounded-xl border px-4 py-3 text-left text-sm font-medium transition-colors",
+        active ? "border-[var(--color-brand)] bg-[var(--color-brand-tint)] text-[var(--color-brand)]" : "border-[var(--color-line-strong)] text-[var(--color-ink-2)] hover:bg-[var(--color-subtle)]")}>
+      {children}
+    </button>
+  );
+}
+
 export function ReinigungWizard({ teaser = false }: { teaser?: boolean }) {
   const [step, setStep] = useState(0);
   const [leistung, setLeistung] = useState<string>("");
@@ -62,14 +72,6 @@ export function ReinigungWizard({ teaser = false }: { teaser?: boolean }) {
   const steps = ["Was?", "Größe", "Verschmutzung", "Häufigkeit", "Ergebnis"];
   const go = (n: number) => setStep(Math.max(0, Math.min(4, n)));
   const reset = () => { setStep(0); setLeistung(""); setFlaeche(0); setStunden(0); setVerschmutzung(""); setFrequenz(""); setEingabe("flaeche"); setPauschal(0); };
-
-  const BigBtn = ({ active, onClick, children }: { active?: boolean; onClick: () => void; children: React.ReactNode }) => (
-    <button type="button" onClick={onClick}
-      className={cx("rounded-xl border px-4 py-3 text-left text-sm font-medium transition-colors",
-        active ? "border-[var(--color-brand)] bg-[var(--color-brand-tint)] text-[var(--color-brand)]" : "border-[var(--color-line-strong)] text-[var(--color-ink-2)] hover:bg-[var(--color-subtle)]")}>
-      {children}
-    </button>
-  );
 
   return (
     <Card className="mx-auto max-w-xl p-5">
