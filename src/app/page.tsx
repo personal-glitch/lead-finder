@@ -199,6 +199,17 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* Bewertung */}
+      <section className="border-y border-[var(--color-line)] bg-[var(--color-surface)]/30">
+        <div className="mx-auto flex max-w-6xl items-center justify-center gap-2 px-6 py-6 text-sm">
+          <span className="text-[var(--color-brand)]">★★★★★</span>
+          <span className="font-semibold tnum">5/5</span>
+          <span className="text-[var(--color-muted)]">von Dienstleistern bewertet</span>
+        </div>
+      </section>
+
+      <StatStrip />
+
       {/* Interaktiver Kalkulator – direkt ausprobieren (Köder) */}
       <section id="kalkulator" className="mx-auto max-w-6xl px-6 py-16 sm:py-20">
         <div className="text-center">
@@ -212,24 +223,6 @@ export default function Landing() {
           <Kalkulator teaser />
         </div>
       </section>
-
-      {/* Social Proof (Platzhalter) */}
-      <section className="border-y border-[var(--color-line)] bg-[var(--color-surface)]/30">
-        <div className="mx-auto flex max-w-6xl flex-col items-center gap-4 px-6 py-7 sm:flex-row sm:justify-between">
-          <div className="flex items-center gap-2 text-sm">
-            <span className="text-[var(--color-brand)]">★★★★★</span>
-            <span className="font-semibold tnum">5/5</span>
-            <span className="text-[var(--color-muted)]">von Dienstleistern bewertet</span>
-          </div>
-          <div className="flex flex-wrap items-center justify-center gap-2.5 opacity-70">
-            {["Agentur", "Reinigung", "Handwerk", "IT-Service", "Kanzlei"].map((l) => (
-              <span key={l} className="rounded-md border border-dashed border-[var(--color-line-strong)] px-3 py-1.5 text-xs text-[var(--color-faint)]">{l}-Logo</span>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <StatStrip />
 
       {/* Vorher / Nachher */}
       <section className="mx-auto max-w-6xl px-6 py-16">

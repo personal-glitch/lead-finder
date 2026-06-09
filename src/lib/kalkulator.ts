@@ -152,6 +152,29 @@ export function calcHandwerk(i: HandwerkInput): HandwerkResult {
 }
 
 // ───────────────────────── Agentur / Dienstleistung ─────────────────────────
+// Marktspannen (netto €/h, Mid-Level) je Disziplin – recherchierte Richtwerte 2025/26.
+export const DISZIPLINEN = [
+  { key: "web", label: "Web-Entwicklung / Webdesign", min: 80, max: 110 },
+  { key: "marketing", label: "Online-Marketing / SEO", min: 90, max: 140 },
+  { key: "social", label: "Social Media", min: 70, max: 110 },
+  { key: "design", label: "Grafik / UX-UI-Design", min: 75, max: 115 },
+  { key: "content", label: "Text / Content", min: 60, max: 100 },
+  { key: "foto", label: "Foto / Video", min: 80, max: 130 },
+  { key: "beratung", label: "Beratung / Strategie", min: 120, max: 200 },
+  { key: "sonstige", label: "Sonstige Dienstleistung", min: 70, max: 120 },
+] as const;
+
+export const SENIORITAET = [
+  { key: "junior", label: "Junior", factor: 0.75 },
+  { key: "mid", label: "Mid-Level", factor: 1.0 },
+  { key: "senior", label: "Senior", factor: 1.4 },
+] as const;
+
+export const ABRECHNUNG = [
+  { key: "stunde", label: "Stundensatz" },
+  { key: "tag", label: "Tagessatz" },
+] as const;
+
 export interface AgenturInput {
   zielJahresgewinn: number; abrechenbareStundenProMonat: number;
   auslastungProzent: number; gemeinkostenProMonat: number;

@@ -7,6 +7,7 @@ import {
   calcReinigung, calcHandwerk, calcAgentur, eur, type KalkModus,
   REINIGUNGSARTEN, OBJEKTARTEN, VERSCHMUTZUNG, LOHNBASIS, FREQUENZEN,
   GEWERKE, HANDWERK_GEMEINKOSTEN, HANDWERK_REGION,
+  DISZIPLINEN, SENIORITAET, ABRECHNUNG,
 } from "@/lib/kalkulator";
 
 const MODI: { key: KalkModus; label: string; icon: IconName }[] = [
@@ -55,7 +56,7 @@ function Num({ label, value, onChange, suffix, step = 1 }: { label: string; valu
 
 const DEF_R = { flaecheM2: 500, reinigungsart: "unterhalt", objektart: "buero", verschmutzung: "mittel", lohnbasis: "tarif1", eigenerLohn: 18, zuschlagProzent: 70, margeProzent: 15, frequenz: "w5", anfahrtProEinsatz: 0, materialProEinsatz: 0 };
 const DEF_H = { gewerk: "elektro", lohnProStd: 28, gemein: "mittel", region: "schnitt", gewinnProzent: 10 };
-const DEF_A = { zielJahresgewinn: 60000, abrechenbareStundenProMonat: 100, auslastungProzent: 70, gemeinkostenProMonat: 3000 };
+const DEF_A = { disziplin: "web", senior: "mid", abrechnung: "stunde", zielJahresgewinn: 60000, abrechenbareStundenProMonat: 120, auslastungProzent: 65, gemeinkostenProMonat: 2500 };
 
 export function Kalkulator({ teaser = false }: { teaser?: boolean }) {
   const [modus, setModus] = useState<KalkModus>("reinigung");
@@ -106,14 +107,23 @@ export function Kalkulator({ teaser = false }: { teaser?: boolean }) {
         ],
       };
     }
+    const di = DISZIPLINEN.find((x) => x.key === a.disziplin) ?? DISZIPLINEN[0];
+    const se = SENIORITAET.find((x) => x.key === a.senior) ?? SENIORITAET[1];
+    const mMin = Math.round(di.min * se.factor);
+    const mMax = Math.round(di.max * se.factor);
     const res = calcAgentur(a);
+    const istTag = a.abrechnung === "tag";
     return {
-      headline: { label: "Dein nötiger Stundensatz", value: eur(res.stundensatz) },
-      sub: `Tagessatz (8 h) ${eur(res.tagessatz)}`,
-      hint: null as string | null,
+      headline: {
+        label: istTag ? "Empfohlener Tagessatz" : "Empfohlener Stundensatz",
+        value: istTag ? `${eur(mMin * 8)} – ${eur(mMax * 8)}` : `${eur(mMin)} – ${eur(mMax)}`,
+      },
+      sub: istTag ? `Stundensatz ${eur(mMin)}–${eur(mMax)}` : `Tagessatz ${eur(mMin * 8)}–${eur(mMax * 8)}`,
+      hint: `Für dein Einkommensziel nötig: ${eur(res.stundensatz)} / h`,
       breakdown: [
         { label: "Effektiv fakturierbare Std./Monat", value: `${res.effektivStundenProMonat} h` },
         { label: "Nötiger Umsatz pro Monat", value: eur(res.benoetigterUmsatzProMonat) },
+        { label: "Nötiger Stundensatz (dein Ziel)", value: eur(res.stundensatz) },
       ],
     };
   }, [modus, r, h, a]);
@@ -177,11 +187,21 @@ export function Kalkulator({ teaser = false }: { teaser?: boolean }) {
         )}
 
         {modus === "agentur" && (
-          <div className="grid gap-3 sm:grid-cols-2">
-            <Num label="Wunsch-Gewinn / Gehalt pro Jahr" value={a.zielJahresgewinn} onChange={(v) => setA({ ...a, zielJahresgewinn: v })} suffix="€" step={1000} />
-            <Num label="Fakturierbare Std./Monat" value={a.abrechenbareStundenProMonat} onChange={(v) => setA({ ...a, abrechenbareStundenProMonat: v })} suffix="h" />
-            <Num label="Realistische Auslastung" value={a.auslastungProzent} onChange={(v) => setA({ ...a, auslastungProzent: v })} suffix="%" />
-            <Num label="Fixkosten pro Monat" value={a.gemeinkostenProMonat} onChange={(v) => setA({ ...a, gemeinkostenProMonat: v })} suffix="€" step={100} />
+          <div className="space-y-3.5">
+            <Field label="Disziplin"><Drop options={DISZIPLINEN} value={a.disziplin} onChange={(v) => setA({ ...a, disziplin: v })} /></Field>
+            <Field label="Erfahrung"><Seg options={SENIORITAET} value={a.senior} onChange={(v) => setA({ ...a, senior: v })} /></Field>
+            <Field label="Abrechnung"><Seg options={ABRECHNUNG} value={a.abrechnung} onChange={(v) => setA({ ...a, abrechnung: v })} /></Field>
+            <button type="button" onClick={() => setAdv(!adv)} className="inline-flex items-center gap-1 text-xs font-medium text-[var(--color-muted)] hover:text-[var(--color-ink)]">
+              <Icon name={adv ? "chevronLeft" : "chevronRight"} size={13} /> {adv ? "Weniger" : "Dein Einkommensziel (optional)"}
+            </button>
+            {adv && (
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Num label="Wunsch-Gewinn / Gehalt pro Jahr" value={a.zielJahresgewinn} onChange={(v) => setA({ ...a, zielJahresgewinn: v })} suffix="€" step={1000} />
+                <Num label="Fakturierbare Std./Monat" value={a.abrechenbareStundenProMonat} onChange={(v) => setA({ ...a, abrechenbareStundenProMonat: v })} suffix="h" />
+                <Num label="Realistische Auslastung" value={a.auslastungProzent} onChange={(v) => setA({ ...a, auslastungProzent: v })} suffix="%" />
+                <Num label="Fixkosten pro Monat" value={a.gemeinkostenProMonat} onChange={(v) => setA({ ...a, gemeinkostenProMonat: v })} suffix="€" step={100} />
+              </div>
+            )}
           </div>
         )}
 
