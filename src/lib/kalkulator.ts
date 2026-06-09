@@ -101,39 +101,53 @@ export function calcReinigung(i: ReinigungInput): ReinigungResult {
 }
 
 // ───────────────────────── Handwerk ─────────────────────────
-// Gewerk-Presets: typische Lohnkosten (€/h, produktiv) + produktive Std./Jahr.
+// HWK-Modell: Stundenverrechnungssatz = Lohn × (1 + Gemeinkostenzuschlag) × (1 + Gewinn).
+// Marktspannen (netto €/h) je Gewerk aus recherchierten Richtwerten 2025/2026.
 export const GEWERKE = [
-  { key: "elektro", label: "Elektro", lohn: 28, stdJahr: 1450, marktSatz: 65 },
-  { key: "shk", label: "Sanitär / Heizung", lohn: 29, stdJahr: 1450, marktSatz: 68 },
-  { key: "maler", label: "Maler & Lackierer", lohn: 25, stdJahr: 1500, marktSatz: 55 },
-  { key: "tischler", label: "Tischler / Schreiner", lohn: 27, stdJahr: 1450, marktSatz: 62 },
-  { key: "dachdecker", label: "Dachdecker", lohn: 28, stdJahr: 1400, marktSatz: 65 },
-  { key: "galabau", label: "Garten- & Landschaftsbau", lohn: 24, stdJahr: 1450, marktSatz: 55 },
-  { key: "kfz", label: "KFZ", lohn: 26, stdJahr: 1500, marktSatz: 90 },
-  { key: "sonstige", label: "Sonstiges Handwerk", lohn: 26, stdJahr: 1450, marktSatz: 60 },
+  { key: "elektro", label: "Elektro", lohn: 28, marktMin: 55, marktMax: 80 },
+  { key: "shk", label: "Sanitär / Heizung", lohn: 29, marktMin: 60, marktMax: 85 },
+  { key: "maler", label: "Maler & Lackierer", lohn: 24, marktMin: 48, marktMax: 62 },
+  { key: "tischler", label: "Tischler / Schreiner", lohn: 26, marktMin: 55, marktMax: 75 },
+  { key: "dachdecker", label: "Dachdecker", lohn: 27, marktMin: 55, marktMax: 80 },
+  { key: "galabau", label: "Garten- & Landschaftsbau", lohn: 23, marktMin: 45, marktMax: 65 },
+  { key: "kfz", label: "KFZ", lohn: 27, marktMin: 80, marktMax: 130 },
+  { key: "sonstige", label: "Sonstiges Handwerk", lohn: 26, marktMin: 50, marktMax: 70 },
+] as const;
+
+// Gemeinkostenzuschlag auf die Lohnkosten (HWK-Empfehlung 70–100 %).
+export const HANDWERK_GEMEINKOSTEN = [
+  { key: "niedrig", label: "Schlank · 70 %", zuschlag: 70 },
+  { key: "mittel", label: "Üblich · 85 %", zuschlag: 85 },
+  { key: "hoch", label: "Hoch · 100 %", zuschlag: 100 },
+] as const;
+
+// Regionaler Aufschlag auf die Marktspanne (±15–30 %).
+export const HANDWERK_REGION = [
+  { key: "schnitt", label: "Bundesschnitt", factor: 1.0 },
+  { key: "stadt", label: "Stadt / Süd-West", factor: 1.15 },
+  { key: "land", label: "Ländlich / Ost", factor: 0.87 },
 ] as const;
 
 export interface HandwerkInput {
-  bruttolohnProStd: number; produktiveStundenProJahr: number; mitarbeiter: number;
-  gemeinkostenProJahr: number; gewinnProzent: number; marktSatz: number;
+  lohnProStd: number; gemeinZuschlagProzent: number; gewinnProzent: number;
+  marktMin: number; marktMax: number; regionFactor: number;
 }
 export interface HandwerkResult {
-  gemeinkostenProStd: number; selbstkostenProStd: number; verrechnungssatz: number; marktSatz: number;
+  selbstkostenProStd: number; verrechnungssatz: number;
+  marktMin: number; marktMax: number;
 }
 export function calcHandwerk(i: HandwerkInput): HandwerkResult {
-  const lohn = clampNum(i.bruttolohnProStd, 26);
-  const stdJahr = Math.max(1, clampNum(i.produktiveStundenProJahr, 1450));
-  const ma = Math.max(1, clampNum(i.mitarbeiter, 1));
-  const gemein = clampNum(i.gemeinkostenProJahr, 30000);
-  const gewinn = clampNum(i.gewinnProzent, 12);
-  const gemeinkostenProStd = gemein / (stdJahr * ma);
-  const selbstkostenProStd = lohn + gemeinkostenProStd;
+  const lohn = clampNum(i.lohnProStd, 26);
+  const zuschlag = clampNum(i.gemeinZuschlagProzent, 85);
+  const gewinn = clampNum(i.gewinnProzent, 10);
+  const region = clampNum(i.regionFactor, 1) || 1;
+  const selbstkostenProStd = lohn * (1 + zuschlag / 100);
   const verrechnungssatz = selbstkostenProStd * (1 + gewinn / 100);
   return {
-    gemeinkostenProStd: round2(gemeinkostenProStd),
     selbstkostenProStd: round2(selbstkostenProStd),
     verrechnungssatz: round2(verrechnungssatz),
-    marktSatz: clampNum(i.marktSatz),
+    marktMin: round2(clampNum(i.marktMin) * region),
+    marktMax: round2(clampNum(i.marktMax) * region),
   };
 }
 

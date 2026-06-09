@@ -5,7 +5,8 @@ import { Icon, type IconName } from "@/components/icons";
 import { Card, cx } from "@/components/ui";
 import {
   calcReinigung, calcHandwerk, calcAgentur, eur, type KalkModus,
-  REINIGUNGSARTEN, OBJEKTARTEN, VERSCHMUTZUNG, LOHNBASIS, FREQUENZEN, GEWERKE,
+  REINIGUNGSARTEN, OBJEKTARTEN, VERSCHMUTZUNG, LOHNBASIS, FREQUENZEN,
+  GEWERKE, HANDWERK_GEMEINKOSTEN, HANDWERK_REGION,
 } from "@/lib/kalkulator";
 
 const MODI: { key: KalkModus; label: string; icon: IconName }[] = [
@@ -53,7 +54,7 @@ function Num({ label, value, onChange, suffix, step = 1 }: { label: string; valu
 }
 
 const DEF_R = { flaecheM2: 500, reinigungsart: "unterhalt", objektart: "buero", verschmutzung: "mittel", lohnbasis: "tarif1", eigenerLohn: 18, zuschlagProzent: 70, margeProzent: 15, frequenz: "w5", anfahrtProEinsatz: 0, materialProEinsatz: 0 };
-const DEF_H = { gewerk: "elektro", bruttolohnProStd: 28, produktiveStundenProJahr: 1450, mitarbeiter: 1, gemeinkostenProJahr: 30000, gewinnProzent: 12 };
+const DEF_H = { gewerk: "elektro", lohnProStd: 28, gemein: "mittel", region: "schnitt", gewinnProzent: 10 };
 const DEF_A = { zielJahresgewinn: 60000, abrechenbareStundenProMonat: 100, auslastungProzent: 70, gemeinkostenProMonat: 3000 };
 
 export function Kalkulator({ teaser = false }: { teaser?: boolean }) {
@@ -90,13 +91,17 @@ export function Kalkulator({ teaser = false }: { teaser?: boolean }) {
       };
     }
     if (modus === "handwerk") {
-      const res = calcHandwerk({ ...h, marktSatz: GEWERKE.find((g) => g.key === h.gewerk)?.marktSatz ?? 60 });
+      const gw = GEWERKE.find((g) => g.key === h.gewerk) ?? GEWERKE[0];
+      const gk = HANDWERK_GEMEINKOSTEN.find((g) => g.key === h.gemein) ?? HANDWERK_GEMEINKOSTEN[1];
+      const rg = HANDWERK_REGION.find((g) => g.key === h.region) ?? HANDWERK_REGION[0];
+      const res = calcHandwerk({ lohnProStd: h.lohnProStd, gemeinZuschlagProzent: gk.zuschlag, gewinnProzent: h.gewinnProzent, marktMin: gw.marktMin, marktMax: gw.marktMax, regionFactor: rg.factor });
       return {
-        headline: { label: "Dein Stundenverrechnungssatz", value: eur(res.verrechnungssatz) },
-        sub: `Marktüblich im Gewerk ~${eur(res.marktSatz)}`,
-        hint: null as string | null,
+        headline: { label: "Empfohlener Stundensatz (netto)", value: eur(res.verrechnungssatz) },
+        sub: `Selbstkosten ${eur(res.selbstkostenProStd)} / h`,
+        hint: `Marktüblich ${eur(res.marktMin)}–${eur(res.marktMax)} / h`,
         breakdown: [
-          { label: "Gemeinkosten je Stunde", value: eur(res.gemeinkostenProStd) },
+          { label: "Lohnkosten je Stunde", value: eur(h.lohnProStd) },
+          { label: "+ Gemeinkostenzuschlag", value: `${gk.zuschlag} %` },
           { label: "Selbstkosten je Stunde", value: eur(res.selbstkostenProStd) },
         ],
       };
@@ -159,14 +164,13 @@ export function Kalkulator({ teaser = false }: { teaser?: boolean }) {
             <Field label="Gewerk">
               <Drop options={GEWERKE} value={h.gewerk} onChange={(v) => {
                 const g = GEWERKE.find((x) => x.key === v);
-                setH({ ...h, gewerk: v, bruttolohnProStd: g?.lohn ?? h.bruttolohnProStd, produktiveStundenProJahr: g?.stdJahr ?? h.produktiveStundenProJahr });
+                setH({ ...h, gewerk: v, lohnProStd: g?.lohn ?? h.lohnProStd });
               }} />
             </Field>
+            <Field label="Region"><Seg options={HANDWERK_REGION} value={h.region} onChange={(v) => setH({ ...h, region: v })} /></Field>
+            <Field label="Gemeinkosten (Zuschlag auf Lohn)"><Seg options={HANDWERK_GEMEINKOSTEN} value={h.gemein} onChange={(v) => setH({ ...h, gemein: v })} /></Field>
             <div className="grid gap-3 sm:grid-cols-2">
-              <Num label="Lohnkosten produktiv" value={h.bruttolohnProStd} onChange={(v) => setH({ ...h, bruttolohnProStd: v })} suffix="€/h" />
-              <Num label="Produktive Std./Jahr je MA" value={h.produktiveStundenProJahr} onChange={(v) => setH({ ...h, produktiveStundenProJahr: v })} suffix="h" step={50} />
-              <Num label="Produktive Mitarbeiter" value={h.mitarbeiter} onChange={(v) => setH({ ...h, mitarbeiter: v })} suffix="Pers." />
-              <Num label="Fixkosten / Overhead pro Jahr" value={h.gemeinkostenProJahr} onChange={(v) => setH({ ...h, gemeinkostenProJahr: v })} suffix="€" step={1000} />
+              <Num label="Lohnkosten produktiv" value={h.lohnProStd} onChange={(v) => setH({ ...h, lohnProStd: v })} suffix="€/h" />
               <Num label="Gewinnaufschlag" value={h.gewinnProzent} onChange={(v) => setH({ ...h, gewinnProzent: v })} suffix="%" />
             </div>
           </div>
