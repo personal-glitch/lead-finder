@@ -170,33 +170,32 @@ export default function Landing() {
       </header>
 
       {/* Hero */}
-      <section id="kalkulator" className="mx-auto grid max-w-6xl items-center gap-10 px-6 py-14 lg:grid-cols-2 lg:py-20">
-        <div>
-          <div className="flex flex-wrap items-center gap-2">
+      <section id="kalkulator" className="mx-auto max-w-6xl px-6 py-14 lg:py-20">
+        {/* Painpoint → Lösung → Benefit (zentriert) */}
+        <div className="mx-auto max-w-3xl text-center">
+          <div className="flex flex-wrap items-center justify-center gap-2">
             <span className="eyebrow rounded-full border border-[var(--color-line-strong)] px-3 py-1">Für Dienstleister</span>
             <span className="rounded-full border border-[var(--color-brand)]/40 bg-[var(--color-brand-tint)]/40 px-3 py-1 text-xs font-medium text-[var(--color-brand)]">{BRANCHEN_N}+ Branchen</span>
           </div>
-          {/* Painpoint → Lösung */}
           <h1 className="mt-5 text-4xl font-semibold leading-[1.1] tracking-[-0.02em] sm:text-5xl">
             Neue Kunden finden – <span className="text-[var(--color-brand)]">ohne stundenlanges Googeln</span>.
           </h1>
-          <p className="mt-5 max-w-xl text-lg text-[var(--color-muted)]">
+          <p className="mx-auto mt-5 max-w-2xl text-lg text-[var(--color-muted)]">
             KundenRadar liefert dir anrufbare Firmen mit Telefon & Ansprechpartner und bündelt Pipeline, Anrufe,
             Aufgaben & E-Mail in einem Tool.
           </p>
-          {/* Benefit */}
-          <ul className="mt-6 space-y-2.5">
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm text-[var(--color-ink-2)]">
             {[
-              "Echte Durchwahlen & Ansprechpartner – keine Karteileichen",
-              "Pipeline, Anrufe, Aufgaben & E-Mail an einem Ort",
-              "Gratis-Preisrechner inklusive – gleich hier testen",
+              "Echte Durchwahlen & Ansprechpartner",
+              "Alles an einem Ort statt Excel & Zettel",
+              "Gratis-Preisrechner inklusive",
             ].map((b) => (
-              <li key={b} className="flex items-start gap-2 text-sm text-[var(--color-ink-2)]">
-                <span className="mt-0.5 shrink-0 text-[var(--color-brand)]"><Icon name="check" size={16} /></span>{b}
-              </li>
+              <span key={b} className="inline-flex items-center gap-1.5">
+                <Icon name="check" size={15} className="shrink-0 text-[var(--color-brand)]" />{b}
+              </span>
             ))}
-          </ul>
-          <div className="mt-7 flex flex-wrap items-center gap-3">
+          </div>
+          <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
             <Link href={signupHref} className="inline-flex items-center gap-2 rounded-lg bg-[var(--color-brand)] px-5 py-3 text-sm font-semibold text-[var(--color-on-brand)] shadow-[0_0_0_1px_rgba(168,232,58,0.25),0_8px_24px_-6px_rgba(168,232,58,0.5)] transition-transform hover:-translate-y-0.5 hover:bg-[var(--color-brand-ink)]">
               Kostenlos starten <Icon name="chevronRight" size={16} />
             </Link>
@@ -206,12 +205,13 @@ export default function Landing() {
           </div>
           <p className="mt-4 text-xs text-[var(--color-faint)]">Keine Kreditkarte · DSGVO-konform · Daten aus öffentlichen Quellen</p>
         </div>
-        {/* Interaktiver Köder direkt im Hero */}
-        <div>
-          <div className="mb-2 flex items-center gap-1.5 text-xs font-medium text-[var(--color-brand)]">
+
+        {/* Interaktiver Köder – volle Breite, in sich ausgewogen */}
+        <div className="mx-auto mt-10 max-w-5xl">
+          <div className="mb-2 flex items-center justify-center gap-1.5 text-xs font-medium text-[var(--color-brand)]">
             <Icon name="calculator" size={14} /> Gratis-Rechner – sofort testen
           </div>
-          <Kalkulator teaser compact />
+          <Kalkulator teaser />
         </div>
       </section>
 
