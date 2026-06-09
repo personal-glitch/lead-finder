@@ -1,11 +1,17 @@
 "use client";
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { Icon } from "@/components/icons";
+import { Icon, type IconName } from "@/components/icons";
 import { Button, Card, cx } from "@/components/ui";
 import {
-  MODI, calcReinigung, calcHandwerk, calcAgentur, eur, type KalkModus,
+  calcReinigung, calcHandwerk, calcAgentur, eur, type KalkModus,
 } from "@/lib/kalkulator";
+
+const MODI: { key: KalkModus; label: string; icon: IconName }[] = [
+  { key: "reinigung", label: "Gebäudereinigung", icon: "broom" },
+  { key: "handwerk", label: "Handwerk", icon: "wrench" },
+  { key: "agentur", label: "Agentur / Dienstleistung", icon: "bolt" },
+];
 
 function Num({ label, value, onChange, suffix, step = 1 }: {
   label: string; value: number; onChange: (n: number) => void; suffix?: string; step?: number;
@@ -26,66 +32,68 @@ function Num({ label, value, onChange, suffix, step = 1 }: {
   );
 }
 
-function Row({ label, value, strong }: { label: string; value: string; strong?: boolean }) {
-  return (
-    <div className={cx("flex items-baseline justify-between gap-4 py-2", strong && "border-t border-[var(--color-line)] pt-3")}>
-      <span className={cx("text-sm", strong ? "font-medium" : "text-[var(--color-muted)]")}>{label}</span>
-      <span className={cx("tnum", strong ? "text-xl font-semibold text-[var(--color-brand)]" : "text-sm")}>{value}</span>
-    </div>
-  );
-}
+const DEF_REIN = { flaecheM2: 500, leistungM2ProStd: 200, stundensatz: 30, einsaetzeProWoche: 5, anfahrtProEinsatz: 0, materialProEinsatz: 0, margeProzent: 15 };
+const DEF_HAND = { bruttolohnProStd: 25, produktiveStundenProJahr: 1500, mitarbeiter: 1, gemeinkostenProJahr: 30000, gewinnProzent: 12 };
+const DEF_AGEN = { zielJahresgewinn: 60000, abrechenbareStundenProMonat: 100, auslastungProzent: 70, gemeinkostenProMonat: 3000 };
 
 export function Kalkulator({ teaser = false }: { teaser?: boolean }) {
   const [modus, setModus] = useState<KalkModus>("reinigung");
+  const [rein, setRein] = useState(DEF_REIN);
+  const [hand, setHand] = useState(DEF_HAND);
+  const [agen, setAgen] = useState(DEF_AGEN);
 
-  const [rein, setRein] = useState({ flaecheM2: 500, leistungM2ProStd: 200, stundensatz: 30, einsaetzeProWoche: 5, anfahrtProEinsatz: 0, materialProEinsatz: 0, margeProzent: 15 });
-  const [hand, setHand] = useState({ bruttolohnProStd: 25, produktiveStundenProJahr: 1500, mitarbeiter: 1, gemeinkostenProJahr: 30000, gewinnProzent: 12 });
-  const [agen, setAgen] = useState({ zielJahresgewinn: 60000, abrechenbareStundenProMonat: 100, auslastungProzent: 70, gemeinkostenProMonat: 3000 });
-
-  const rows = useMemo(() => {
+  const { headline, sub, breakdown } = useMemo(() => {
     if (modus === "reinigung") {
       const r = calcReinigung(rein);
-      return [
-        { label: "Arbeitszeit pro Einsatz", value: `${r.stundenProEinsatz} h` },
-        { label: "Kosten pro Einsatz", value: eur(r.kostenProEinsatz) },
-        { label: "Angebotspreis pro Einsatz", value: eur(r.preisProEinsatz), strong: true },
-        { label: "Pro Monat", value: eur(r.preisProMonat) },
-        { label: "Pro Jahr", value: eur(r.preisProJahr) },
-      ];
+      return {
+        headline: { label: "Angebotspreis pro Einsatz", value: eur(r.preisProEinsatz) },
+        sub: `≈ ${eur(r.preisProMonat)} / Monat`,
+        breakdown: [
+          { label: "Arbeitszeit pro Einsatz", value: `${r.stundenProEinsatz} h` },
+          { label: "Kosten pro Einsatz", value: eur(r.kostenProEinsatz) },
+          { label: "Pro Jahr", value: eur(r.preisProJahr) },
+        ],
+      };
     }
     if (modus === "handwerk") {
       const r = calcHandwerk(hand);
-      return [
-        { label: "Gemeinkosten je Stunde", value: eur(r.gemeinkostenProStd) },
-        { label: "Selbstkosten je Stunde", value: eur(r.selbstkostenProStd) },
-        { label: "Stundenverrechnungssatz", value: eur(r.verrechnungssatz), strong: true },
-      ];
+      return {
+        headline: { label: "Dein Stundenverrechnungssatz", value: eur(r.verrechnungssatz) },
+        sub: "kostendeckend inkl. Gewinn",
+        breakdown: [
+          { label: "Gemeinkosten je Stunde", value: eur(r.gemeinkostenProStd) },
+          { label: "Selbstkosten je Stunde", value: eur(r.selbstkostenProStd) },
+        ],
+      };
     }
     const r = calcAgentur(agen);
-    return [
-      { label: "Effektiv fakturierbare Std./Monat", value: `${r.effektivStundenProMonat} h` },
-      { label: "Nötiger Umsatz pro Monat", value: eur(r.benoetigterUmsatzProMonat) },
-      { label: "Nötiger Stundensatz", value: eur(r.stundensatz), strong: true },
-    ];
+    return {
+      headline: { label: "Dein nötiger Stundensatz", value: eur(r.stundensatz) },
+      sub: `für ${eur(r.benoetigterUmsatzProMonat)} Umsatz / Monat`,
+      breakdown: [
+        { label: "Effektiv fakturierbare Std./Monat", value: `${r.effektivStundenProMonat} h` },
+        { label: "Nötiger Umsatz pro Monat", value: eur(r.benoetigterUmsatzProMonat) },
+      ],
+    };
   }, [modus, rein, hand, agen]);
 
   return (
-    <div className="grid gap-5 lg:grid-cols-[1fr_360px]">
+    <div className="grid gap-5 lg:grid-cols-[1fr_380px]">
       {/* Eingaben */}
       <Card className="space-y-4 p-5">
-        <div className="flex flex-wrap gap-2">
+        <div className="grid grid-cols-3 gap-2">
           {MODI.map((m) => (
             <button
               key={m.key}
               onClick={() => setModus(m.key)}
-              className={cx("rounded-lg border px-3 py-1.5 text-sm font-medium",
+              className={cx("flex flex-col items-center gap-1.5 rounded-xl border px-2 py-3 text-center text-xs font-medium transition-colors",
                 modus === m.key ? "border-[var(--color-brand)] bg-[var(--color-brand-tint)] text-[var(--color-brand)]" : "border-[var(--color-line)] text-[var(--color-ink-2)] hover:bg-[var(--color-subtle)]")}
             >
+              <Icon name={m.icon} size={20} strokeWidth={modus === m.key ? 2 : 1.6} />
               {m.label}
             </button>
           ))}
         </div>
-        <p className="text-xs text-[var(--color-muted)]">{MODI.find((m) => m.key === modus)?.hint}</p>
 
         {modus === "reinigung" && (
           <div className="grid gap-3 sm:grid-cols-2">
@@ -115,37 +123,60 @@ export function Kalkulator({ teaser = false }: { teaser?: boolean }) {
             <Num label="Fixkosten pro Monat" value={agen.gemeinkostenProMonat} onChange={(v) => setAgen({ ...agen, gemeinkostenProMonat: v })} suffix="€" step={100} />
           </div>
         )}
+        {!teaser && (
+          <button
+            className="inline-flex items-center gap-1.5 text-xs text-[var(--color-muted)] hover:text-[var(--color-ink)]"
+            onClick={() => { setRein(DEF_REIN); setHand(DEF_HAND); setAgen(DEF_AGEN); }}
+          >
+            <Icon name="refresh" size={13} /> Werte zurücksetzen
+          </button>
+        )}
       </Card>
 
-      {/* Ergebnis */}
+      {/* Ergebnis – Kernzahl immer sichtbar (der „Aha") */}
       <div className="space-y-3">
-        <Card className="relative overflow-hidden p-5">
-          <div className="eyebrow mb-1">Ergebnis</div>
-          <div className={cx(teaser && "pointer-events-none select-none blur-[7px]")}>
-            {rows.map((r) => <Row key={r.label} {...r} />)}
+        <Card className="overflow-hidden p-0">
+          <div className="bg-[var(--color-brand-tint)]/30 px-5 py-5 text-center">
+            <div className="eyebrow">{headline.label}</div>
+            <div className="mt-1 text-4xl font-semibold tracking-[-0.02em] text-[var(--color-brand)] tnum">{headline.value}</div>
+            <div className="mt-1 text-xs text-[var(--color-muted)]">{sub}</div>
           </div>
-          {teaser && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-[var(--color-surface)]/70 px-4 text-center backdrop-blur-[2px]">
-              <Icon name="key" size={22} className="text-[var(--color-brand)]" />
-              <p className="text-sm font-medium">Dein Ergebnis ist fertig.</p>
-              <p className="text-xs text-[var(--color-muted)]">Kostenlos registrieren und den vollen Kalkulator dauerhaft im Tool nutzen.</p>
-              <Link href="/registrieren" className="inline-flex items-center gap-2 rounded-lg bg-[var(--color-brand)] px-4 py-2.5 text-sm font-semibold text-[var(--color-on-brand)] hover:bg-[var(--color-brand-ink)]">
-                Kostenlos starten <Icon name="chevronRight" size={15} />
-              </Link>
+
+          {/* Aufschlüsselung – im Köder verschwommen */}
+          <div className="relative px-5 py-3">
+            <div className={cx(teaser && "pointer-events-none select-none blur-[6px]")}>
+              {breakdown.map((b) => (
+                <div key={b.label} className="flex items-baseline justify-between gap-4 py-1.5 text-sm">
+                  <span className="text-[var(--color-muted)]">{b.label}</span>
+                  <span className="tnum">{b.value}</span>
+                </div>
+              ))}
             </div>
-          )}
+            {teaser && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="rounded-full bg-[var(--color-surface)] px-3 py-1 text-[11px] font-medium text-[var(--color-muted)] shadow-sm">
+                  Volle Aufschlüsselung + Angebots-PDF im Tool
+                </span>
+              </div>
+            )}
+          </div>
         </Card>
-        <p className="px-1 text-[11px] text-[var(--color-faint)]">
-          Richtwert zur Orientierung – ersetzt keine individuelle Kalkulation. Ohne Gewähr.
-        </p>
-        {!teaser && (
-          <Button variant="ghost" size="sm" className="w-full" onClick={() => {
-            setRein({ flaecheM2: 500, leistungM2ProStd: 200, stundensatz: 30, einsaetzeProWoche: 5, anfahrtProEinsatz: 0, materialProEinsatz: 0, margeProzent: 15 });
-            setHand({ bruttolohnProStd: 25, produktiveStundenProJahr: 1500, mitarbeiter: 1, gemeinkostenProJahr: 30000, gewinnProzent: 12 });
-            setAgen({ zielJahresgewinn: 60000, abrechenbareStundenProMonat: 100, auslastungProzent: 70, gemeinkostenProMonat: 3000 });
-          }}>
-            <Icon name="refresh" size={14} /> Werte zurücksetzen
-          </Button>
+
+        {teaser ? (
+          <Card className="border-[var(--color-brand)]/30 bg-[var(--color-brand-tint)]/15 p-4 text-center">
+            <p className="text-sm font-medium">Kostenlos sichern & weiter:</p>
+            <ul className="mx-auto mt-2 max-w-xs space-y-1 text-left text-xs text-[var(--color-muted)]">
+              <li className="flex items-start gap-1.5"><Icon name="check" size={13} className="mt-0.5 shrink-0 text-[var(--color-brand)]" /> Kalkulation speichern & als Angebot exportieren</li>
+              <li className="flex items-start gap-1.5"><Icon name="check" size={13} className="mt-0.5 shrink-0 text-[var(--color-brand)]" /> Passende Firmen in deiner Nähe finden & anrufen</li>
+              <li className="flex items-start gap-1.5"><Icon name="check" size={13} className="mt-0.5 shrink-0 text-[var(--color-brand)]" /> Pipeline, Aufgaben & E-Mail an einem Ort</li>
+            </ul>
+            <Link href="/registrieren" className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[var(--color-brand)] px-5 py-3 text-sm font-semibold text-[var(--color-on-brand)] hover:bg-[var(--color-brand-ink)]">
+              Kostenlos starten <Icon name="chevronRight" size={15} />
+            </Link>
+            <p className="mt-1.5 text-[11px] text-[var(--color-muted)]">3 Tage gratis · keine Vorab-Zahlung · jederzeit kündbar</p>
+          </Card>
+        ) : (
+          <p className="px-1 text-[11px] text-[var(--color-faint)]">Richtwert zur Orientierung – ersetzt keine individuelle Kalkulation. Ohne Gewähr.</p>
         )}
       </div>
     </div>

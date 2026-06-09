@@ -6,6 +6,7 @@ import { PLANS } from "@/lib/plans";
 import { config } from "@/lib/config";
 import { ALLE_BRANCHEN, BRANCHEN_KATEGORIEN } from "@/lib/leadgen/branchen-catalog";
 import { HeroPreview } from "@/components/landing/HeroPreview";
+import { Kalkulator } from "@/components/Kalkulator";
 import { ExplainerVideo } from "@/components/landing/ExplainerVideo";
 import { StatStrip, Reveal } from "@/components/landing/anim";
 import { PlanButton } from "@/components/landing/PlanButton";
@@ -159,7 +160,7 @@ export default function Landing() {
             <a href="#ablauf" className="hover:text-[var(--color-ink)]">Ablauf</a>
             <a href="#zielgruppe" className="hover:text-[var(--color-ink)]">Für wen?</a>
             <a href="#preise" className="hover:text-[var(--color-ink)]">Preise</a>
-            <Link href="/rechner" className="hover:text-[var(--color-ink)]">Rechner</Link>
+            <a href="#kalkulator" className="hover:text-[var(--color-ink)]">Rechner</a>
             <a href="#faq" className="hover:text-[var(--color-ink)]">FAQ</a>
           </nav>
           <div className="flex items-center gap-3">
@@ -195,6 +196,20 @@ export default function Landing() {
         </div>
         <div className="flex justify-center lg:justify-end">
           <HeroPreview />
+        </div>
+      </section>
+
+      {/* Interaktiver Kalkulator – direkt ausprobieren (Köder) */}
+      <section id="kalkulator" className="mx-auto max-w-6xl px-6 py-16 sm:py-20">
+        <div className="text-center">
+          <span className="eyebrow rounded-full border border-[var(--color-line-strong)] px-3 py-1">Gratis-Rechner</span>
+          <h2 className="mx-auto mt-4 max-w-2xl text-3xl font-semibold tracking-[-0.02em] sm:text-4xl">Was solltest du verlangen?</h2>
+          <p className="mx-auto mt-3 max-w-xl text-[var(--color-muted)]">
+            Angebotspreis, Stundenverrechnungssatz & Marge für Reinigung, Handwerk oder Dienstleistung – direkt hier ausrechnen.
+          </p>
+        </div>
+        <div className="mt-8">
+          <Kalkulator teaser />
         </div>
       </section>
 
