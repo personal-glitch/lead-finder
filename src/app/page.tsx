@@ -62,6 +62,38 @@ const SHOWCASE: { tag: string; title: string; text: string; bullets: string[]; m
     mock: <CallMock />,
   },
   {
+    tag: "E-Mail-Outreach",
+    title: "Aus dem Tool mailen – mit Signatur, Vorlagen & automatischem Nachfass",
+    text: "Schreib direkt aus dem Kontakt heraus – einzeln oder als Sammel-Versand. Aus deinem eigenen Postfach, mit deiner Signatur. Impressum & Abmeldelink kommen automatisch dazu, und nach 3 Tagen erinnert dich das Tool ans Nachfassen.",
+    bullets: [
+      "Versand aus deinem Postfach (SMTP) – mit persönlicher Signatur",
+      "Vorlagen-Bibliothek + Platzhalter · Sammel-Versand mit Tageslimit",
+      "Halbautomatischer Follow-up · DSGVO/§7-konform (Opt-out, Impressum)",
+    ],
+    mock: (
+      <div className="space-y-3 text-xs">
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-semibold">E-Mail schreiben</span>
+          <span className="rounded-full bg-[var(--color-brand-tint)] px-2 py-0.5 text-[10px] font-medium text-[var(--color-brand-ink)]">aus deinem Postfach</span>
+        </div>
+        <div className="space-y-2 rounded-lg border border-[var(--color-line)] p-3">
+          <div className="text-[var(--color-muted)]">An: m.weber@hausverwaltung-koeln.de</div>
+          <div className="border-t border-[var(--color-line)] pt-2 font-medium">Betreff: Unterhaltsreinigung für Ihre Objekte</div>
+          <div className="space-y-1.5 text-[var(--color-muted)]">
+            <div>Guten Tag Herr Weber,</div>
+            <div className="h-2 w-full rounded bg-[var(--color-subtle)]" />
+            <div className="h-2 w-4/5 rounded bg-[var(--color-subtle)]" />
+            <div className="pt-1 text-[10px] text-[var(--color-faint)]">— Signatur · Impressum · Abmeldelink werden automatisch ergänzt</div>
+          </div>
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="rounded-md bg-[var(--color-subtle)] px-2 py-1 text-[var(--color-ink-2)]">⏰ Follow-up in 3 Tagen</span>
+          <span className="rounded-md bg-[var(--color-brand)] px-3 py-1 font-semibold text-[var(--color-on-brand)]">Senden</span>
+        </div>
+      </div>
+    ),
+  },
+  {
     tag: "Aufgaben & Wiedervorlagen",
     title: "Nie wieder einen Rückruf vergessen",
     text: "Jede offene Sache wird zur Aufgabe mit Fälligkeit. Morgens siehst du genau, was heute ansteht – kein Zettel, nichts geht unter.",
@@ -80,9 +112,13 @@ const SHOWCASE: { tag: string; title: string; text: string; bullets: string[]; m
 // Kompaktes Feature-Raster (der Rest, den das Tool kann)
 const FEATURES: { icon: IconName; title: string; text: string }[] = [
   { icon: "agents", title: "Such-Agenten", text: "Gespeicherte Such-Profile pro Zielgruppe. Einmal anlegen, jederzeit per Klick laufen lassen." },
-  { icon: "template", title: "E-Mail-Vorlagen", text: "Personalisierte Ansprache mit Platzhaltern – inkl. Pflicht-Impressum & Abmeldelink." },
+  { icon: "mail", title: "Versand aus deinem Postfach", text: "Mailen direkt aus dem Tool über deinen eigenen SMTP-Zugang – mit persönlicher Signatur unter jeder Mail." },
+  { icon: "template", title: "Vorlagen-Bibliothek", text: "Fertige Vorlagen für Reinigung, Handwerk & Agentur – mit Platzhaltern, einsatzbereit in Sekunden." },
+  { icon: "mail", title: "Sammel-Versand", text: "Mehrere Kontakte auf einmal anschreiben – mit Tageslimit, das deine Zustellbarkeit schützt." },
+  { icon: "tasks", title: "Automatischer Nachfass", text: "Nach dem Erstkontakt erinnert dich das Tool ans Follow-up – senden mit einem Klick." },
   { icon: "user", title: "Kontakte & Unternehmen", text: "Alle Firmen & Ansprechpartner sauber gespeichert – filter-, sortier- und durchsuchbar." },
   { icon: "settings", title: "Eine Logik – alles verknüpft", text: "Ein Anruf bewegt die Pipeline, erzeugt Aufgaben und aktualisiert dein Dashboard. Automatisch." },
+  { icon: "check", title: "DSGVO- & §7-UWG-konform", text: "Impressum & Abmeldelink in jeder Mail, Opt-out-Liste, EU-Hosting – rechtssicher aufgesetzt." },
   { icon: "calculator", title: "Preis-Kalkulator", text: "Angebotspreis, Stundenverrechnungssatz & Marge für Reinigung, Handwerk und Dienstleistung – in Sekunden." },
 ];
 
@@ -96,15 +132,15 @@ const ALT = [
 const NEU = [
   "Anrufbare Firmen auf Knopfdruck – mit Ansprechpartner",
   "Pipeline, Aufgaben & Historie an einem Ort",
-  "Automatische Wiedervorlagen – nichts geht verloren",
-  "Ein Tool für den kompletten Vertrieb",
+  "Automatische Wiedervorlagen & Follow-ups – nichts geht verloren",
+  "Finden, anrufen & mailen in einem Tool",
 ];
 
 // Vertriebstag
 const TAG: { time: string; t: string; d: string }[] = [
   { time: "09:00", t: "Agent läuft – Liste steht", d: "Dein gespeicherter Agent liefert frische, anrufbare Firmen aus deinen Zielbranchen." },
   { time: "09:15", t: "Anrufen & loggen", d: "Klick-to-Call, Ergebnis festhalten – Stage & Wiedervorlage entstehen automatisch." },
-  { time: "11:00", t: "Pipeline pflegen", d: "Interessenten nach vorn ziehen, Angebote als Aufgabe einplanen." },
+  { time: "11:00", t: "Mailen & nachfassen", d: "Interessenten per Mail anschreiben (einzeln oder Sammel) – das Follow-up landet automatisch als Wiedervorlage." },
   { time: "17:00", t: "Tag im Blick", d: "Dashboard zeigt Anrufe, Termine und den Funnel – fertig, ohne Reporting-Stress." },
 ];
 
