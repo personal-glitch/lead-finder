@@ -40,6 +40,9 @@ export async function getCachedEnrichment(domain: string): Promise<ImpressumResu
       .maybeSingle();
     if (error || !data) return null;
     if (Date.now() - new Date(data.fetched_at as string).getTime() > TTL_MS) return null;
+    // Alte Cache-Einträge VOR der v2-Anreicherung haben kein `extra` → als
+    // Cache-Miss behandeln, damit neu gescrapt wird und die Listen entstehen.
+    if (data.extra == null) return null;
     const extra = (data.extra as { emails?: string[]; phones?: ImpressumResult["phones"]; contacts?: ImpressumResult["contacts"] } | null) ?? null;
     return {
       impressumUrl: (data.impressum_url as string) ?? null,
