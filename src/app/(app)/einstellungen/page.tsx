@@ -246,10 +246,15 @@ export default function EinstellungenPage() {
               <TextInput type="number" min={1} value={callGoal} onChange={(e) => setCallGoal(Number(e.target.value) || 0)} />
             </Field>
           </div>
-          <Field label="Absender-Impressum" hint="Rechtlich Pflicht in jeder Werbe-E-Mail (steht im Footer).">
+          <Field label="Absender-Impressum" required hint="Pflicht – ohne Impressum kannst du keine E-Mails versenden. Es wird automatisch in den Footer jeder Mail gesetzt.">
             <Textarea rows={3} value={impressum} onChange={(e) => setImpressum(e.target.value)}
               placeholder="Deine Firma GmbH · Musterstr. 1 · 50667 Köln · GF: Max Muster · HRB 12345 Amtsgericht Köln" />
           </Field>
+          {!impressum.trim() && (
+            <div className="rounded-lg border border-amber-300/50 bg-amber-50/60 px-3 py-2 text-xs text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200">
+              ⚠️ Noch kein Impressum hinterlegt – <b>der E-Mail-Versand ist blockiert</b>, bis du es einträgst und speicherst.
+            </div>
+          )}
           <div className="flex justify-end">
             <Button onClick={saveSettings} disabled={savingSettings}>{savingSettings ? <><Spinner size={14} /> …</> : "Speichern"}</Button>
           </div>

@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { jsonOk, jsonError } from "@/lib/api";
 import { AppError } from "@/lib/errors";
+import { config } from "@/lib/config";
 import { getStore, getOwnerId } from "@/lib/db";
 import { sendOutreach, type SendOutcome } from "@/lib/email/send";
 import type { EmailTemplate } from "@/lib/types";
@@ -23,6 +24,16 @@ export async function POST(req: Request) {
     const ownerId = await getOwnerId();
     const { leadIds, templateId, subject, body } = Body.parse(await req.json());
     const store = getStore();
+
+    // Pflicht: Ohne hinterlegtes Impressum dürfen keine Werbe-E-Mails raus (§ 5 DDG / § 6 UWG).
+    const settings = await store.getSettings(ownerId);
+    const impressum = (settings.senderImpressum ?? config.resend.impressum ?? "").trim();
+    if (!impressum) {
+      throw new AppError(
+        "bad_request",
+        "Bitte zuerst dein Impressum unter Einstellungen → E-Mail-Versand hinterlegen. Ohne Impressum dürfen keine Werbe-E-Mails versendet werden.",
+      );
+    }
 
     let template: EmailTemplate | undefined;
     if (subject && body) {

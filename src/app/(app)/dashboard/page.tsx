@@ -113,7 +113,7 @@ export default function DashboardPage() {
             { done: setup.agents > 0, t: "Ersten Agenten anlegen", d: "Such-Profil für deine Zielbranchen – einmal, dann jederzeit.", href: "/agenten", cta: "Agent anlegen" },
             { done: leads.length > 0, t: "Passende Firmen finden", d: "PLZ + Branche wählen und Leads in die Pipeline übernehmen.", href: "/suche", cta: "Zur Suche" },
             { done: setup.emailReady, t: "E-Mail-Versand einrichten", d: "Eigenes Postfach (SMTP) – Schritt-für-Schritt-Hilfe in den Einstellungen.", href: "/einstellungen", cta: "Einrichten" },
-            { done: setup.impressum, t: "Impressum hinterlegen", d: "Pflicht in jeder Werbe-E-Mail – steht automatisch im Footer.", href: "/einstellungen", cta: "Hinterlegen" },
+            { done: setup.impressum, t: "Impressum hinterlegen (Pflicht)", d: "Ohne Impressum ist der E-Mail-Versand blockiert. Steht automatisch im Footer jeder Mail.", href: "/einstellungen", cta: "Jetzt hinterlegen" },
             { done: setup.signature, t: "E-Mail-Signatur hinterlegen", d: "Dein Name, Firma & Kontakt unter jeder Mail.", href: "/einstellungen", cta: "Hinzufügen" },
             { done: setup.templates > 0, t: "E-Mail-Vorlage anlegen", d: "Aus der Bibliothek übernehmen oder selbst schreiben.", href: "/vorlagen", cta: "Vorlage anlegen" },
             { done: hasOutreach, t: "Ersten Kontakt ansprechen", d: "Erster Anruf oder erste Mail an einen Lead – los geht's.", href: "/pipeline", cta: "Zur Pipeline" },
