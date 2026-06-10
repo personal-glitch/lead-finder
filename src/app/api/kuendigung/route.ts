@@ -20,7 +20,7 @@ export async function POST(req: Request) {
     if (!config.supabase.enabled) {
       throw new AppError(
         "not_configured",
-        "Die Online-Kündigung ist derzeit nicht verfügbar. Bitte kündige per E-Mail an kontakt@seciora.de.",
+        "Die Online-Kündigung ist derzeit nicht verfügbar. Bitte kündige per E-Mail an kontakt@seciora-solutions.de.",
       );
     }
     const { createAdminClient } = await import("@/lib/supabase/server");

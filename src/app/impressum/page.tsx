@@ -12,7 +12,7 @@ export default function ImpressumPage() {
       <P>Windthorststraße 15<br />51373 Leverkusen<br />Deutschland</P>
 
       <H2>Kontakt</H2>
-      <P>Telefon: +49 15566 021171<br />E-Mail: kontakt@seciora.de</P>
+      <P>Telefon: +49 15566 021171<br />E-Mail: kontakt@seciora-solutions.de</P>
 
       <H2>Rechtsform</H2>
       <P>Einzelunternehmen. Eine Eintragung im Handelsregister besteht nicht.</P>
