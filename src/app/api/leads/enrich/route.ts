@@ -10,6 +10,8 @@ import { firstGermanPhone } from "@/lib/phone/parse-de";
 import type { Lead } from "@/lib/types";
 
 const Body = z.object({
+  // Temporär: Diagnose (roher Fetch-Status der Website).
+  debug: z.boolean().optional(),
   // Entweder eine bereits gespeicherte Lead-ID (Ergebnis wird persistiert) …
   id: z.uuid().optional(),
   // … oder direkt eine Website (Vorschau ohne Speichern).
@@ -24,7 +26,23 @@ const Body = z.object({
 
 export async function POST(req: Request) {
   try {
-    const { id, website, branche, name, ort } = Body.parse(await req.json());
+    const { id, website, branche, name, ort, debug } = Body.parse(await req.json());
+
+    // ── Temporäre Egress-Diagnose ──
+    if (debug && website) {
+      const { config } = await import("@/lib/config");
+      const out: Record<string, unknown> = {};
+      for (const u of [website, new URL("/impressum", website).toString()]) {
+        try {
+          const r = await fetch(u, { headers: { "User-Agent": config.osm.userAgent, Accept: "text/html" }, signal: AbortSignal.timeout(12_000), redirect: "follow" });
+          out[u] = { status: r.status, ctype: r.headers.get("content-type"), len: (await r.text()).length };
+        } catch (e) {
+          out[u] = { error: String(e) };
+        }
+      }
+      return jsonOk({ debugFetch: out });
+    }
+
     const store = getStore();
     const ownerId = await getOwnerId();
 
