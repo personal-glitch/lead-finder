@@ -17,15 +17,18 @@ const SMTP_PRESETS: Record<string, { host: string; port: number }> = {
   Strato: { host: "smtp.strato.de", port: 587 },
 };
 
-// Schicke, e-mail-sichere HTML-Signatur (ohne Bilder, mit Marken-Akzent). Platzhalter danach anpassen.
+// Schicke, e-mail-sichere HTML-Signatur (Logo als HTML/CSS, ohne Bilder, mit Marken-Akzent + CTA). Platzhalter anpassen.
 function profiSignatur(name: string, email: string): string {
   const n = name?.trim() || "Dein Name";
   const e = email?.trim() || "name@deinefirma.de";
-  return `<table cellpadding="0" cellspacing="0" style="font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#1f2937;line-height:1.55"><tr><td style="border-left:3px solid #a8e83a;padding:2px 0 2px 14px">
+  return `<table cellpadding="0" cellspacing="0" style="font-family:Arial,Helvetica,sans-serif;color:#1f2937;font-size:14px;line-height:1.5"><tr>
+<td style="vertical-align:top;padding-right:14px"><table cellpadding="0" cellspacing="0" style="width:48px;height:48px;background:#a8e83a;border-radius:12px"><tr><td align="center" valign="middle"><table cellpadding="0" cellspacing="3"><tr><td style="width:9px;height:9px;background:#0a0f06;border-radius:2px;font-size:0;line-height:0">&nbsp;</td><td style="width:9px;height:9px;background:#0a0f06;border-radius:2px;font-size:0;line-height:0">&nbsp;</td></tr><tr><td style="width:9px;height:9px;background:#0a0f06;border-radius:2px;font-size:0;line-height:0">&nbsp;</td><td style="width:9px;height:9px;background:#0a0f06;border-radius:2px;font-size:0;line-height:0">&nbsp;</td></tr></table></td></tr></table></td>
+<td style="vertical-align:top;border-left:3px solid #a8e83a;padding-left:14px">
 <div style="font-size:16px;font-weight:bold;color:#0f172a">${n}</div>
 <div style="color:#6b7280">Deine Firma · Deine Rolle</div>
-<div style="margin-top:8px">Tel.: <a href="tel:+490000000000" style="color:#1f2937;text-decoration:none">+49 000 0000000</a></div>
-<div><a href="mailto:${e}" style="color:#1f2937;text-decoration:none">${e}</a> &nbsp;·&nbsp; <a href="https://deinefirma.de" style="color:#0f766e;text-decoration:none;font-weight:600">deinefirma.de</a></div>
+<div style="margin-top:4px;color:#0f766e;font-size:13px">Dein Slogan – z. B. dein Vorteil in einem Satz.</div>
+<div style="margin-top:8px;color:#1f2937">Tel.: +49 000 0000000 · <a href="mailto:${e}" style="color:#1f2937;text-decoration:none">${e}</a></div>
+<div style="margin-top:10px"><a href="https://deinefirma.de" style="display:inline-block;background:#a8e83a;color:#0a0f06;text-decoration:none;font-weight:bold;padding:7px 14px;border-radius:8px;font-size:13px">Mehr erfahren: deinefirma.de &rarr;</a></div>
 </td></tr></table>`;
 }
 
