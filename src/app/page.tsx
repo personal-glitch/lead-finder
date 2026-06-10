@@ -175,6 +175,48 @@ function Faq({ q, a }: { q: string; a: string }) {
   );
 }
 
+// Structured Data (schema.org) – hilft Google bei Einordnung & Rich Snippets.
+const JSON_LD = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": `${config.appUrl}/#organization`,
+      name: "Seciora Solutions",
+      url: config.appUrl,
+      email: "kontakt@seciora-solutions.de",
+      brand: "KundenRadar",
+    },
+    {
+      "@type": "WebSite",
+      "@id": `${config.appUrl}/#website`,
+      url: config.appUrl,
+      name: "KundenRadar",
+      inLanguage: "de-DE",
+      publisher: { "@id": `${config.appUrl}/#organization` },
+    },
+    {
+      "@type": "SoftwareApplication",
+      name: "KundenRadar",
+      applicationCategory: "BusinessApplication",
+      operatingSystem: "Web",
+      url: config.appUrl,
+      description:
+        "B2B-Neukunden finden, anrufen und per E-Mail ansprechen – Lead-Recherche, Pipeline, Anrufe, Aufgaben und E-Mail-Outreach in einem Tool.",
+      offers: { "@type": "Offer", price: "49", priceCurrency: "EUR" },
+      publisher: { "@id": `${config.appUrl}/#organization` },
+    },
+    {
+      "@type": "FAQPage",
+      mainEntity: FAQ.map((f) => ({
+        "@type": "Question",
+        name: f.q,
+        acceptedAnswer: { "@type": "Answer", text: f.a },
+      })),
+    },
+  ],
+};
+
 export default function Landing() {
   // Mit Supabase-Auth → Registrierung/Anmeldung; im lokalen Demo-Modus direkt ins Tool.
   const signupHref = config.supabase.enabled ? "/registrieren" : "/dashboard";
@@ -183,6 +225,7 @@ export default function Landing() {
 
   return (
     <div className="min-h-screen pb-20 md:pb-0">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD) }} />
       {/* Header */}
       <header className="sticky top-0 z-30 border-b border-[var(--color-line)] bg-[var(--color-canvas)]/80 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3.5">
