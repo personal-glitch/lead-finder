@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { config } from "@/lib/config";
+import { Analytics } from "@/components/Analytics";
 import "./globals.css";
 
 const TITLE = "KundenRadar – Neukunden finden & anrufen";
@@ -35,7 +36,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="de">
-      <body>{children}</body>
+      <body>{children}<Analytics /></body>
     </html>
   );
 }
