@@ -34,16 +34,18 @@ export const config = {
       env("NOMINATIM_URL") ?? "https://nominatim.openstreetmap.org/search",
     // Photon (komoot) als Geocoder-Fallback, falls Nominatim die IP sperrt.
     photonUrl: env("PHOTON_URL") ?? "https://photon.komoot.io/api/",
+    // Primär: kumi.systems – erlaubt (anders als overpass-api.de & die mail.ru/
+    // .fr-Mirror) Cloud-/Vercel-IPs; braucht nur etwas mehr Zeit als 8 s.
     overpassUrl:
-      env("OVERPASS_URL") ?? "https://overpass-api.de/api/interpreter",
+      env("OVERPASS_URL") ?? "https://overpass.kumi.systems/api/interpreter",
     // Öffentliche Overpass-Mirror als Fallback (Reihenfolge = Priorität).
     overpassFallbacks: [
-      "https://overpass.kumi.systems/api/interpreter",
-      "https://overpass.openstreetmap.fr/api/interpreter",
-      "https://maps.mail.ru/osm/tools/overpass/api/interpreter",
+      "https://overpass.private.coffee/api/interpreter",
+      "https://overpass.osm.ch/api/interpreter",
+      "https://overpass-api.de/api/interpreter",
     ],
-    // Kürzeres Timeout für Fallback-Mirror, damit ein Ausfall schnell auffällt.
-    overpassFallbackTimeoutMs: 8_000,
+    // Fallback-Mirror bekommen jetzt mehr Luft (Cloud-IP-Latenz).
+    overpassFallbackTimeoutMs: 12_000,
     // Nominatim: max. 1 Request/Sekunde.
     nominatimMinIntervalMs: 1100,
     // Overpass ist rate-limited – Anfragen serialisieren.
