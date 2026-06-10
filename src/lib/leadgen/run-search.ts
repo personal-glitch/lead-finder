@@ -93,8 +93,25 @@ export async function runBrancheSearch(
   const softCodes = ["upstream", "timeout", "rate_limited"];
   const diag: BrancheSearchResult["_diag"] = { source: "none" };
 
-  // 1) PRIMÄR: Kategorie-Suche über Overpass (findet nach Tätigkeit, nicht nach
-  //    Name). Liefert i. d. R. deutlich mehr & passendere Treffer.
+  // 1) PRIMÄR: Namens-Suche über Nominatim – schnell & von Vercel zuverlässig
+  //    erreichbar. (Overpass/Kategorie wäre schöner, blockt aber Cloud-IPs.)
+  let nominatimOk = false;
+  try {
+    const leads = (await searchLeadsNominatim(center, radiusKm, branchen, keywords)).map(toLeadInput);
+    nominatimOk = true;
+    diag.source = "nominatim";
+    if (leads.length > 0) {
+      return { center, radiusKm, leads, notes: [], demo: false, _diag: diag };
+    }
+    // 0 Treffer → unten Kategorie-Suche (Overpass) als Rettung versuchen.
+  } catch (err) {
+    diag.nominatimError = err instanceof AppError ? `${err.code}: ${err.message}` : String(err);
+    const code = err instanceof AppError ? err.code : "upstream";
+    if (!softCodes.includes(code)) throw err;
+  }
+
+  // 2) RETTUNG: Kategorie-Suche über Overpass – nur wenn Nominatim nichts fand
+  //    bzw. nicht erreichbar war. (Best effort; kann aus der Cloud scheitern.)
   try {
     const leads = await searchLeadsOverpass(center, radiusKm, branchen, keywords);
     diag.overpassCount = leads.length;
@@ -102,28 +119,20 @@ export async function runBrancheSearch(
       diag.source = "overpass";
       return { center, radiusKm, leads, notes: [], demo: false, _diag: diag };
     }
-    // 0 Treffer → unten Namens-Suche als Ergänzung versuchen.
   } catch (err) {
     diag.overpassError = err instanceof AppError ? `${err.code}: ${err.message}` : String(err);
     const code = err instanceof AppError ? err.code : "upstream";
-    if (!softCodes.includes(code)) throw err;
-    // Overpass nicht erreichbar → unten Nominatim-Fallback.
+    if (!softCodes.includes(code) && !nominatimOk) throw err;
   }
 
-  // 2) FALLBACK: Namens-Suche über Nominatim (kostenlos, sehr gut erreichbar).
-  try {
-    const leads = (await searchLeadsNominatim(center, radiusKm, branchen, keywords)).map(toLeadInput);
-    diag.source = "nominatim";
-    const notes = leads.length === 0
-      ? ["Keine Treffer in diesem Umkreis – Umkreis vergrößern oder andere Branche/Stichwort wählen."]
-      : [];
-    return { center, radiusKm, leads, notes, demo: false, _diag: diag };
-  } catch (err) {
-    diag.nominatimError = err instanceof AppError ? `${err.code}: ${err.message}` : String(err);
-    const code = err instanceof AppError ? err.code : "upstream";
-    // Nur bei Upstream-/Timeout-/Rate-Limit-Fehlern auf Beispieldaten ausweichen.
-    if (!softCodes.includes(code)) throw err;
-    diag.source = "demo";
-    return { center, radiusKm, leads: buildDemoLeads(center, radiusKm, branchen, keywords), notes: [DEMO_NOTE], demo: true, _diag: diag };
+  // 3) Nichts gefunden / beide Quellen aus → leere, ehrliche Antwort bzw. Demo.
+  if (nominatimOk) {
+    return {
+      center, radiusKm, leads: [],
+      notes: ["Keine Treffer in diesem Umkreis – Umkreis vergrößern oder andere Branche/Stichwort wählen."],
+      demo: false, _diag: diag,
+    };
   }
+  diag.source = "demo";
+  return { center, radiusKm, leads: buildDemoLeads(center, radiusKm, branchen, keywords), notes: [DEMO_NOTE], demo: true, _diag: diag };
 }
