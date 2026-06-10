@@ -113,6 +113,23 @@ function extractEmail(text: string): string | null {
   return [...new Set(good)].sort((a, b) => emailScore(b) - emailScore(a))[0] ?? null;
 }
 
+// Menü-/Navigations- & Seitenwörter, die KEINE Personennamen sind.
+const NAME_JUNK = new Set([
+  "faq", "kontakt", "impressum", "datenschutz", "startseite", "home", "leistungen",
+  "leistung", "über uns", "ueber uns", "team", "aktuelles", "news", "anfahrt",
+  "öffnungszeiten", "galerie", "jobs", "karriere", "angebot", "angebote", "service",
+  "services", "produkte", "shop", "blog", "presse", "downloads", "sitemap", "cookie",
+  "cookies", "agb", "navigation", "menü", "menu", "suche", "login", "anmelden",
+  "termin", "termine", "online", "mehr", "weiterlesen", "willkommen", "herzlich",
+  "aktuell", "standort", "standorte", "filiale", "filialen", "newsletter",
+]);
+// Wörter, die auf einen Satz statt einen Namen hindeuten.
+const SENTENCE_WORDS = new Set([
+  "sie", "uns", "unter", "wir", "ihnen", "ihre", "ihren", "ihr", "bitte", "hier",
+  "und", "oder", "der", "die", "das", "mit", "für", "von", "zur", "zum", "im",
+  "am", "auf", "ist", "sind", "wird", "werden", "haben", "können", "gerne",
+]);
+
 function cleanName(raw: string): string | null {
   let s = raw.split(
     /\b(?:Tel\.?|Telefon|Fax|E-?Mail|Mail|USt|HRB|HRA|Registergericht|Amtsgericht|Handelsregister|Steuernummer)\b|[,;·|•\n]/i,
@@ -123,6 +140,15 @@ function cleanName(raw: string): string | null {
   if (s.length < 2 || s.length > 60) return null;
   if (!/[A-Za-zÄÖÜäöüß]/.test(s)) return null;
   if (/^\d+$/.test(s)) return null;
+  if (NAME_JUNK.has(s.toLowerCase())) return null;
+
+  // Ein Personenname besteht aus mind. 2 Wörtern (Vor- + Nachname), beide
+  // großgeschrieben. Das filtert „FAQ", „Kontakt", Satzfragmente etc. zuverlässig.
+  const tokens = s.split(/\s+/).filter(Boolean);
+  if (tokens.length < 2) return null;
+  if (tokens.some((w) => SENTENCE_WORDS.has(w.toLowerCase()) || NAME_JUNK.has(w.toLowerCase()))) return null;
+  const looksName = (w: string) => /^[A-ZÄÖÜ][A-Za-zÄÖÜäöüß.'-]+$/.test(w);
+  if (!looksName(tokens[0]) || !looksName(tokens[tokens.length - 1])) return null;
   return s;
 }
 
@@ -153,7 +179,9 @@ export function findBestContact(
 ): { name: string; role: string } | null {
   // branche kann auch ein freies Stichwort (Joker) sein → dann nur generische Rollen.
   const def = BRANCHEN[branche as BrancheKey];
-  const tiers = [...(def?.roleTiers ?? []), GENERIC_FALLBACK, ["Kontakt"]];
+  // Hinweis: bewusst KEINE generische „Kontakt"-Stufe mehr – die griff Menü-
+  // Einträge („Kontakt", „FAQ") statt echter Namen.
+  const tiers = [...(def?.roleTiers ?? []), GENERIC_FALLBACK];
   for (const tier of tiers) {
     for (const role of tier) {
       const r = escapeRe(role);
