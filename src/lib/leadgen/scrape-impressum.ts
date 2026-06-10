@@ -7,16 +7,31 @@ import { config } from "@/lib/config";
 import { extractPhoneNumbers, pickBestPhone } from "@/lib/phone/parse-de";
 import { BRANCHEN, type BrancheKey } from "./branchen";
 
+export interface ImpressumContact {
+  name: string;
+  role: string | null;
+}
+export interface ImpressumPhone {
+  number: string;
+  e164: string | null;
+  label: "tel" | "mobil" | "fax" | null;
+}
+
 export interface ImpressumResult {
   impressumUrl: string | null;
   phone: string | null;
   email: string | null;
   contactName: string | null;
   contactRole: string | null;
+  // v2: alle gefundenen Kontaktwege (für das Detail-Fenster).
+  emails: string[];
+  phones: ImpressumPhone[];
+  contacts: ImpressumContact[];
 }
 
 const EMPTY: ImpressumResult = {
   impressumUrl: null, phone: null, email: null, contactName: null, contactRole: null,
+  emails: [], phones: [], contacts: [],
 };
 
 // Pfade laut Vorgabe (Reihenfolge = Priorität).
@@ -103,14 +118,24 @@ function emailScore(e: string): number {
   if (/[._-]/.test(local)) return 2; // vorname.nachname@ – wahrscheinlich Person
   return 1;
 }
-function extractEmail(text: string): string | null {
+function cleanEmails(text: string): string[] {
   const all = text.match(EMAIL_RE) ?? [];
   const good = all
     .map((e) => e.toLowerCase())
-    .filter((e) => !/(example\.|sentry|wixpress|\.png|\.jpe?g|@2x|@sentry|\.gif)/.test(e));
-  if (good.length === 0) return null;
-  // Persönliche Adressen bevorzugen; bei Gleichstand erste Fundstelle (stabil).
-  return [...new Set(good)].sort((a, b) => emailScore(b) - emailScore(a))[0] ?? null;
+    .filter((e) => !/(example\.|sentry|wixpress|\.png|\.jpe?g|@2x|@sentry|\.gif|\.webp|\.svg)/.test(e));
+  // Persönliche Adressen zuerst (vorname.nachname@), generische (info@) danach.
+  return [...new Set(good)].sort((a, b) => emailScore(b) - emailScore(a));
+}
+/** ALLE E-Mails aus mehreren Texten, dedupliziert, persönliche zuerst. Cap 8. */
+function extractAllEmails(texts: string[]): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const e of texts.flatMap(cleanEmails)) {
+    if (!seen.has(e)) { seen.add(e); out.push(e); }
+  }
+  return out
+    .sort((a, b) => emailScore(b) - emailScore(a))
+    .slice(0, 8);
 }
 
 // Menü-/Navigations- & Seitenwörter, die KEINE Personennamen sind.
@@ -200,6 +225,40 @@ export function findBestContact(
 }
 
 /**
+ * Sammelt MEHRERE Ansprechpersonen (Name + Rolle) aus dem Text – für das
+ * Detail-Fenster. Reihenfolge nach Rollen-Priorität; Dubletten (gleicher Name)
+ * werden zusammengeführt. Cap 6.
+ */
+export function findAllContacts(
+  text: string,
+  branche: BrancheKey | string,
+): { name: string; role: string }[] {
+  const def = BRANCHEN[branche as BrancheKey];
+  const tiers = [...(def?.roleTiers ?? []), GENERIC_FALLBACK];
+  const byName = new Map<string, { name: string; role: string }>();
+  for (const tier of tiers) {
+    for (const role of tier) {
+      const r = escapeRe(role);
+      // (a) Rolle vor dem Namen
+      const reA = new RegExp(`${r}[ \\t:.\\-–]*\\n?[ \\t]*([A-ZÄÖÜ][\\wäöüß.\\-' ]{2,80})`, "gi");
+      // (b) Name vor der Rolle
+      const reB = new RegExp(`(${NAME_CORE})\\s*[,(\\-–]+\\s*${r}\\b`, "gi");
+      for (const m of text.matchAll(reA)) {
+        const name = cleanName(m[1]);
+        if (name && !byName.has(name.toLowerCase())) byName.set(name.toLowerCase(), { name, role });
+      }
+      for (const m of text.matchAll(reB)) {
+        const name = cleanName(m[1]);
+        if (name && !byName.has(name.toLowerCase())) byName.set(name.toLowerCase(), { name, role });
+      }
+      if (byName.size >= 6) break;
+    }
+    if (byName.size >= 6) break;
+  }
+  return [...byName.values()].slice(0, 6);
+}
+
+/**
  * Holt das Impressum (probiert Standardpfade + entdeckten Footer-Link) und
  * extrahiert Telefon, E-Mail und – bei gegebener Branche – die beste Ansprechperson.
  */
@@ -230,43 +289,61 @@ export async function scrapeImpressum(
   if (!impressum?.html) return EMPTY;
 
   const brancheKey = branche ?? "Büro & Unternehmen";
-  const text = toText(impressum.html);
-  let phone = pickBestPhone(extractPhoneNumbers(text))?.normalized ?? null;
-  let email = extractEmail(text);
-  let contact = findBestContact(text, brancheKey);
 
-  // Startseite ist oft die beste Quelle für Telefon (steht prominent im Header/Footer).
-  if (home && (!phone || !email)) {
-    const htext = toText(home);
-    if (!phone) phone = pickBestPhone(extractPhoneNumbers(htext))?.normalized ?? null;
-    if (!email) email = extractEmail(htext);
-  }
+  // Texte aller relevanten Seiten sammeln: Impressum + Startseite + Kontakt/Team.
+  // (Kontakt-/Team-Seiten IMMER mitnehmen → mehr Ansprechpartner/Kontaktwege.)
+  const pageTexts: string[] = [toText(impressum.html)];
+  if (home && home !== impressum.html) pageTexts.push(toText(home));
 
-  // Fehlt noch etwas (Name/Telefon/E-Mail), Kontakt-/Team-/Über-uns-Seiten nachladen.
-  if (!contact || !phone || !email) {
-    const more: string[] = [];
-    if (home) {
-      const h = findHref(home, base, "kontakt|team|ueber-uns|über-uns|ansprechpartner|unternehmen");
-      if (h) more.push(h);
-    }
-    for (const p of CONTACT_PATHS) more.push(origin + p);
-    const extra = [...new Set(more)].filter((u) => u !== impressum.url).slice(0, 3);
-    const extraPages = await Promise.all(extra.map((u) => fetchText(u)));
-    for (const h of extraPages) {
-      if (!h) continue;
-      const t2 = toText(h);
-      if (!contact) contact = findBestContact(t2, brancheKey);
-      if (!phone) phone = pickBestPhone(extractPhoneNumbers(t2))?.normalized ?? null;
-      if (!email) email = extractEmail(t2);
-      if (contact && phone && email) break;
+  const more: string[] = [];
+  if (home) {
+    const h = findHref(home, base, "kontakt|team|ueber-uns|über-uns|ansprechpartner|unternehmen");
+    if (h) more.push(h);
+  }
+  for (const p of CONTACT_PATHS) more.push(origin + p);
+  const extra = [...new Set(more)].filter((u) => u !== impressum.url).slice(0, 3);
+  const extraPages = await Promise.all(extra.map((u) => fetchText(u)));
+  for (const h of extraPages) if (h) pageTexts.push(toText(h));
+
+  // ── Listen über alle Seiten berechnen ──
+  const emails = extractAllEmails(pageTexts);
+
+  // Telefon/Mobil/Fax: über alle Seiten, dedupliziert (nach E.164), Tel zuerst.
+  const seenPhone = new Set<string>();
+  const phoneParsed = pageTexts.flatMap(extractPhoneNumbers).filter((p) => {
+    const k = p.e164 ?? p.normalized;
+    if (seenPhone.has(k)) return false;
+    seenPhone.add(k);
+    return true;
+  });
+  const rank = (l: ImpressumPhone["label"]) => (l === "tel" ? 0 : l == null ? 1 : l === "mobil" ? 2 : 3);
+  phoneParsed.sort((a, b) => rank(a.label) - rank(b.label));
+  const phones: ImpressumPhone[] = phoneParsed
+    .slice(0, 6)
+    .map((p) => ({ number: p.normalized, e164: p.e164, label: p.label }));
+
+  // Mehrere Ansprechpersonen über alle Seiten.
+  const contactsMap = new Map<string, { name: string; role: string }>();
+  for (const t of pageTexts) {
+    for (const c of findAllContacts(t, brancheKey)) {
+      if (!contactsMap.has(c.name.toLowerCase())) contactsMap.set(c.name.toLowerCase(), c);
     }
   }
+  const contacts = [...contactsMap.values()].slice(0, 6);
+
+  // „Beste" Einzelwerte (primäre Anzeige / Abwärtskompatibilität).
+  const phone = pickBestPhone(phoneParsed)?.normalized ?? null;
+  const email = emails[0] ?? null;
+  const bestContact = contacts[0] ?? null;
 
   return {
     impressumUrl: impressum.url,
     phone,
     email,
-    contactName: contact?.name ?? null,
-    contactRole: contact?.role ?? null,
+    contactName: bestContact?.name ?? null,
+    contactRole: bestContact?.role ?? null,
+    emails,
+    phones,
+    contacts: contacts.map((c) => ({ name: c.name, role: c.role })),
   };
 }

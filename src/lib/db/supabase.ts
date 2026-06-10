@@ -79,6 +79,7 @@ function toLead(r: any): Lead {
     source: r.source,
     enrichmentSource: r.enrichment_source ?? null,
     enrichedAt: r.enriched_at ?? null,
+    enrichmentExtra: r.enrichment_extra ?? null,
     osmId: r.osm_id ?? null,
     notes: r.notes ?? null,
     stageId: r.stage_id ?? null,
@@ -107,6 +108,7 @@ function leadInputToRow(ownerId: string, input: LeadInput, stageId: string | nul
     source: input.source,
     enrichment_source: input.enrichmentSource,
     enriched_at: input.enrichedAt,
+    enrichment_extra: input.enrichmentExtra ?? null,
     osm_id: input.osmId,
     stage_id: stageId,
     dedupe_key: dedupeKey(input),
@@ -129,6 +131,7 @@ const LEAD_PATCH_COLS: Record<string, string> = {
   openingHours: "opening_hours",
   enrichmentSource: "enrichment_source",
   enrichedAt: "enriched_at",
+  enrichmentExtra: "enrichment_extra",
   notes: "notes",
   stageId: "stage_id",
 };

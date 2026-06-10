@@ -5,6 +5,23 @@
 export type LeadSource = "recherche" | "manual" | "osm" | "impressum";
 export type EnrichmentSource = "web" | "impressum" | null;
 
+// ── Erweiterte Anreicherung (mehrere Kontaktwege je Firma) ──
+export interface EnrichmentContact {
+  name: string;
+  role: string | null;
+}
+export interface EnrichmentPhone {
+  number: string;
+  e164: string | null;
+  label: "tel" | "mobil" | "fax" | null;
+}
+/** Alle gefundenen Kontaktwege einer Firma (Person UND generisch wie info@). */
+export interface EnrichmentExtra {
+  emails: string[];
+  phones: EnrichmentPhone[];
+  contacts: EnrichmentContact[];
+}
+
 /** Ein in der Pipeline gespeicherter Lead. */
 export interface Lead {
   id: string;
@@ -25,6 +42,8 @@ export interface Lead {
   source: LeadSource;
   enrichmentSource: EnrichmentSource;
   enrichedAt: string | null;
+  /** Alle weiteren gefundenen Kontaktwege (E-Mails, Nummern, Ansprechpartner). */
+  enrichmentExtra?: EnrichmentExtra | null;
   /** OSM-Identität (type/id), z. B. "node/123" – nur für Dedupe. */
   osmId: string | null;
   notes: string | null;

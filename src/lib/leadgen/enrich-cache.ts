@@ -35,17 +35,21 @@ export async function getCachedEnrichment(domain: string): Promise<ImpressumResu
     if (!db) return null;
     const { data, error } = await db
       .from("enrichment_cache")
-      .select("phone, email, contact_name, contact_role, impressum_url, fetched_at")
+      .select("phone, email, contact_name, contact_role, impressum_url, extra, fetched_at")
       .eq("domain", domain)
       .maybeSingle();
     if (error || !data) return null;
     if (Date.now() - new Date(data.fetched_at as string).getTime() > TTL_MS) return null;
+    const extra = (data.extra as { emails?: string[]; phones?: ImpressumResult["phones"]; contacts?: ImpressumResult["contacts"] } | null) ?? null;
     return {
       impressumUrl: (data.impressum_url as string) ?? null,
       phone: (data.phone as string) ?? null,
       email: (data.email as string) ?? null,
       contactName: (data.contact_name as string) ?? null,
       contactRole: (data.contact_role as string) ?? null,
+      emails: extra?.emails ?? [],
+      phones: extra?.phones ?? [],
+      contacts: extra?.contacts ?? [],
     };
   } catch {
     return null;
@@ -64,6 +68,7 @@ export async function putCachedEnrichment(domain: string, imp: ImpressumResult):
         contact_name: imp.contactName,
         contact_role: imp.contactRole,
         impressum_url: imp.impressumUrl,
+        extra: { emails: imp.emails, phones: imp.phones, contacts: imp.contacts },
         source: imp.impressumUrl ? "web" : "none",
         fetched_at: new Date().toISOString(),
       },

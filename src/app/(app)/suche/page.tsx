@@ -1,13 +1,21 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { LeadInput, PipelineStage } from "@/lib/types";
+import type { EnrichmentExtra, LeadInput, PipelineStage } from "@/lib/types";
 import { api } from "@/lib/client";
 import { dedupeKey, hostFromUrl } from "@/lib/dedupe";
 import { type BrancheKey } from "@/lib/leadgen/branchen-catalog";
 import { PageHeader, refreshStats } from "@/components/shell/AppShell";
 import { TargetPicker } from "@/components/agents/TargetPicker";
 import { Icon } from "@/components/icons";
-import { Badge, Button, Card, EmptyState, Field, Spinner, TextInput, Toast, cx } from "@/components/ui";
+import { Badge, Button, Card, Drawer, EmptyState, Field, Spinner, TextInput, Toast, cx } from "@/components/ui";
+import { LeadContactWays } from "@/components/LeadContactWays";
+
+// Antwort-Form der Anreicherung (inkl. v2-Listen).
+interface EnrichResp {
+  phone?: string | null; phoneE164?: string | null; email?: string | null;
+  ansprechpartner?: string | null; website?: string | null;
+  extra?: EnrichmentExtra | null; enrichmentSource?: string | null;
+}
 
 interface SearchResult { center: { displayName: string }; radiusKm: number; leads: LeadInput[]; notes: string[]; demo: boolean }
 
@@ -27,6 +35,7 @@ export default function SuchePage() {
   const [onlyWithContact, setOnlyWithContact] = useState(false);
   const [autoEnrich, setAutoEnrich] = useState(true);
   const [toast, setToast] = useState<string | null>(null);
+  const [detail, setDetail] = useState<LeadInput | null>(null);
   const stopRef = useRef(false);
 
   useEffect(() => {
@@ -57,20 +66,25 @@ export default function SuchePage() {
     finally { setSearching(false); }
   };
 
-  const applyEnrichment = (key: string, e: Record<string, string | null>) =>
-    setResult((r) => r ? { ...r, leads: r.leads.map((l) => dedupeKey(l) === key ? {
+  const applyEnrichment = (key: string, e: EnrichResp) => {
+    const patch = (l: LeadInput): LeadInput => dedupeKey(l) === key ? {
       ...l, phone: e.phone ?? l.phone, phoneE164: e.phoneE164 ?? l.phoneE164,
       email: e.email ?? l.email, ansprechpartner: e.ansprechpartner ?? l.ansprechpartner,
       website: e.website ?? l.website,
+      enrichmentExtra: e.extra ?? l.enrichmentExtra,
       enrichmentSource: (e.enrichmentSource as "web") ?? l.enrichmentSource,
-    } : l) } : r);
+    } : l;
+    setResult((r) => r ? { ...r, leads: r.leads.map(patch) } : r);
+    // Offenes Detail-Fenster live mitziehen.
+    setDetail((d) => (d && dedupeKey(d) === key ? patch(d) : d));
+  };
 
   // Anreichern eines einzelnen Treffers. Hat der Treffer keine Website, wird sie
   // serverseitig per Web-Suche aus Name + Ort ermittelt und danach gescrapt.
   const enrich = async (input: LeadInput) => {
     const key = dedupeKey(input); setEnrichingKey(key);
     try {
-      const { enrichment } = await api<{ enrichment: Record<string, string | null> }>("/api/leads/enrich", {
+      const { enrichment } = await api<{ enrichment: EnrichResp }>("/api/leads/enrich", {
         json: { website: input.website ?? undefined, branche: input.objektTyp, name: input.name, ort: input.ort },
       });
       applyEnrichment(key, enrichment);
@@ -99,7 +113,7 @@ export default function SuchePage() {
       while (idx < targets.length && !stopRef.current) {
         const input = targets[idx++]; const key = dedupeKey(input);
         try {
-          const { enrichment } = await api<{ enrichment: Record<string, string | null> }>("/api/leads/enrich", {
+          const { enrichment } = await api<{ enrichment: EnrichResp }>("/api/leads/enrich", {
             json: { website: input.website ?? undefined, branche: input.objektTyp, name: input.name, ort: input.ort },
           });
           applyEnrichment(key, enrichment);
@@ -222,7 +236,7 @@ export default function SuchePage() {
                   return (
                     <div key={key} className={cx("flex items-center gap-3 px-4 py-3", i > 0 && "border-t border-[var(--color-line)]", isTaken && "bg-[var(--color-success-tint)]/30")}>
                       <input type="checkbox" checked={selected.has(key)} disabled={isTaken} onChange={() => toggle(key)} className="h-4 w-4 shrink-0 accent-[var(--color-brand)]" />
-                      <div className="min-w-0 flex-1">
+                      <div className="min-w-0 flex-1 cursor-pointer" onClick={() => setDetail(l)} title="Details anzeigen">
                         <div className="flex items-center gap-2">
                           <span className="truncate text-sm font-medium">{l.name ?? "Ohne Namen"}</span>
                           {l.objektTyp && <Badge tone="slate">{l.objektTyp}</Badge>}
@@ -256,6 +270,42 @@ export default function SuchePage() {
           </EmptyState>
         )}
       </div>
+
+      {detail && (
+        <Drawer open={!!detail} onClose={() => setDetail(null)} title={detail.name ?? "Treffer"} subtitle={detail.objektTyp ?? undefined}>
+          <div className="space-y-4">
+            <div className="flex flex-wrap gap-1.5">
+              {detail.objektTyp && <Badge tone="slate">{detail.objektTyp}</Badge>}
+              {detail.enrichmentSource && <Badge tone="blue">angereichert</Badge>}
+            </div>
+            {(detail.strasse || detail.ort) && (
+              <p className="text-sm text-[var(--color-muted)]">
+                {[detail.strasse, [detail.plz, detail.ort].filter(Boolean).join(" ")].filter(Boolean).join(", ")}
+              </p>
+            )}
+            <div className="grid grid-cols-1 gap-2 text-sm">
+              {detail.phone && <a href={detail.phoneE164 ? `tel:${detail.phoneE164}` : undefined} className="inline-flex items-center gap-2 text-[var(--color-success)] tnum"><Icon name="phone" size={14} /> {detail.phone}</a>}
+              {detail.email && <a href={`mailto:${detail.email}`} className="inline-flex items-center gap-2 text-[var(--color-brand)] hover:underline"><Icon name="mail" size={14} /> {detail.email}</a>}
+              {detail.ansprechpartner && <span className="inline-flex items-center gap-2"><Icon name="user" size={14} /> {detail.ansprechpartner}</span>}
+              {detail.website && <a href={detail.website} target="_blank" rel="noreferrer noopener" className="inline-flex items-center gap-2 text-[var(--color-brand)] hover:underline"><Icon name="globe" size={14} /> {hostFromUrl(detail.website) ?? detail.website}</a>}
+            </div>
+
+            <LeadContactWays extra={detail.enrichmentExtra} />
+
+            {!detail.enrichmentSource && detail.name && (
+              <Button variant="ghost" size="sm" disabled={enrichingKey === dedupeKey(detail)}
+                onClick={() => enrich(detail)}>
+                {enrichingKey === dedupeKey(detail) ? <Spinner size={13} /> : detail.website ? "Anreichern" : "Tiefensuche (Web)"}
+              </Button>
+            )}
+            {detail.enrichmentSource && !detail.enrichmentExtra && (
+              <p className="text-xs text-[var(--color-muted)]">Angereichert – keine weiteren Kontaktwege gefunden.</p>
+            )}
+            <p className="text-xs text-[var(--color-faint)]">Tipp: Mit „Übernehmen" landet dieser Treffer samt aller Kontaktwege in deiner Pipeline.</p>
+          </div>
+        </Drawer>
+      )}
+
       {toast && <Toast message={toast} onClose={() => setToast(null)} />}
     </>
   );

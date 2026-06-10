@@ -74,6 +74,9 @@ export async function POST(req: Request) {
     // Intern reicht die Info „wurde angereichert" – die konkrete Quelle/URL
     // bleibt Geheimnis und wird NICHT an den Client zurückgegeben.
     const enriched = Boolean(imp.impressumUrl);
+    // v2: alle gefundenen Kontaktwege (mehrere E-Mails/Nummern/Ansprechpartner).
+    const extra = { emails: imp.emails, phones: imp.phones, contacts: imp.contacts };
+    const hasExtra = imp.emails.length > 0 || imp.phones.length > 0 || imp.contacts.length > 0;
     const enrichment = {
       phone: imp.phone,
       phoneE164: e164,
@@ -81,6 +84,8 @@ export async function POST(req: Request) {
       ansprechpartner,
       // Per Web-Suche gefundene Website (für die UI, damit der Lead sie übernimmt).
       website: discoveredWebsite,
+      // Alle weiteren Kontaktwege (für das Detail-Fenster).
+      extra,
       enrichmentSource: enriched ? ("web" as const) : null,
       enrichedAt: enriched ? new Date().toISOString() : null,
     };
@@ -97,6 +102,7 @@ export async function POST(req: Request) {
       }
       if (enrichment.email) patch.email = enrichment.email;
       if (enrichment.ansprechpartner) patch.ansprechpartner = enrichment.ansprechpartner;
+      if (hasExtra) patch.enrichmentExtra = extra;
       const updated = await store.updateLead(ownerId, lead.id, patch);
       if (enrichment.enrichmentSource) {
         await store.addActivity(ownerId, {

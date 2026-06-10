@@ -33,6 +33,15 @@ const LeadInputSchema = z.object({
   source: z.enum(["osm", "impressum", "manual", "recherche"]).optional(),
   enrichmentSource: z.enum(["impressum", "web"]).nullish(),
   enrichedAt: z.string().nullish(),
+  enrichmentExtra: z.object({
+    emails: z.array(z.string()),
+    phones: z.array(z.object({
+      number: z.string(),
+      e164: z.string().nullable(),
+      label: z.enum(["tel", "mobil", "fax"]).nullable(),
+    })),
+    contacts: z.array(z.object({ name: z.string(), role: z.string().nullable() })),
+  }).nullish(),
   osmId: z.string().nullish(),
 });
 
@@ -61,6 +70,7 @@ function toLeadInput(i: z.infer<typeof LeadInputSchema>): LeadInput {
     source: i.source ?? "manual",
     enrichmentSource: i.enrichmentSource ?? null,
     enrichedAt: i.enrichedAt ?? null,
+    enrichmentExtra: i.enrichmentExtra ?? null,
     osmId: i.osmId ?? null,
   };
 }

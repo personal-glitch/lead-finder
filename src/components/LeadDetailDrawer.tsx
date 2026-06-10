@@ -7,6 +7,7 @@ import { refreshStats } from "./shell/AppShell";
 import { Icon, type IconName } from "./icons";
 import { Badge, Button, Drawer, Field, Select, Spinner, TextInput, Textarea, cx } from "./ui";
 import { ConfirmDialog } from "./ConfirmDialog";
+import { LeadContactWays } from "./LeadContactWays";
 
 const ACT_ICON: Record<ActivityType, IconName> = {
   created: "plus",
@@ -231,6 +232,8 @@ export function LeadDetailDrawer({
             </Button>
           </div>
         )}
+
+        <LeadContactWays extra={lead.enrichmentExtra} />
 
         <Field label="Notizen">
           <Textarea rows={3} defaultValue={lead.notes ?? ""} placeholder="Gesprächsnotizen, nächste Schritte …"
