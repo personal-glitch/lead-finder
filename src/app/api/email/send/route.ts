@@ -73,6 +73,22 @@ export async function POST(req: Request) {
         summary: `E-Mail „${template.name}" (${outcome.status})`,
         meta: { status: outcome.status, to: outcome.to },
       });
+      // Halbautomatischer Follow-up: nach erfolgreichem Versand eine Wiedervorlage in 3 Tagen
+      // anlegen – aber nur, wenn für den Lead noch keine offene Follow-up-Erinnerung existiert.
+      if (outcome.status === "sent") {
+        try {
+          const open = await store.listTasks(ownerId, { leadId, done: false });
+          const hasFollowup = open.some((t) => t.type === "email" && t.title.startsWith("Follow-up"));
+          if (!hasFollowup) {
+            await store.createTask(ownerId, {
+              leadId,
+              title: `Follow-up: ${lead.name ?? "Lead"}`,
+              type: "email",
+              dueAt: new Date(Date.now() + 3 * 86_400_000).toISOString(),
+            });
+          }
+        } catch { /* Follow-up ist optional – Versand nicht blockieren */ }
+      }
       results.push({ leadId, ...outcome });
     }
 

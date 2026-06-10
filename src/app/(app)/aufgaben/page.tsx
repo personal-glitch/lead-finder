@@ -1,10 +1,11 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
-import type { Lead, Task } from "@/lib/types";
+import type { EmailTemplate, Lead, Task } from "@/lib/types";
 import { api } from "@/lib/client";
 import { PageHeader, refreshStats } from "@/components/shell/AppShell";
+import { EmailComposeModal, type ComposeContact } from "@/components/EmailComposeModal";
 import { Icon } from "@/components/icons";
-import { Button, Card, EmptyState, Field, Select, Spinner, TextInput, cx } from "@/components/ui";
+import { Button, Card, EmptyState, Field, Select, Spinner, TextInput, Toast, cx } from "@/components/ui";
 
 function fmt(iso: string | null) {
   if (!iso) return "ohne Termin";
@@ -20,7 +21,7 @@ const DUE_OPTIONS: { key: string; label: string; value: () => string | null }[] 
   { key: "none", label: "Kein Datum", value: () => null },
 ];
 
-function TaskRow({ task, firma, onToggle, onDelete }: { task: Task; firma: string | null; onToggle: () => void; onDelete: () => void }) {
+function TaskRow({ task, firma, onToggle, onDelete, onMail }: { task: Task; firma: string | null; onToggle: () => void; onDelete: () => void; onMail?: (() => void) | null }) {
   return (
     <div className="flex items-center gap-2.5 px-1 py-2">
       <button onClick={onToggle} title={task.done ? "Wieder öffnen" : "Erledigt"}
@@ -33,6 +34,12 @@ function TaskRow({ task, firma, onToggle, onDelete }: { task: Task; firma: strin
         <div className={cx("truncate text-sm", task.done && "text-[var(--color-faint)] line-through")}>{task.title}</div>
         {firma && <div className="truncate text-xs text-[var(--color-muted)]">{firma}</div>}
       </div>
+      {onMail && !task.done && (
+        <button onClick={onMail} title="Follow-up-Mail senden"
+          className="inline-flex shrink-0 items-center gap-1 rounded-md border border-[var(--color-line-strong)] bg-[var(--color-surface)] px-2 py-1 text-xs font-medium hover:border-[var(--color-brand)] hover:bg-[var(--color-brand-tint)]">
+          <Icon name="mail" size={12} /> Mail
+        </button>
+      )}
       <span className="shrink-0 text-[11px] text-[var(--color-faint)] tnum">{fmt(task.dueAt)}</span>
       <button onClick={onDelete} className="shrink-0 text-[var(--color-faint)] hover:text-[var(--color-danger)]" aria-label="Löschen">
         <Icon name="trash" size={14} />
@@ -44,23 +51,35 @@ function TaskRow({ task, firma, onToggle, onDelete }: { task: Task; firma: strin
 export default function AufgabenPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [leads, setLeads] = useState<Lead[]>([]);
+  const [templates, setTemplates] = useState<EmailTemplate[]>([]);
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
   const [title, setTitle] = useState("");
   const [due, setDue] = useState("3d");
+  const [toast, setToast] = useState<string | null>(null);
+  const [composeFor, setComposeFor] = useState<{ contact: ComposeContact; taskId: string } | null>(null);
 
   const load = async () => {
     try {
-      const [t, l] = await Promise.all([
+      const [t, l, tpl] = await Promise.all([
         api<{ tasks: Task[] }>("/api/tasks"),
         api<{ leads: Lead[] }>("/api/leads"),
+        api<{ templates: EmailTemplate[] }>("/api/templates"),
       ]);
-      setTasks(t.tasks); setLeads(l.leads);
+      setTasks(t.tasks); setLeads(l.leads); setTemplates(tpl.templates);
     } finally { setLoading(false); }
   };
   useEffect(() => { load(); }, []);
 
   const leadName = (id: string | null) => (id ? leads.find((l) => l.id === id)?.name ?? "Firma" : null);
+
+  // Öffnet das E-Mail-Fenster für eine Follow-up-Aufgabe (Lead mit E-Mail).
+  const mailFor = (task: Task) => {
+    const lead = leads.find((l) => l.id === task.leadId);
+    if (!lead?.email) return null;
+    const name = lead.ansprechpartner?.split(" · ")[0]?.trim() || lead.name || "Kontakt";
+    return () => setComposeFor({ contact: { leadId: lead.id, name, email: lead.email }, taskId: task.id });
+  };
 
   const groups = useMemo(() => {
     const now = new Date();
@@ -135,7 +154,8 @@ export default function AufgabenPage() {
                   </div>
                   <div className="divide-y divide-[var(--color-line)]">
                     {items.map((t) => (
-                      <TaskRow key={t.id} task={t} firma={leadName(t.leadId)} onToggle={() => toggle(t)} onDelete={() => remove(t.id)} />
+                      <TaskRow key={t.id} task={t} firma={leadName(t.leadId)} onToggle={() => toggle(t)} onDelete={() => remove(t.id)}
+                        onMail={t.type === "email" && t.leadId ? mailFor(t) : null} />
                     ))}
                   </div>
                 </Card>
@@ -144,6 +164,19 @@ export default function AufgabenPage() {
           </div>
         )}
       </div>
+
+      <EmailComposeModal
+        open={composeFor !== null}
+        contact={composeFor?.contact ?? null}
+        templates={templates}
+        onClose={() => setComposeFor(null)}
+        onSent={(m) => {
+          const tid = composeFor?.taskId;
+          setToast(m); setComposeFor(null);
+          if (tid) { setTasks((p) => p.map((t) => (t.id === tid ? { ...t, done: true } : t))); api(`/api/tasks/${tid}`, { method: "PATCH", json: { done: true } }).then(refreshStats).catch(() => {}); }
+        }}
+      />
+      {toast && <Toast message={toast} onClose={() => setToast(null)} />}
     </>
   );
 }
