@@ -14,9 +14,9 @@ export default function KontaktPage() {
           <div className="space-y-2 text-sm text-[var(--color-muted)]">
             <p className="flex items-center gap-2"><Icon name="mail" size={15} /> kontakt@seciora.de</p>
             <p className="flex items-center gap-2"><Icon name="phone" size={15} /> +49 15566 021171</p>
-            <p className="flex items-center gap-2"><Icon name="pin" size={15} /> Rathenaustraße 135, 51373 Leverkusen</p>
+            <p className="flex items-center gap-2"><Icon name="pin" size={15} /> Windthorststraße 15, 51373 Leverkusen</p>
           </div>
-          <P>Anbieter: Cihan Yildirim, Einzelunternehmen „KundenRadar". Mo–Fr, 9–17 Uhr. Für rechtliche Angaben siehe <a href="/impressum" className="text-[var(--color-brand)] hover:underline">Impressum</a>.</P>
+          <P>Anbieter: Seciora Solutions, Inhaber Cihan Yildirim. Mo–Fr, 9–17 Uhr. Für rechtliche Angaben siehe <a href="/impressum" className="text-[var(--color-brand)] hover:underline">Impressum</a>.</P>
         </div>
         <ContactForm />
       </div>

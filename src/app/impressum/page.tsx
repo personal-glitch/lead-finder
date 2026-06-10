@@ -7,9 +7,9 @@ export default function ImpressumPage() {
   return (
     <LegalShell title="Impressum">
       <H2>Angaben gemäß § 5 DDG</H2>
-      <P>Cihan Yildirim</P>
-      <P>Einzelunternehmen · Geschäftsbezeichnung „KundenRadar"</P>
-      <P>Rathenaustraße 135<br />51373 Leverkusen<br />Deutschland</P>
+      <P>Seciora Solutions</P>
+      <P>Inhaber: Cihan Yildirim (Einzelunternehmen)<br />Geschäftsbezeichnung „KundenRadar"</P>
+      <P>Windthorststraße 15<br />51373 Leverkusen<br />Deutschland</P>
 
       <H2>Kontakt</H2>
       <P>Telefon: +49 15566 021171<br />E-Mail: kontakt@seciora.de</P>

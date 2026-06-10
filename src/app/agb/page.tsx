@@ -11,8 +11,8 @@ export default function AgbPage() {
     >
       <H2>§ 1 Anbieter &amp; Geltungsbereich</H2>
       <P>
-        Anbieter des Dienstes „KundenRadar" (nachfolgend „Dienst") ist das Einzelunternehmen Cihan Yildirim
-        (Geschäftsbezeichnung „KundenRadar"), Rathenaustraße 135, 51373 Leverkusen
+        Anbieter des Dienstes „KundenRadar" (nachfolgend „Dienst") ist Seciora Solutions, Inhaber Cihan Yildirim
+        (Einzelunternehmen), Windthorststraße 15, 51373 Leverkusen
         (nachfolgend „Anbieter"). Diese AGB gelten für sämtliche Verträge über die Nutzung des Dienstes zwischen
         dem Anbieter und seinen Kundinnen und Kunden (nachfolgend „Nutzer").
       </P>
