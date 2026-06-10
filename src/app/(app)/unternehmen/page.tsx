@@ -5,6 +5,7 @@ import { api } from "@/lib/client";
 import { PageHeader, useFlags } from "@/components/shell/AppShell";
 import { useLeadWorkspace } from "@/components/use-lead-workspace";
 import { LeadDetailDrawer } from "@/components/LeadDetailDrawer";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { Icon, InitialsAvatar } from "@/components/icons";
 import { Badge, Button, Card, EmptyState, Select, Spinner, TextInput, Toast, cx } from "@/components/ui";
 
@@ -20,6 +21,7 @@ export default function UnternehmenPage() {
   const [onlyContact, setOnlyContact] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkBusy, setBulkBusy] = useState(false);
+  const [confirmDel, setConfirmDel] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
 
   const stageName = (id: string | null) => stages.find((s) => s.id === id)?.name ?? "—";
@@ -58,6 +60,13 @@ export default function UnternehmenPage() {
     for (const id of [...selected]) await ws.updateLead(id, { stageId });
     setBulkBusy(false); setSelected(new Set());
     setToast("Stage gesetzt.");
+  };
+  const bulkDelete = async () => {
+    const targets = leads.filter((l) => selected.has(l.id));
+    setBulkBusy(true);
+    for (const l of targets) await ws.deleteLead(l);
+    setBulkBusy(false); setSelected(new Set()); setConfirmDel(false);
+    setToast(`${targets.length} Firma(en) gelöscht.`);
   };
 
   return (
@@ -100,6 +109,9 @@ export default function UnternehmenPage() {
               <option value="">In Stage verschieben …</option>
               {stages.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
             </Select>
+            <Button size="sm" variant="danger" onClick={() => setConfirmDel(true)} disabled={bulkBusy}>
+              <Icon name="trash" size={14} /> Löschen
+            </Button>
             <button onClick={() => setSelected(new Set())} className="text-xs text-[var(--color-muted)] hover:text-[var(--color-ink)]">Auswahl aufheben</button>
           </Card>
         )}
@@ -166,6 +178,15 @@ export default function UnternehmenPage() {
         onEnrich={ws.enrichLead}
         onDelete={ws.deleteLead}
         onLeadChanged={ws.upsert}
+      />
+      <ConfirmDialog
+        open={confirmDel}
+        title="Firmen löschen?"
+        message={<><b>{selected.size}</b> ausgewählte Firma(en) werden mit allen Kontakten, Aufgaben und Aktivitäten gelöscht. Das kann nicht rückgängig gemacht werden.</>}
+        confirmLabel={`${selected.size} löschen`}
+        busy={bulkBusy}
+        onConfirm={bulkDelete}
+        onClose={() => setConfirmDel(false)}
       />
       {(toast || ws.error) && <Toast message={toast ?? ws.error ?? ""} onClose={() => { setToast(null); ws.setError(null); }} />}
     </>

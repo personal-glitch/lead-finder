@@ -6,6 +6,7 @@ import { api } from "@/lib/client";
 import { refreshStats } from "./shell/AppShell";
 import { Icon, type IconName } from "./icons";
 import { Badge, Button, Drawer, Field, Select, Spinner, TextInput, Textarea, cx } from "./ui";
+import { ConfirmDialog } from "./ConfirmDialog";
 
 const ACT_ICON: Record<ActivityType, IconName> = {
   created: "plus",
@@ -64,6 +65,7 @@ export function LeadDetailDrawer({
   const [msg, setMsg] = useState<string | null>(null);
   const [callNote, setCallNote] = useState("");
   const [taskTitle, setTaskTitle] = useState("");
+  const [confirmDel, setConfirmDel] = useState(false);
 
   const loadActivities = async (leadId: string) => {
     try {
@@ -258,11 +260,19 @@ export function LeadDetailDrawer({
         </div>
 
         <div className="flex justify-between border-t border-[var(--color-line)] pt-4">
-          <Button variant="danger" onClick={() => { if (confirm("Diesen Lead wirklich löschen?")) onDelete(lead); }}>
+          <Button variant="danger" onClick={() => setConfirmDel(true)}>
             Lead löschen
           </Button>
         </div>
       </div>
+      <ConfirmDialog
+        open={confirmDel}
+        title="Lead löschen?"
+        message={<>Möchtest du <b>{lead.name ?? "diesen Lead"}</b> wirklich löschen? Das kann nicht rückgängig gemacht werden.</>}
+        confirmLabel="Endgültig löschen"
+        onConfirm={() => { setConfirmDel(false); onDelete(lead); }}
+        onClose={() => setConfirmDel(false)}
+      />
     </Drawer>
   );
 }

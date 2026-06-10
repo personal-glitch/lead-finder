@@ -5,6 +5,7 @@ import { api } from "@/lib/client";
 import { useFlags, PageHeader } from "@/components/shell/AppShell";
 import { useLeadWorkspace } from "@/components/use-lead-workspace";
 import { LeadDetailDrawer } from "@/components/LeadDetailDrawer";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { EmailComposeModal, type ComposeContact } from "@/components/EmailComposeModal";
 import { QuickCallModal, type CallContact } from "@/components/QuickCallModal";
 import { Icon, InitialsAvatar } from "@/components/icons";
@@ -34,6 +35,7 @@ export default function KontaktePage() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkTemplateId, setBulkTemplateId] = useState("");
   const [bulkBusy, setBulkBusy] = useState(false);
+  const [confirmDel, setConfirmDel] = useState(false);
 
   const kontakte = useMemo<Kontakt[]>(() => {
     return leads
@@ -60,20 +62,20 @@ export default function KontaktePage() {
     });
   }, [kontakte, q, branche]);
 
-  const mailable = useMemo(() => filtered.filter((k) => k.email), [filtered]);
   const selCount = selected.size;
+  const selWithMail = useMemo(() => filtered.filter((k) => selected.has(k.leadId) && k.email).map((k) => k.leadId), [filtered, selected]);
 
   const toggle = (id: string) => setSelected((p) => { const n = new Set(p); n.has(id) ? n.delete(id) : n.add(id); return n; });
-  const toggleAll = () => setSelected((p) => p.size === mailable.length ? new Set() : new Set(mailable.map((k) => k.leadId)));
+  const toggleAll = () => setSelected((p) => p.size === filtered.length ? new Set() : new Set(filtered.map((k) => k.leadId)));
   const clearSel = () => setSelected(new Set());
 
   const bulkSend = async () => {
-    if (!bulkTemplateId || selCount === 0) return;
+    if (!bulkTemplateId || selWithMail.length === 0) { setToast("Keine ausgewählten Kontakte mit E-Mail."); return; }
     setBulkBusy(true);
     try {
       const { results } = await api<{ results: Array<{ status: string }> }>(
         "/api/email/send",
-        { json: { leadIds: [...selected], templateId: bulkTemplateId } },
+        { json: { leadIds: selWithMail, templateId: bulkTemplateId } },
       );
       const sent = results.filter((r) => r.status === "sent").length;
       const skipped = results.filter((r) => r.status === "queued").length;
@@ -83,6 +85,14 @@ export default function KontaktePage() {
     } catch (e) {
       setToast(e instanceof Error ? e.message : "Versand fehlgeschlagen.");
     } finally { setBulkBusy(false); }
+  };
+
+  const bulkDelete = async () => {
+    const targets = leads.filter((l) => selected.has(l.id));
+    setBulkBusy(true);
+    for (const l of targets) await ws.deleteLead(l);
+    setBulkBusy(false); clearSel(); setConfirmDel(false);
+    setToast(`${targets.length} Kontakt(e) gelöscht.`);
   };
 
   return (
@@ -111,6 +121,9 @@ export default function KontaktePage() {
             <Button onClick={bulkSend} disabled={bulkBusy || !bulkTemplateId}>
               {bulkBusy ? <Spinner size={14} /> : <><Icon name="mail" size={15} /> An Auswahl senden</>}
             </Button>
+            <Button variant="danger" onClick={() => setConfirmDel(true)} disabled={bulkBusy}>
+              <Icon name="trash" size={15} /> Löschen
+            </Button>
             <button onClick={clearSel} className="text-xs text-[var(--color-muted)] hover:text-[var(--color-ink)]">Auswahl aufheben</button>
             <span className="ml-auto text-xs text-[var(--color-muted)]">Max. 50 E-Mails/Tag (Zustellbarkeit). Platzhalter & Signatur werden eingesetzt.</span>
           </div>
@@ -130,8 +143,8 @@ export default function KontaktePage() {
               <thead>
                 <tr className="border-b border-[var(--color-line)] text-left text-[11px] uppercase tracking-[0.05em] text-[var(--color-muted)]">
                   <th className="px-3 py-2.5 font-medium">
-                    <input type="checkbox" title="Alle mit E-Mail auswählen" aria-label="Alle auswählen"
-                      checked={mailable.length > 0 && selCount === mailable.length}
+                    <input type="checkbox" title="Alle auswählen" aria-label="Alle auswählen"
+                      checked={filtered.length > 0 && selCount === filtered.length}
                       onChange={toggleAll} className="h-4 w-4 cursor-pointer accent-[var(--color-brand)]" />
                   </th>
                   <th className="px-3 py-2.5 font-medium">Name</th>
@@ -147,9 +160,9 @@ export default function KontaktePage() {
                     className="cursor-pointer border-b border-[var(--color-line)] transition-colors last:border-0 hover:bg-[var(--color-subtle)]">
                     <td className="px-3 py-2.5" onClick={(e) => e.stopPropagation()}>
                       <input type="checkbox" aria-label={`${k.name} auswählen`}
-                        disabled={!k.email} checked={selected.has(k.leadId)}
+                        checked={selected.has(k.leadId)}
                         onChange={() => toggle(k.leadId)}
-                        className="h-4 w-4 cursor-pointer accent-[var(--color-brand)] disabled:cursor-not-allowed disabled:opacity-40" />
+                        className="h-4 w-4 cursor-pointer accent-[var(--color-brand)]" />
                     </td>
                     <td className="px-3 py-2.5">
                       <div className="flex items-center gap-2.5">
@@ -218,6 +231,15 @@ export default function KontaktePage() {
         contact={callFor}
         onClose={() => setCallFor(null)}
         onLogged={(m) => { setToast(m); setCallFor(null); ws.reload?.(); }}
+      />
+      <ConfirmDialog
+        open={confirmDel}
+        title="Kontakte löschen?"
+        message={<><b>{selCount}</b> ausgewählte Kontakt(e) (inkl. zugehöriger Firma & Historie) werden gelöscht. Das kann nicht rückgängig gemacht werden.</>}
+        confirmLabel={`${selCount} löschen`}
+        busy={bulkBusy}
+        onConfirm={bulkDelete}
+        onClose={() => setConfirmDel(false)}
       />
       {(toast || ws.error) && <Toast message={toast ?? ws.error ?? ""} onClose={() => { setToast(null); ws.setError(null); }} />}
     </>
