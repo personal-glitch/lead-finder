@@ -29,9 +29,12 @@ export async function POST(req: Request) {
     const keywords = [...(b.keywords ?? []), ...(b.keyword ? [b.keyword] : [])]
       .map((k) => k.trim())
       .filter(Boolean);
+    // Owner vorab (für die Statistik) – Serverless friert nach der Antwort ein,
+    // daher das Logging VOR dem Return abschließen.
+    const oid = await getOwnerId().catch(() => null);
     const result = await runBrancheSearch(plz, b.radiusKm ?? 15, branchen, keywords);
-    // Nutzungs-Statistik (Superadmin): Suche zählen – best effort, nicht blockierend.
-    void getOwnerId().then((oid) => logUsage("search", oid)).catch(() => logUsage("search", null));
+    // Nutzungs-Statistik (Superadmin): Suche zählen.
+    await logUsage("search", oid);
     // _diag nur bei ausdrücklichem debug zurückgeben (Datenquelle bleibt sonst intern).
     if (!b.debug && "_diag" in result) {
       const { _diag, ...rest } = result;

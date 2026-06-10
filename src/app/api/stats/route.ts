@@ -6,8 +6,8 @@ import { logUsage } from "@/lib/usage";
 export async function GET() {
   try {
     const ownerId = await getOwnerId();
-    // Heartbeat „aktiv heute" (gedrosselt, best effort).
-    void logUsage("visit", ownerId);
+    // Heartbeat „aktiv heute" (gedrosselt) – vor dem Return abschließen.
+    await logUsage("visit", ownerId);
     const store = getStore();
     const [activities, openTasks, settings] = await Promise.all([
       store.listActivities(ownerId, { limit: 1000 }),
