@@ -47,21 +47,28 @@ export default function DashboardPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [activities, setActivities] = useState<Activity[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
-  const [setup, setSetup] = useState<{ emailReady: boolean; agents: number }>({ emailReady: false, agents: 0 });
+  const [setup, setSetup] = useState<{ emailReady: boolean; agents: number; impressum: boolean; signature: boolean; templates: number }>({ emailReady: false, agents: 0, impressum: false, signature: false, templates: 0 });
   const [loading, setLoading] = useState(true);
 
   const load = async () => {
     try {
-      const [l, s, t, a, st, cfg] = await Promise.all([
+      const [l, s, t, a, st, cfg, tpl] = await Promise.all([
         api<{ leads: Lead[] }>("/api/leads"),
         api<{ stages: PipelineStage[] }>("/api/stages"),
         api<{ tasks: Task[] }>("/api/tasks?done=false"),
         api<{ activities: Activity[] }>("/api/activities?limit=14"),
         api<Stats>("/api/stats"),
-        api<{ settings: { emailReady: boolean }; usage: { agents: number } }>("/api/settings"),
+        api<{ settings: { emailReady: boolean; senderImpressum: string; senderSignature: string }; usage: { agents: number } }>("/api/settings"),
+        api<{ templates: { id: string }[] }>("/api/templates"),
       ]);
       setLeads(l.leads); setStages(s.stages); setTasks(t.tasks); setActivities(a.activities); setStats(st);
-      setSetup({ emailReady: cfg.settings.emailReady, agents: cfg.usage.agents });
+      setSetup({
+        emailReady: cfg.settings.emailReady,
+        agents: cfg.usage.agents,
+        impressum: Boolean(cfg.settings.senderImpressum?.trim()),
+        signature: Boolean(cfg.settings.senderSignature?.trim()),
+        templates: tpl.templates.length,
+      });
     } finally { setLoading(false); }
   };
   useEffect(() => { load(); }, []);
@@ -101,33 +108,46 @@ export default function DashboardPage() {
         </div>
 
         {!loading && (() => {
+          const hasOutreach = activities.some((a) => a.type === "call" || a.type === "email");
           const steps = [
             { done: setup.agents > 0, t: "Ersten Agenten anlegen", d: "Such-Profil für deine Zielbranchen – einmal, dann jederzeit.", href: "/agenten", cta: "Agent anlegen" },
-            { done: leads.length > 0, t: "Kontakte finden", d: "PLZ + Branchen wählen und in die Pipeline übernehmen.", href: "/suche", cta: "Zur Suche" },
-            { done: setup.emailReady, t: "Absender-E-Mail einrichten", d: "Damit du Angebote direkt aus dem Tool versendest.", href: "/einstellungen", cta: "Einrichten" },
+            { done: leads.length > 0, t: "Passende Firmen finden", d: "PLZ + Branche wählen und Leads in die Pipeline übernehmen.", href: "/suche", cta: "Zur Suche" },
+            { done: setup.emailReady, t: "E-Mail-Versand einrichten", d: "Eigenes Postfach (SMTP) – Schritt-für-Schritt-Hilfe in den Einstellungen.", href: "/einstellungen", cta: "Einrichten" },
+            { done: setup.impressum, t: "Impressum hinterlegen", d: "Pflicht in jeder Werbe-E-Mail – steht automatisch im Footer.", href: "/einstellungen", cta: "Hinterlegen" },
+            { done: setup.signature, t: "E-Mail-Signatur hinterlegen", d: "Dein Name, Firma & Kontakt unter jeder Mail.", href: "/einstellungen", cta: "Hinzufügen" },
+            { done: setup.templates > 0, t: "E-Mail-Vorlage anlegen", d: "Aus der Bibliothek übernehmen oder selbst schreiben.", href: "/vorlagen", cta: "Vorlage anlegen" },
+            { done: hasOutreach, t: "Ersten Kontakt ansprechen", d: "Erster Anruf oder erste Mail an einen Lead – los geht's.", href: "/pipeline", cta: "Zur Pipeline" },
           ];
-          if (steps.every((s) => s.done)) return null;
           const doneCount = steps.filter((s) => s.done).length;
+          const allDone = doneCount === steps.length;
+          const pct = Math.round((doneCount / steps.length) * 100);
           return (
             <Card className="space-y-4 p-5">
               <div className="flex items-center justify-between">
-                <h2 className="text-sm font-semibold">Erste Schritte</h2>
-                <span className="text-xs text-[var(--color-muted)] tnum">{doneCount}/{steps.length} erledigt</span>
+                <h2 className="text-sm font-semibold">{allDone ? "✅ Einrichtung abgeschlossen" : "🚀 Einrichtung – so wirst du startklar"}</h2>
+                <span className="text-xs font-medium text-[var(--color-muted)] tnum">{doneCount}/{steps.length} erledigt · {pct}%</span>
               </div>
-              <div className="grid gap-3 sm:grid-cols-3">
-                {steps.map((s, i) => (
-                  <div key={s.t} className={`rounded-xl border p-4 ${s.done ? "border-[var(--color-line)] opacity-60" : "border-[var(--color-brand)]/40 bg-[var(--color-brand-tint)]/20"}`}>
-                    <div className="flex items-center gap-2">
-                      <span className={`grid h-6 w-6 shrink-0 place-items-center rounded-full text-xs font-semibold ${s.done ? "bg-[var(--color-brand)] text-[var(--color-on-brand)]" : "border border-[var(--color-line-strong)] text-[var(--color-muted)]"}`}>
-                        {s.done ? <Icon name="check" size={13} /> : i + 1}
-                      </span>
-                      <span className="text-sm font-medium">{s.t}</span>
+              <div className="h-2 overflow-hidden rounded-full bg-[var(--color-subtle)]">
+                <div className="h-full rounded-full bg-[var(--color-brand)] transition-all" style={{ width: `${pct}%` }} />
+              </div>
+              {allDone ? (
+                <p className="text-sm text-[var(--color-muted)]">Perfekt – alles eingerichtet. Du kannst jetzt voll loslegen. 🎉</p>
+              ) : (
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  {steps.map((s, i) => (
+                    <div key={s.t} className={`rounded-xl border p-4 ${s.done ? "border-[var(--color-line)] opacity-60" : "border-[var(--color-brand)]/40 bg-[var(--color-brand-tint)]/20"}`}>
+                      <div className="flex items-center gap-2">
+                        <span className={`grid h-6 w-6 shrink-0 place-items-center rounded-full text-xs font-semibold ${s.done ? "bg-[var(--color-brand)] text-[var(--color-on-brand)]" : "border border-[var(--color-line-strong)] text-[var(--color-muted)]"}`}>
+                          {s.done ? <Icon name="check" size={13} /> : i + 1}
+                        </span>
+                        <span className="text-sm font-medium">{s.t}</span>
+                      </div>
+                      <p className="mt-2 text-xs text-[var(--color-muted)]">{s.d}</p>
+                      {!s.done && <Link href={s.href} className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-[var(--color-brand)] hover:underline">{s.cta} <Icon name="chevronRight" size={13} /></Link>}
                     </div>
-                    <p className="mt-2 text-xs text-[var(--color-muted)]">{s.d}</p>
-                    {!s.done && <Link href={s.href} className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-[var(--color-brand)] hover:underline">{s.cta} <Icon name="chevronRight" size={13} /></Link>}
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </Card>
           );
         })()}
