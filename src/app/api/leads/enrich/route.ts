@@ -28,19 +28,14 @@ export async function POST(req: Request) {
   try {
     const { id, website, branche, name, ort, debug } = Body.parse(await req.json());
 
-    // ── Temporäre Egress-Diagnose ──
+    // ── Temporäre Diagnose: roher Scrape OHNE Cache ──
     if (debug && website) {
-      const { config } = await import("@/lib/config");
-      const out: Record<string, unknown> = {};
-      for (const u of [website, new URL("/impressum", website).toString()]) {
-        try {
-          const r = await fetch(u, { headers: { "User-Agent": config.osm.userAgent, Accept: "text/html" }, signal: AbortSignal.timeout(12_000), redirect: "follow" });
-          out[u] = { status: r.status, ctype: r.headers.get("content-type"), len: (await r.text()).length };
-        } catch (e) {
-          out[u] = { error: String(e) };
-        }
+      try {
+        const raw = await scrapeImpressum(website, isBrancheKey(branche ?? "") ? (branche as BrancheKey) : undefined);
+        return jsonOk({ rawScrape: raw });
+      } catch (e) {
+        return jsonOk({ scrapeError: String(e) });
       }
-      return jsonOk({ debugFetch: out });
     }
 
     const store = getStore();
