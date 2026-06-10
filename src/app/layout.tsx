@@ -12,6 +12,7 @@ export const metadata: Metadata = {
   description: DESCRIPTION,
   applicationName: "KundenRadar",
   robots: { index: true, follow: true },
+  verification: { google: "_beC31t_DXMtwOG1ejHcukNusu6YI_uYciq6Ax-sUnE" },
   openGraph: {
     type: "website",
     locale: "de_DE",
