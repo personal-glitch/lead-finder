@@ -1,6 +1,7 @@
 "use client";
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { api } from "@/lib/client";
 import { useFlags, PageHeader } from "@/components/shell/AppShell";
 import { useLeadWorkspace } from "@/components/use-lead-workspace";
 import { LeadDetailDrawer } from "@/components/LeadDetailDrawer";
@@ -28,6 +29,9 @@ export default function KontaktePage() {
   const [branche, setBranche] = useState("");
   const [toast, setToast] = useState<string | null>(null);
   const [composeFor, setComposeFor] = useState<ComposeContact | null>(null);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkTemplateId, setBulkTemplateId] = useState("");
+  const [bulkBusy, setBulkBusy] = useState(false);
 
   const kontakte = useMemo<Kontakt[]>(() => {
     return leads
@@ -54,6 +58,31 @@ export default function KontaktePage() {
     });
   }, [kontakte, q, branche]);
 
+  const mailable = useMemo(() => filtered.filter((k) => k.email), [filtered]);
+  const selCount = selected.size;
+
+  const toggle = (id: string) => setSelected((p) => { const n = new Set(p); n.has(id) ? n.delete(id) : n.add(id); return n; });
+  const toggleAll = () => setSelected((p) => p.size === mailable.length ? new Set() : new Set(mailable.map((k) => k.leadId)));
+  const clearSel = () => setSelected(new Set());
+
+  const bulkSend = async () => {
+    if (!bulkTemplateId || selCount === 0) return;
+    setBulkBusy(true);
+    try {
+      const { results } = await api<{ results: Array<{ status: string }> }>(
+        "/api/email/send",
+        { json: { leadIds: [...selected], templateId: bulkTemplateId } },
+      );
+      const sent = results.filter((r) => r.status === "sent").length;
+      const skipped = results.filter((r) => r.status === "queued").length;
+      const failed = results.filter((r) => r.status === "failed" || r.status === "suppressed").length;
+      setToast(`${sent} gesendet${skipped ? `, ${skipped} wg. Tageslimit verschoben` : ""}${failed ? `, ${failed} fehlgeschlagen` : ""}.`);
+      clearSel(); setBulkTemplateId(""); ws.reload?.();
+    } catch (e) {
+      setToast(e instanceof Error ? e.message : "Versand fehlgeschlagen.");
+    } finally { setBulkBusy(false); }
+  };
+
   return (
     <>
       <PageHeader title="Kontakte" subtitle={`${kontakte.length} Ansprechpartner`} />
@@ -70,6 +99,21 @@ export default function KontaktePage() {
           <span className="ml-auto text-xs text-[var(--color-muted)] tnum">{filtered.length} angezeigt</span>
         </div>
 
+        {selCount > 0 && (
+          <div className="sticky top-2 z-10 flex flex-wrap items-center gap-2 rounded-xl border border-[var(--color-brand)]/40 bg-[var(--color-brand-tint)] px-3 py-2.5 shadow-sm">
+            <span className="text-sm font-medium">{selCount} ausgewählt</span>
+            <Select value={bulkTemplateId} onChange={(e) => setBulkTemplateId(e.target.value)} className="w-56">
+              <option value="">Vorlage wählen …</option>
+              {templates.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+            </Select>
+            <Button onClick={bulkSend} disabled={bulkBusy || !bulkTemplateId}>
+              {bulkBusy ? <Spinner size={14} /> : <><Icon name="mail" size={15} /> An Auswahl senden</>}
+            </Button>
+            <button onClick={clearSel} className="text-xs text-[var(--color-muted)] hover:text-[var(--color-ink)]">Auswahl aufheben</button>
+            <span className="ml-auto text-xs text-[var(--color-muted)]">Max. 50 E-Mails/Tag (Zustellbarkeit). Platzhalter & Signatur werden eingesetzt.</span>
+          </div>
+        )}
+
         {ws.loading ? (
           <div className="flex items-center gap-2 text-[var(--color-muted)]"><Spinner /> Lädt …</div>
         ) : kontakte.length === 0 ? (
@@ -83,6 +127,11 @@ export default function KontaktePage() {
             <table className="w-full min-w-[640px] text-sm">
               <thead>
                 <tr className="border-b border-[var(--color-line)] text-left text-[11px] uppercase tracking-[0.05em] text-[var(--color-muted)]">
+                  <th className="px-3 py-2.5 font-medium">
+                    <input type="checkbox" title="Alle mit E-Mail auswählen" aria-label="Alle auswählen"
+                      checked={mailable.length > 0 && selCount === mailable.length}
+                      onChange={toggleAll} className="h-4 w-4 cursor-pointer accent-[var(--color-brand)]" />
+                  </th>
                   <th className="px-3 py-2.5 font-medium">Name</th>
                   <th className="px-2 py-2.5 font-medium">Rolle</th>
                   <th className="px-2 py-2.5 font-medium">Firma</th>
@@ -94,6 +143,12 @@ export default function KontaktePage() {
                 {filtered.map((k) => (
                   <tr key={k.leadId} onClick={() => ws.openLead(k.leadId)}
                     className="cursor-pointer border-b border-[var(--color-line)] transition-colors last:border-0 hover:bg-[var(--color-subtle)]">
+                    <td className="px-3 py-2.5" onClick={(e) => e.stopPropagation()}>
+                      <input type="checkbox" aria-label={`${k.name} auswählen`}
+                        disabled={!k.email} checked={selected.has(k.leadId)}
+                        onChange={() => toggle(k.leadId)}
+                        className="h-4 w-4 cursor-pointer accent-[var(--color-brand)] disabled:cursor-not-allowed disabled:opacity-40" />
+                    </td>
                     <td className="px-3 py-2.5">
                       <div className="flex items-center gap-2.5">
                         <InitialsAvatar name={k.name} seed={k.leadId} size={30} />

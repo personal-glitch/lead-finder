@@ -33,9 +33,27 @@ export async function POST(req: Request) {
     }
     if (!template) throw new AppError("not_found", "Vorlage nicht gefunden.");
 
+    // Tageslimit zum Schutz der Zustellbarkeit (eigenes Postfach wird sonst schnell als Spam gewertet).
+    const DAILY_CAP = 50;
+    const today = new Date().toDateString();
+    const sentToday = (await store.listEmailLog(ownerId)).filter(
+      (e) => e.status === "sent" && e.sentAt && new Date(e.sentAt).toDateString() === today,
+    ).length;
+    let remaining = Math.max(0, DAILY_CAP - sentToday);
+
     const results: Array<{ leadId: string } & SendOutcome> = [];
-    // Sequenziell – schont Resend-Limits und hält die Reihenfolge stabil.
+    // Sequenziell – schont Limits und hält die Reihenfolge stabil.
     for (const leadId of leadIds) {
+      if (remaining <= 0) {
+        results.push({
+          leadId,
+          status: "queued",
+          to: null,
+          subject: null,
+          error: `Tageslimit von ${DAILY_CAP} E-Mails erreicht – Rest am nächsten Tag senden.`,
+        });
+        continue;
+      }
       const lead = await store.getLead(ownerId, leadId);
       if (!lead) {
         results.push({
@@ -48,6 +66,7 @@ export async function POST(req: Request) {
         continue;
       }
       const outcome = await sendOutreach(ownerId, lead, template);
+      if (outcome.status === "sent") remaining--;
       await store.addActivity(ownerId, {
         leadId,
         type: "email",
