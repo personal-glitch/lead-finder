@@ -6,6 +6,7 @@ import { useFlags, PageHeader } from "@/components/shell/AppShell";
 import { useLeadWorkspace } from "@/components/use-lead-workspace";
 import { LeadDetailDrawer } from "@/components/LeadDetailDrawer";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { AddLeadModal } from "@/components/AddLeadModal";
 import { EmailComposeModal, type ComposeContact } from "@/components/EmailComposeModal";
 import { QuickCallModal, type CallContact } from "@/components/QuickCallModal";
 import { Icon, InitialsAvatar } from "@/components/icons";
@@ -36,6 +37,7 @@ export default function KontaktePage() {
   const [bulkTemplateId, setBulkTemplateId] = useState("");
   const [bulkBusy, setBulkBusy] = useState(false);
   const [confirmDel, setConfirmDel] = useState(false);
+  const [addOpen, setAddOpen] = useState(false);
 
   const kontakte = useMemo<Kontakt[]>(() => {
     return leads
@@ -97,7 +99,8 @@ export default function KontaktePage() {
 
   return (
     <>
-      <PageHeader title="Kontakte" subtitle={`${kontakte.length} Ansprechpartner`} />
+      <PageHeader title="Kontakte" subtitle={`${kontakte.length} Ansprechpartner`}
+        actions={<Button onClick={() => setAddOpen(true)}><Icon name="plus" size={16} /> Neuer Kontakt</Button>} />
       <div className="space-y-4 p-4 sm:p-7">
         <div className="flex flex-wrap items-center gap-2">
           <div className="relative">
@@ -231,6 +234,12 @@ export default function KontaktePage() {
         contact={callFor}
         onClose={() => setCallFor(null)}
         onLogged={(m) => { setToast(m); setCallFor(null); ws.reload?.(); }}
+      />
+      <AddLeadModal
+        open={addOpen}
+        mode="kontakt"
+        onClose={() => setAddOpen(false)}
+        onAdded={(m) => { setToast(m); setAddOpen(false); ws.reload(); }}
       />
       <ConfirmDialog
         open={confirmDel}

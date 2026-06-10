@@ -6,6 +6,7 @@ import { PageHeader, useFlags } from "@/components/shell/AppShell";
 import { useLeadWorkspace } from "@/components/use-lead-workspace";
 import { LeadDetailDrawer } from "@/components/LeadDetailDrawer";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { AddLeadModal } from "@/components/AddLeadModal";
 import { Icon, InitialsAvatar } from "@/components/icons";
 import { Badge, Button, Card, EmptyState, Select, Spinner, TextInput, Toast, cx } from "@/components/ui";
 
@@ -22,6 +23,7 @@ export default function UnternehmenPage() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkBusy, setBulkBusy] = useState(false);
   const [confirmDel, setConfirmDel] = useState(false);
+  const [addOpen, setAddOpen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
 
   const stageName = (id: string | null) => stages.find((s) => s.id === id)?.name ?? "—";
@@ -71,7 +73,8 @@ export default function UnternehmenPage() {
 
   return (
     <>
-      <PageHeader title="Unternehmen" subtitle={`${leads.length} Firmen im Bestand`} />
+      <PageHeader title="Unternehmen" subtitle={`${leads.length} Firmen im Bestand`}
+        actions={<Button onClick={() => setAddOpen(true)}><Icon name="plus" size={16} /> Neue Firma</Button>} />
       <div className="space-y-4 p-4 sm:p-7">
         {/* Filterleiste */}
         <div className="flex flex-wrap items-center gap-2">
@@ -178,6 +181,12 @@ export default function UnternehmenPage() {
         onEnrich={ws.enrichLead}
         onDelete={ws.deleteLead}
         onLeadChanged={ws.upsert}
+      />
+      <AddLeadModal
+        open={addOpen}
+        mode="firma"
+        onClose={() => setAddOpen(false)}
+        onAdded={(m) => { setToast(m); setAddOpen(false); ws.reload(); }}
       />
       <ConfirmDialog
         open={confirmDel}

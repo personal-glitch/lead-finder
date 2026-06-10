@@ -340,6 +340,28 @@ export default function EinstellungenPage() {
             <b> Abmeldelink</b> (setzt das Tool automatisch). Abmeldungen werden dauerhaft gesperrt.
           </div>
 
+          {/* Zustellbarkeit – damit Mails nicht im Spam landen. */}
+          <details className="rounded-lg border border-[var(--color-line)] bg-[var(--color-surface)] open:pb-3">
+            <summary className="cursor-pointer select-none px-3 py-2 text-xs font-semibold text-[var(--color-ink)]">
+              📬 So landest du nicht im Spam (wichtig vor dem ersten Versand)
+            </summary>
+            <div className="space-y-2 px-3 text-xs text-[var(--color-muted)]">
+              <ul className="list-disc space-y-1 pl-4">
+                <li><b>Aus eigener Domain senden</b> (z. B. name@deinefirma.de), nicht als Absender über Gmail/GMX/Web.de – das wirkt seriöser und kommt besser an.</li>
+                <li><b>SPF, DKIM & DMARC</b> einrichten – das beweist, dass die Mail wirklich von dir kommt. Bei IONOS, Strato &amp; Co. sind diese Einträge meist <b>automatisch</b> gesetzt; bei eigener Domain einmal beim Anbieter aktivieren.</li>
+                <li><b>Langsam starten (Warm-up):</b> erst 5–10 Mails/Tag, dann über Wochen steigern. Nicht sofort 50 am ersten Tag.</li>
+                <li><b>Personalisieren</b> (Platzhalter nutzen) statt identischer Massenmail – persönliche Mails landen seltener im Spam.</li>
+                <li><b>Spam-Wörter vermeiden:</b> kein „GRATIS!!!", keine VIELEN AUSRUFEZEICHEN, kein reiner Großbuchstaben-Betreff, keine $$$.</li>
+                <li><b>Kurz &amp; sauber:</b> wenig Links, keine großen Bilder/Anhänge, klarer Text.</li>
+                <li><b>Impressum &amp; Abmeldelink</b> – setzt das Tool automatisch unter jede Mail (Pflicht &amp; gut für die Zustellbarkeit).</li>
+                <li><b>Tageslimit beachten:</b> das Tool drosselt auf max. 50 Mails/Tag – bewusst niedrig, um deine Adresse zu schützen.</li>
+              </ul>
+              <div className="rounded-md border border-[var(--color-brand)]/40 bg-[var(--color-brand-tint)] px-3 py-2 text-[var(--color-ink)]">
+                <b>Tipp:</b> Schick dir zuerst eine Testmail an ein Gmail-/Outlook-Konto und prüfe, ob sie im Posteingang (nicht im Spam) landet.
+              </div>
+            </div>
+          </details>
+
           <div className="flex items-center justify-between">
             <Button variant="ghost" onClick={sendTest} disabled={testing || !emailReady}>
               {testing ? <><Spinner size={14} /> …</> : <><Icon name="mail" size={15} /> Test-E-Mail</>}
