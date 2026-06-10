@@ -10,8 +10,6 @@ import { firstGermanPhone } from "@/lib/phone/parse-de";
 import type { Lead } from "@/lib/types";
 
 const Body = z.object({
-  // Temporär: Diagnose (roher Fetch-Status der Website).
-  debug: z.boolean().optional(),
   // Entweder eine bereits gespeicherte Lead-ID (Ergebnis wird persistiert) …
   id: z.uuid().optional(),
   // … oder direkt eine Website (Vorschau ohne Speichern).
@@ -26,17 +24,7 @@ const Body = z.object({
 
 export async function POST(req: Request) {
   try {
-    const { id, website, branche, name, ort, debug } = Body.parse(await req.json());
-
-    // ── Temporäre Diagnose: roher Scrape OHNE Cache ──
-    if (debug && website) {
-      try {
-        const raw = await scrapeImpressum(website, isBrancheKey(branche ?? "") ? (branche as BrancheKey) : undefined);
-        return jsonOk({ rawScrape: raw });
-      } catch (e) {
-        return jsonOk({ scrapeError: String(e) });
-      }
-    }
+    const { id, website, branche, name, ort } = Body.parse(await req.json());
 
     const store = getStore();
     const ownerId = await getOwnerId();
@@ -75,7 +63,9 @@ export async function POST(req: Request) {
     let imp = domain ? await getCachedEnrichment(domain) : null;
     if (!imp) {
       imp = await scrapeImpressum(url, brancheKey);
-      if (domain) await putCachedEnrichment(domain, imp);
+      // NUR erfolgreiche Funde cachen – sonst würde ein vorübergehend nicht
+      // erreichbarer Server ein leeres Ergebnis 60 Tage „festschreiben".
+      if (domain && imp.impressumUrl) await putCachedEnrichment(domain, imp);
     }
     const e164 = imp.phone ? firstGermanPhone(imp.phone)?.e164 ?? null : null;
     const ansprechpartner = imp.contactName
