@@ -46,6 +46,7 @@ function rowToSettings(r: any): Settings {
   return {
     callGoal: r?.call_goal ?? null,
     senderImpressum: r?.sender_impressum ?? null,
+    senderSignature: r?.sender_signature ?? null,
     plan: r?.plan ?? null,
     senderName: r?.sender_name ?? null,
     senderEmail: r?.sender_email ?? null,
@@ -649,6 +650,7 @@ export function createSupabaseStore(): DataStore {
       const row: Record<string, unknown> = { owner_id: ownerId };
       if (patch.callGoal !== undefined) row.call_goal = patch.callGoal;
       if (patch.senderImpressum !== undefined) row.sender_impressum = patch.senderImpressum;
+      if (patch.senderSignature !== undefined) row.sender_signature = patch.senderSignature;
       if (patch.plan !== undefined) row.plan = patch.plan;
       if (patch.senderName !== undefined) row.sender_name = patch.senderName;
       if (patch.senderEmail !== undefined) row.sender_email = patch.senderEmail;

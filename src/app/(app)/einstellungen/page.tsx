@@ -35,6 +35,7 @@ export default function EinstellungenPage() {
   // E-Mail-Versand (eigener SMTP-Zugang)
   const [senderName, setSenderName] = useState("");
   const [senderEmail, setSenderEmail] = useState("");
+  const [signature, setSignature] = useState("");
   const [smtpHost, setSmtpHost] = useState("");
   const [smtpPort, setSmtpPort] = useState("587");
   const [smtpUser, setSmtpUser] = useState("");
@@ -53,7 +54,7 @@ export default function EinstellungenPage() {
     (async () => {
       try {
         const [s, st] = await Promise.all([
-          api<{ settings: { callGoal: number; senderImpressum: string; plan: string; senderName: string; senderEmail: string; smtpHost: string; smtpPort: number | null; smtpUser: string; smtpPassSet: boolean; emailReady: boolean; subscriptionStatus: string | null; subscriptionRenewsAt: string | null; cancelAtPeriodEnd: boolean }; usage: { agents: number; leads: number } }>("/api/settings"),
+          api<{ settings: { callGoal: number; senderImpressum: string; senderSignature: string; plan: string; senderName: string; senderEmail: string; smtpHost: string; smtpPort: number | null; smtpUser: string; smtpPassSet: boolean; emailReady: boolean; subscriptionStatus: string | null; subscriptionRenewsAt: string | null; cancelAtPeriodEnd: boolean }; usage: { agents: number; leads: number } }>("/api/settings"),
           api<{ stages: PipelineStage[] }>("/api/stages"),
         ]);
         setCallGoal(s.settings.callGoal);
@@ -62,6 +63,7 @@ export default function EinstellungenPage() {
         setUsage(s.usage);
         setSenderName(s.settings.senderName);
         setSenderEmail(s.settings.senderEmail);
+        setSignature(s.settings.senderSignature);
         setSmtpHost(s.settings.smtpHost);
         setSmtpPort(s.settings.smtpPort ? String(s.settings.smtpPort) : "587");
         setSmtpUser(s.settings.smtpUser);
@@ -110,7 +112,7 @@ export default function EinstellungenPage() {
     setSavingEmail(true);
     try {
       const json: Record<string, unknown> = {
-        senderName, senderEmail, smtpHost, smtpPort: Number(smtpPort) || null, smtpUser,
+        senderName, senderEmail, senderSignature: signature, smtpHost, smtpPort: Number(smtpPort) || null, smtpUser,
       };
       if (smtpPass.trim()) json.smtpPass = smtpPass.trim();
       const r = await api<{ settings: { emailReady: boolean; smtpPassSet: boolean } }>("/api/settings", { method: "PATCH", json });
@@ -251,6 +253,37 @@ export default function EinstellungenPage() {
             Hinterlege deine eigene Mailadresse – dann verschickst du Angebote direkt aus dem Tool, aus deinem Postfach.
             Das Passwort wird verschlüsselt gespeichert.
           </p>
+
+          {/* Schritt-für-Schritt-Anleitung – damit jeder Nutzer es selbst sicher einrichtet. */}
+          <details className="rounded-lg border border-[var(--color-line)] bg-[var(--color-surface)] open:pb-3">
+            <summary className="cursor-pointer select-none px-3 py-2 text-xs font-semibold text-[var(--color-ink)]">
+              📩 So richtest du den Versand in 2 Minuten ein (Schritt für Schritt)
+            </summary>
+            <div className="space-y-3 px-3 text-xs text-[var(--color-muted)]">
+              <ol className="list-decimal space-y-1 pl-4">
+                <li><b>Absender-Name</b> = dein Name oder Firma · <b>Absender-E-Mail</b> = deine Postfach-Adresse.</li>
+                <li><b>Anbieter</b> im Dropdown wählen → Server &amp; Port werden automatisch gesetzt.</li>
+                <li><b>SMTP-Benutzer</b> = deine <b>komplette</b> E-Mail-Adresse (z. B. kontakt@deinefirma.de).</li>
+                <li><b>Passwort</b> = dein Postfach-Passwort. <b>Bei Gmail, GMX, Web.de, Outlook</b> brauchst du ein <b>App-Passwort</b> (nicht das normale Login-Passwort!).</li>
+                <li><b>Speichern</b> → <b>Test-E-Mail</b> klicken. Kommt sie an, läuft alles.</li>
+              </ol>
+              <div className="rounded-md border border-[var(--color-brand)]/40 bg-[var(--color-brand-tint)] px-3 py-2 text-[var(--color-ink)]">
+                <b>Zwei goldene Regeln:</b> 1) <b>Absender-E-Mail</b> und <b>SMTP-Benutzer</b> müssen <b>identisch</b> sein. 2) Du kannst nur unter der Adresse senden, mit der du dich anmeldest – sonst lehnt der Anbieter ab.
+              </div>
+              <table className="w-full text-left">
+                <thead className="text-[var(--color-faint)]"><tr><th className="py-1 pr-2 font-medium">Anbieter</th><th className="py-1 pr-2 font-medium">SMTP-Server</th><th className="py-1 font-medium">Port</th></tr></thead>
+                <tbody className="tnum">
+                  <tr><td className="py-0.5 pr-2">IONOS</td><td className="pr-2">smtp.ionos.de</td><td>587</td></tr>
+                  <tr><td className="py-0.5 pr-2">Gmail (App-Passwort)</td><td className="pr-2">smtp.gmail.com</td><td>587</td></tr>
+                  <tr><td className="py-0.5 pr-2">Outlook / M365</td><td className="pr-2">smtp.office365.com</td><td>587</td></tr>
+                  <tr><td className="py-0.5 pr-2">GMX</td><td className="pr-2">mail.gmx.net</td><td>587</td></tr>
+                  <tr><td className="py-0.5 pr-2">Web.de</td><td className="pr-2">smtp.web.de</td><td>587</td></tr>
+                  <tr><td className="py-0.5 pr-2">Strato</td><td className="pr-2">smtp.strato.de</td><td>587</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </details>
+
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="Absender-Name"><TextInput value={senderName} onChange={(e) => setSenderName(e.target.value)} placeholder="Max Mustermann" /></Field>
             <Field label="Absender-E-Mail"><TextInput type="email" value={senderEmail} onChange={(e) => setSenderEmail(e.target.value)} placeholder="kontakt@deinefirma.de" /></Field>
@@ -275,6 +308,20 @@ export default function EinstellungenPage() {
               <TextInput type="password" value={smtpPass} onChange={(e) => setSmtpPass(e.target.value)} placeholder={smtpPassSet ? "•••••••• (gespeichert)" : "App-Passwort"} />
             </Field>
           </div>
+          <Field label="E-Mail-Signatur" hint="Steht automatisch unter jeder Mail – über dem Pflicht-Footer (Impressum & Abmeldelink).">
+            <Textarea rows={5} value={signature} onChange={(e) => setSignature(e.target.value)}
+              placeholder={"Mit freundlichen Grüßen\nMax Mustermann\n\nMuster GmbH\nMusterstr. 1 · 50667 Köln\nTel.: 0221 1234567\nweb: musterfirma.de"} />
+          </Field>
+
+          {/* Compliance-Hinweis: Kaltakquise per E-Mail (§ 7 UWG). */}
+          <div className="rounded-lg border border-amber-300/50 bg-amber-50/60 px-3 py-2 text-xs leading-relaxed text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200">
+            <b>⚖️ Bitte beachten – Werbe-E-Mails an Firmen (§ 7 UWG):</b> Unaufgeforderte Werbung per E-Mail ist auch im
+            B2B nur zulässig, wenn ein <b>mutmaßliches Interesse</b> des Empfängers an genau deinem Angebot besteht
+            (sachlicher Bezug zu seinem Geschäft) – oder eine Einwilligung vorliegt. Versende gezielt &amp; relevant,
+            nie in Masse „auf Verdacht". Pflicht in jeder Mail: <b>Impressum</b> und ein funktionierender
+            <b> Abmeldelink</b> (setzt das Tool automatisch). Abmeldungen werden dauerhaft gesperrt.
+          </div>
+
           <div className="flex items-center justify-between">
             <Button variant="ghost" onClick={sendTest} disabled={testing || !emailReady}>
               {testing ? <><Spinner size={14} /> …</> : <><Icon name="mail" size={15} /> Test-E-Mail</>}

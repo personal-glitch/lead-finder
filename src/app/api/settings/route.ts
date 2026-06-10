@@ -12,6 +12,7 @@ function publicSettings(s: Settings) {
   return {
     callGoal: s.callGoal ?? config.targets.callsPerDay,
     senderImpressum: s.senderImpressum ?? config.resend.impressum ?? "",
+    senderSignature: s.senderSignature ?? "",
     plan: planOf(s.plan).key,
     senderName: s.senderName ?? "",
     senderEmail: s.senderEmail ?? "",
@@ -44,6 +45,7 @@ export async function GET() {
 const Body = z.object({
   callGoal: z.number().int().positive().max(1000).optional(),
   senderImpressum: z.string().nullish(),
+  senderSignature: z.string().max(2000).nullish(),
   plan: z.string().optional(),
   senderName: z.string().max(120).nullish(),
   senderEmail: z.string().max(200).nullish(),
@@ -63,6 +65,7 @@ export async function PATCH(req: Request) {
     const patch: Partial<Settings> = {};
     if (b.callGoal !== undefined) patch.callGoal = b.callGoal;
     if (b.senderImpressum !== undefined) patch.senderImpressum = clean(b.senderImpressum);
+    if (b.senderSignature !== undefined) patch.senderSignature = clean(b.senderSignature);
     if (b.plan !== undefined && isPlanKey(b.plan)) patch.plan = b.plan;
     if (b.senderName !== undefined) patch.senderName = clean(b.senderName);
     if (b.senderEmail !== undefined) patch.senderEmail = clean(b.senderEmail);

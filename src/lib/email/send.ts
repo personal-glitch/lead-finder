@@ -75,16 +75,21 @@ function unsubscribeUrl(email: string, ownerId: string): string {
   return u.toString();
 }
 
-function buildHtml(body: string, unsubUrl: string, senderImpressum: string | null): string {
+function buildHtml(body: string, unsubUrl: string, senderImpressum: string | null, signature: string | null): string {
   const paragraphs = escapeHtml(body)
     .split(/\n{2,}/)
     .map((p) => `<p>${p.replace(/\n/g, "<br>")}</p>`)
     .join("\n");
+  // Persönliche Signatur (optional) – direkt unter dem Mailtext, über dem Pflicht-Footer.
+  const sig = signature?.trim()
+    ? `<p style="margin-top:16px;color:#334155">${escapeHtml(signature.trim()).replace(/\n/g, "<br>")}</p>`
+    : "";
   const impressum = senderImpressum
     ? escapeHtml(senderImpressum)
     : "[Impressum bitte in den Einstellungen hinterlegen]";
   return `<!doctype html><html lang="de"><body style="font-family:system-ui,Arial,sans-serif;color:#0f172a;line-height:1.5">
 ${paragraphs}
+${sig}
 <hr style="border:none;border-top:1px solid #e2e8f0;margin:24px 0">
 <p style="font-size:12px;color:#64748b">${impressum}</p>
 <p style="font-size:12px;color:#64748b">
@@ -132,8 +137,10 @@ export async function sendOutreach(
   const unsubUrl = unsubscribeUrl(to, ownerId);
   const settings = await store.getSettings(ownerId);
   const senderImpressum = settings.senderImpressum ?? config.resend.impressum ?? null;
-  const html = buildHtml(rendered.body, unsubUrl, senderImpressum);
-  const text = `${rendered.body}\n\n—\n${senderImpressum ?? ""}\nAbmelden: ${unsubUrl}`;
+  const signature = settings.senderSignature ?? null;
+  const html = buildHtml(rendered.body, unsubUrl, senderImpressum, signature);
+  const sigText = signature?.trim() ? `\n\n${signature.trim()}` : "";
+  const text = `${rendered.body}${sigText}\n\n—\n${senderImpressum ?? ""}\nAbmelden: ${unsubUrl}`;
   const headers = {
     "List-Unsubscribe": `<${unsubUrl}>`,
     "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",

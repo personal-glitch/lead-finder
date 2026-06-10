@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import type { EmailTemplate, Suppression } from "@/lib/types";
 import { api } from "@/lib/client";
 import { PLACEHOLDERS } from "@/lib/email/templates";
+import { TEMPLATE_LIBRARY } from "@/lib/email/library";
 import { PageHeader } from "@/components/shell/AppShell";
 import { Icon } from "@/components/icons";
 import { Badge, Button, Card, Field, Spinner, TextInput, Textarea, Toast, cx } from "@/components/ui";
@@ -82,9 +83,37 @@ function Templates({ notify }: { notify: (m: string) => void }) {
     setList(rest); loadInto(rest[0] ?? null);
   };
 
+  const useLibrary = (t: { name: string; subject: string; body: string }) => {
+    setSelectedId(null); setName(t.name); setSubject(t.subject); setBody(t.body);
+    notify("Vorlage geladen – anpassen und Anlegen klicken.");
+  };
+
   if (loading) return <div className="flex items-center gap-2 text-[var(--color-muted)]"><Spinner /> Lädt …</div>;
 
   return (
+    <div className="space-y-5">
+      {/* Compliance-Hinweis: Kaltakquise per E-Mail (§ 7 UWG). */}
+      <div className="rounded-lg border border-amber-300/50 bg-amber-50/60 px-3.5 py-2.5 text-xs leading-relaxed text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200">
+        <b>⚖️ Spielregeln für Werbe-E-Mails (§ 7 UWG):</b> Schreibe nur Firmen an, bei denen ein <b>sachlicher Bezug</b> zu
+        deinem Angebot plausibel ist (mutmaßliches Interesse) – nicht wahllos in Masse. Am sichersten ist die Mail
+        <b> nach einem Erstkontakt</b> (z. B. Telefonat). <b>Impressum &amp; Abmeldelink</b> setzt das Tool automatisch unter
+        jede Mail; Abmeldungen werden dauerhaft gesperrt.
+      </div>
+
+      {/* Vorlagen-Bibliothek: per Klick in den Editor laden, dann anlegen. */}
+      <Card className="space-y-2.5 p-4">
+        <div className="flex items-center gap-2 text-sm font-semibold"><Icon name="template" size={15} /> Vorlagen-Bibliothek</div>
+        <p className="text-xs text-[var(--color-muted)]">Fertige Vorlagen als Startpunkt – anklicken, anpassen, „Anlegen". Platzhalter werden beim Versand automatisch ersetzt.</p>
+        <div className="flex flex-wrap gap-2">
+          {TEMPLATE_LIBRARY.map((t) => (
+            <button key={t.name} onClick={() => useLibrary(t)}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--color-line-strong)] bg-[var(--color-surface)] px-3 py-1.5 text-xs hover:border-[var(--color-brand)] hover:bg-[var(--color-brand-tint)]">
+              <Badge tone="slate">{t.branche}</Badge>{t.name}
+            </button>
+          ))}
+        </div>
+      </Card>
+
     <div className="grid grid-cols-1 gap-5 sm:grid-cols-[230px_1fr]">
       <Card className="h-fit p-2">
         {list.map((t) => (
@@ -118,6 +147,7 @@ function Templates({ notify }: { notify: (m: string) => void }) {
           </Button>
         </div>
       </Card>
+    </div>
     </div>
   );
 }

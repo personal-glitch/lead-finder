@@ -162,6 +162,8 @@ export interface Settings {
   senderImpressum: string | null;
   /** Gewähltes Paket; null = Default. */
   plan: string | null;
+  /** Persönliche E-Mail-Signatur; wird unter den Mailtext (über dem Pflicht-Footer) gesetzt. */
+  senderSignature: string | null;
   // ── Eigener E-Mail-Versand pro Nutzer (SMTP) ──
   senderName: string | null;
   senderEmail: string | null;
