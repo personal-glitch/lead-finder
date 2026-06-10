@@ -61,27 +61,35 @@ export default function SuchePage() {
     setResult((r) => r ? { ...r, leads: r.leads.map((l) => dedupeKey(l) === key ? {
       ...l, phone: e.phone ?? l.phone, phoneE164: e.phoneE164 ?? l.phoneE164,
       email: e.email ?? l.email, ansprechpartner: e.ansprechpartner ?? l.ansprechpartner,
+      website: e.website ?? l.website,
       enrichmentSource: (e.enrichmentSource as "web") ?? l.enrichmentSource,
     } : l) } : r);
 
+  // Anreichern eines einzelnen Treffers. Hat der Treffer keine Website, wird sie
+  // serverseitig per Web-Suche aus Name + Ort ermittelt und danach gescrapt.
   const enrich = async (input: LeadInput) => {
-    if (!input.website) return;
     const key = dedupeKey(input); setEnrichingKey(key);
     try {
-      const { enrichment } = await api<{ enrichment: Record<string, string | null> }>("/api/leads/enrich", { json: { website: input.website, branche: input.objektTyp } });
+      const { enrichment } = await api<{ enrichment: Record<string, string | null> }>("/api/leads/enrich", {
+        json: { website: input.website ?? undefined, branche: input.objektTyp, name: input.name, ort: input.ort },
+      });
       applyEnrichment(key, enrichment);
+      if (!enrichment.phone && !enrichment.email && !enrichment.ansprechpartner) {
+        setToast("Keine zusätzlichen Kontaktdaten gefunden.");
+      }
     } catch (e) { setToast(e instanceof Error ? e.message : "Anreicherung fehlgeschlagen."); }
     finally { setEnrichingKey(null); }
   };
 
-  // Alle Treffer mit Website anreichern (Impressum-/Kontakt-Scrape, serverseitig &
-  // kostenlos). Parallelisiert (schonende Nebenläufigkeit), abbrechbar. Schon
-  // angereicherte werden übersprungen. Wird manuell oder automatisch nach der Suche
-  // aufgerufen; `leads` kommt direkt aus dem frischen Suchergebnis.
-  const runEnrich = async (leads: LeadInput[], silent = false) => {
-    const targets = leads.filter((l) => l.website && !l.enrichmentSource);
+  // Treffer anreichern (Impressum-/Kontakt-Scrape, serverseitig & kostenlos).
+  // Parallelisiert (schonende Nebenläufigkeit), abbrechbar. Schon angereicherte
+  // werden übersprungen.
+  //   deep=false  → nur Treffer mit bereits bekannter Website (schnell; Auto-Lauf)
+  //   deep=true   → auch Treffer OHNE Website: Website wird per Web-Suche gesucht
+  const runEnrich = async (leads: LeadInput[], silent = false, deep = false) => {
+    const targets = leads.filter((l) => !l.enrichmentSource && (deep ? (l.website || l.name) : l.website));
     if (targets.length === 0) {
-      if (!silent) setToast("Nichts anzureichern – kein Treffer mit Website (oder alle bereits angereichert).");
+      if (!silent) setToast("Nichts anzureichern – alle Treffer sind bereits angereichert.");
       return;
     }
     setEnrichingAll(true); stopRef.current = false;
@@ -91,20 +99,24 @@ export default function SuchePage() {
       while (idx < targets.length && !stopRef.current) {
         const input = targets[idx++]; const key = dedupeKey(input);
         try {
-          const { enrichment } = await api<{ enrichment: Record<string, string | null> }>("/api/leads/enrich", { json: { website: input.website, branche: input.objektTyp } });
+          const { enrichment } = await api<{ enrichment: Record<string, string | null> }>("/api/leads/enrich", {
+            json: { website: input.website ?? undefined, branche: input.objektTyp, name: input.name, ort: input.ort },
+          });
           applyEnrichment(key, enrichment);
           if (enrichment.phone || enrichment.email || enrichment.ansprechpartner) found++;
         } catch { /* einzelne Fehler überspringen, Lauf nicht abbrechen */ }
         setEnrichProgress({ done: ++done, total: targets.length });
       }
     };
-    // Schonende Nebenläufigkeit: max. 5 Firmen gleichzeitig.
-    await Promise.all(Array.from({ length: Math.min(5, targets.length) }, worker));
+    // Schonende Nebenläufigkeit: tiefe Suche zurückhaltender (Web-Suche je Firma).
+    const lanes = deep ? 3 : 5;
+    await Promise.all(Array.from({ length: Math.min(lanes, targets.length) }, worker));
     setEnrichingAll(false); setEnrichProgress(null);
     if (!stopRef.current) setToast(`Anreicherung fertig: ${found} von ${targets.length} mit Kontaktdaten gefunden.`);
   };
 
-  const enrichAll = () => { if (result && !enrichingAll) runEnrich(result.leads); };
+  // „Alle anreichern" geht in die Tiefe (auch Firmen ohne hinterlegte Website).
+  const enrichAll = () => { if (result && !enrichingAll) runEnrich(result.leads, false, true); };
   const stopEnrich = () => { stopRef.current = true; };
 
   const take = async () => {
@@ -224,9 +236,10 @@ export default function SuchePage() {
                           {host && <span className="truncate text-[var(--color-faint)]">{host}</span>}
                         </div>
                       </div>
-                      {l.website && (
-                        <Button variant="ghost" size="sm" disabled={enrichingKey === key} onClick={() => enrich(l)}>
-                          {enrichingKey === key ? <Spinner size={13} /> : "Anreichern"}
+                      {!l.enrichmentSource && l.name && (
+                        <Button variant="ghost" size="sm" disabled={enrichingKey === key} onClick={() => enrich(l)}
+                          title={l.website ? "Impressum auslesen" : "Website per Web-Suche finden und auslesen"}>
+                          {enrichingKey === key ? <Spinner size={13} /> : l.website ? "Anreichern" : "Tiefensuche"}
                         </Button>
                       )}
                     </div>
