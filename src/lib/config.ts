@@ -46,6 +46,10 @@ export const config = {
     ],
     // Fallback-Mirror bekommen jetzt mehr Luft (Cloud-IP-Latenz).
     overpassFallbackTimeoutMs: 12_000,
+    // true = ein eigener OVERPASS_URL (z. B. Cloudflare-Worker-Proxy) ist gesetzt.
+    // Dann ist Overpass von der Cloud erreichbar und wird PRIMÄR genutzt
+    // (Kategorie-Suche = Firmen nach Tätigkeit, viel mehr Treffer).
+    overpassProxied: Boolean(env("OVERPASS_URL")),
     // Nominatim: max. 1 Request/Sekunde.
     nominatimMinIntervalMs: 1100,
     // Overpass ist rate-limited – Anfragen serialisieren.

@@ -1,6 +1,7 @@
 // Gemeinsamer Suchlauf: geocode → searchLeads → (Demo-Fallback) → LeadInput[].
 // Wird von /api/agents/[id]/run UND /api/leads/search genutzt.
 import { AppError } from "@/lib/errors";
+import { config } from "@/lib/config";
 import { geocode, type GeoPoint } from "@/lib/osm/geocode";
 import { firstGermanPhone } from "@/lib/phone/parse-de";
 import type { LeadInput } from "@/lib/types";
@@ -93,8 +94,24 @@ export async function runBrancheSearch(
   const softCodes = ["upstream", "timeout", "rate_limited"];
   const diag: BrancheSearchResult["_diag"] = { source: "none" };
 
-  // 1) PRIMÄR: Namens-Suche über Nominatim – schnell & von Vercel zuverlässig
-  //    erreichbar. (Overpass/Kategorie wäre schöner, blockt aber Cloud-IPs.)
+  // 0) Ist ein Overpass-Proxy (OVERPASS_URL) gesetzt, ist die Kategorie-Suche von
+  //    der Cloud erreichbar → PRIMÄR nutzen (findet Firmen nach Tätigkeit).
+  if (config.osm.overpassProxied) {
+    try {
+      const leads = await searchLeadsOverpass(center, radiusKm, branchen, keywords);
+      diag.overpassCount = leads.length;
+      if (leads.length > 0) {
+        diag.source = "overpass";
+        return { center, radiusKm, leads, notes: [], demo: false, _diag: diag };
+      }
+    } catch (err) {
+      diag.overpassError = err instanceof AppError ? `${err.code}: ${err.message}` : String(err);
+      const code = err instanceof AppError ? err.code : "upstream";
+      if (!softCodes.includes(code)) throw err;
+    }
+  }
+
+  // 1) Namens-Suche über Nominatim – schnell & von Vercel zuverlässig erreichbar.
   let nominatimOk = false;
   try {
     const leads = (await searchLeadsNominatim(center, radiusKm, branchen, keywords)).map(toLeadInput);
