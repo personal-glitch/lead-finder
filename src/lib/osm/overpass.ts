@@ -77,29 +77,34 @@ export async function runOverpass(query: string): Promise<OverpassElement[]> {
   const endpoints = [...new Set([config.osm.overpassUrl, ...config.osm.overpassFallbacks])];
   let lastError: AppError | null = null;
   let sawRateLimit = false;
+  const details: string[] = [];
 
   for (let i = 0; i < endpoints.length; i++) {
     const timeoutMs = i === 0 ? config.osm.fetchTimeoutMs : config.osm.overpassFallbackTimeoutMs;
+    const host = (() => { try { return new URL(endpoints[i]).host; } catch { return endpoints[i]; } })();
     try {
       return await queryEndpoint(endpoints[i], query, timeoutMs);
     } catch (err) {
       const appErr = toAppError(err, "Overpass");
       if (appErr.code === "rate_limited") sawRateLimit = true;
       lastError = appErr;
+      details.push(`${host}=${appErr.code}:${appErr.message}`);
       // nächsten Mirror versuchen
     }
   }
 
   // Detail nur fürs Server-Log – nach außen bleibt die Quelle/Technik anonym.
   if (lastError) console.error("[search] upstream failed:", lastError.message);
+  // Temporäre Diagnose: Details aller Endpoints in die Fehlermeldung legen.
+  const detailMsg = details.join(" | ");
   if (sawRateLimit) {
     throw new AppError(
       "rate_limited",
-      "Zu viele Anfragen. Bitte einen Moment warten und erneut suchen.",
+      `Zu viele Anfragen. Bitte einen Moment warten und erneut suchen. [${detailMsg}]`,
     );
   }
   throw new AppError(
     "upstream",
-    "Die Live-Datenbank ist gerade nicht erreichbar. Bitte gleich erneut versuchen.",
+    `Die Live-Datenbank ist gerade nicht erreichbar. [${detailMsg}]`,
   );
 }
