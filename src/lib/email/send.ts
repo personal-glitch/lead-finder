@@ -81,8 +81,13 @@ function buildHtml(body: string, unsubUrl: string, senderImpressum: string | nul
     .map((p) => `<p>${p.replace(/\n/g, "<br>")}</p>`)
     .join("\n");
   // Persönliche Signatur (optional) – direkt unter dem Mailtext, über dem Pflicht-Footer.
-  const sig = signature?.trim()
-    ? `<p style="margin-top:16px;color:#334155">${escapeHtml(signature.trim()).replace(/\n/g, "<br>")}</p>`
+  // Enthält die Signatur HTML-Tags, wird sie roh eingebettet (Profi-Signatur); sonst Text mit nl2br.
+  const sigTrim = signature?.trim();
+  const sigIsHtml = !!sigTrim && /<[a-z][\s\S]*>/i.test(sigTrim);
+  const sig = sigTrim
+    ? sigIsHtml
+      ? `<div style="margin-top:16px">${sigTrim}</div>`
+      : `<p style="margin-top:16px;color:#334155">${escapeHtml(sigTrim).replace(/\n/g, "<br>")}</p>`
     : "";
   const impressum = senderImpressum
     ? escapeHtml(senderImpressum)
@@ -139,7 +144,11 @@ export async function sendOutreach(
   const senderImpressum = settings.senderImpressum ?? config.resend.impressum ?? null;
   const signature = settings.senderSignature ?? null;
   const html = buildHtml(rendered.body, unsubUrl, senderImpressum, signature);
-  const sigText = signature?.trim() ? `\n\n${signature.trim()}` : "";
+  // Für die Text-Version HTML-Tags entfernen, damit die Signatur lesbar bleibt.
+  const sigPlain = signature?.trim()
+    ? signature.replace(/<br\s*\/?>(?=)/gi, "\n").replace(/<[^>]+>/g, "").replace(/[ \t]+\n/g, "\n").trim()
+    : "";
+  const sigText = sigPlain ? `\n\n${sigPlain}` : "";
   const text = `${rendered.body}${sigText}\n\n—\n${senderImpressum ?? ""}\nAbmelden: ${unsubUrl}`;
   const headers = {
     "List-Unsubscribe": `<${unsubUrl}>`,

@@ -17,6 +17,18 @@ const SMTP_PRESETS: Record<string, { host: string; port: number }> = {
   Strato: { host: "smtp.strato.de", port: 587 },
 };
 
+// Schicke, e-mail-sichere HTML-Signatur (ohne Bilder, mit Marken-Akzent). Platzhalter danach anpassen.
+function profiSignatur(name: string, email: string): string {
+  const n = name?.trim() || "Dein Name";
+  const e = email?.trim() || "name@deinefirma.de";
+  return `<table cellpadding="0" cellspacing="0" style="font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#1f2937;line-height:1.55"><tr><td style="border-left:3px solid #a8e83a;padding:2px 0 2px 14px">
+<div style="font-size:16px;font-weight:bold;color:#0f172a">${n}</div>
+<div style="color:#6b7280">Deine Firma · Deine Rolle</div>
+<div style="margin-top:8px">Tel.: <a href="tel:+490000000000" style="color:#1f2937;text-decoration:none">+49 000 0000000</a></div>
+<div><a href="mailto:${e}" style="color:#1f2937;text-decoration:none">${e}</a> &nbsp;·&nbsp; <a href="https://deinefirma.de" style="color:#0f766e;text-decoration:none;font-weight:600">deinefirma.de</a></div>
+</td></tr></table>`;
+}
+
 export default function EinstellungenPage() {
   const flags = useFlags();
   const [loading, setLoading] = useState(true);
@@ -308,8 +320,14 @@ export default function EinstellungenPage() {
               <TextInput type="password" value={smtpPass} onChange={(e) => setSmtpPass(e.target.value)} placeholder={smtpPassSet ? "•••••••• (gespeichert)" : "App-Passwort"} />
             </Field>
           </div>
-          <Field label="E-Mail-Signatur" hint="Steht automatisch unter jeder Mail – über dem Pflicht-Footer (Impressum & Abmeldelink).">
-            <Textarea rows={5} value={signature} onChange={(e) => setSignature(e.target.value)}
+          <Field label="E-Mail-Signatur" hint="Steht automatisch unter jeder Mail – über dem Pflicht-Footer. Reiner Text ODER HTML (Profi-Signatur).">
+            <div className="mb-2 flex flex-wrap items-center gap-2">
+              <Button variant="ghost" onClick={() => setSignature(profiSignatur(senderName, senderEmail))}>
+                <Icon name="plus" size={14} /> Profi-Signatur einfügen
+              </Button>
+              <span className="text-xs text-[var(--color-muted)]">Fügt eine schicke HTML-Signatur ein – danach Name, Firma, Telefon & Web anpassen.</span>
+            </div>
+            <Textarea rows={7} value={signature} onChange={(e) => setSignature(e.target.value)}
               placeholder={"Mit freundlichen Grüßen\nMax Mustermann\n\nMuster GmbH\nMusterstr. 1 · 50667 Köln\nTel.: 0221 1234567\nweb: musterfirma.de"} />
           </Field>
 
