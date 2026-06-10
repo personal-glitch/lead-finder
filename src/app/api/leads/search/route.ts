@@ -15,6 +15,8 @@ const Body = z.object({
   branchen: z.array(z.string()).optional(),
   keywords: z.array(z.string()).optional(),
   keyword: z.string().optional(),
+  // Temporär: Diagnose-Infos (Quelle/Fehler) mit ausgeben.
+  debug: z.boolean().optional(),
 });
 
 export async function POST(req: Request) {
@@ -26,6 +28,12 @@ export async function POST(req: Request) {
       .map((k) => k.trim())
       .filter(Boolean);
     const result = await runBrancheSearch(plz, b.radiusKm ?? 15, branchen, keywords);
+    // _diag nur bei ausdrücklichem debug zurückgeben (Datenquelle bleibt sonst intern).
+    if (!b.debug && "_diag" in result) {
+      const { _diag, ...rest } = result;
+      void _diag;
+      return jsonOk(rest);
+    }
     return jsonOk(result);
   } catch (err) {
     return jsonError(err);

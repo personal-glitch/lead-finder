@@ -15,6 +15,8 @@ export interface BrancheSearchResult {
   leads: LeadInput[];
   notes: string[];
   demo: boolean;
+  /** Temporäre Diagnose (nur wenn debug angefordert): welche Quelle, welcher Fehler. */
+  _diag?: { source: string; overpassCount?: number; overpassError?: string; nominatimError?: string };
 }
 
 const DEMO_NOTE =
@@ -89,14 +91,20 @@ export async function runBrancheSearch(
   if (!center) throw new AppError("no_geocode", `Für „${plz}" wurde kein Ort gefunden.`);
 
   const softCodes = ["upstream", "timeout", "rate_limited"];
+  const diag: BrancheSearchResult["_diag"] = { source: "none" };
 
   // 1) PRIMÄR: Kategorie-Suche über Overpass (findet nach Tätigkeit, nicht nach
   //    Name). Liefert i. d. R. deutlich mehr & passendere Treffer.
   try {
     const leads = await searchLeadsOverpass(center, radiusKm, branchen, keywords);
-    if (leads.length > 0) return { center, radiusKm, leads, notes: [], demo: false };
+    diag.overpassCount = leads.length;
+    if (leads.length > 0) {
+      diag.source = "overpass";
+      return { center, radiusKm, leads, notes: [], demo: false, _diag: diag };
+    }
     // 0 Treffer → unten Namens-Suche als Ergänzung versuchen.
   } catch (err) {
+    diag.overpassError = err instanceof AppError ? `${err.code}: ${err.message}` : String(err);
     const code = err instanceof AppError ? err.code : "upstream";
     if (!softCodes.includes(code)) throw err;
     // Overpass nicht erreichbar → unten Nominatim-Fallback.
@@ -105,14 +113,17 @@ export async function runBrancheSearch(
   // 2) FALLBACK: Namens-Suche über Nominatim (kostenlos, sehr gut erreichbar).
   try {
     const leads = (await searchLeadsNominatim(center, radiusKm, branchen, keywords)).map(toLeadInput);
+    diag.source = "nominatim";
     const notes = leads.length === 0
       ? ["Keine Treffer in diesem Umkreis – Umkreis vergrößern oder andere Branche/Stichwort wählen."]
       : [];
-    return { center, radiusKm, leads, notes, demo: false };
+    return { center, radiusKm, leads, notes, demo: false, _diag: diag };
   } catch (err) {
+    diag.nominatimError = err instanceof AppError ? `${err.code}: ${err.message}` : String(err);
     const code = err instanceof AppError ? err.code : "upstream";
     // Nur bei Upstream-/Timeout-/Rate-Limit-Fehlern auf Beispieldaten ausweichen.
     if (!softCodes.includes(code)) throw err;
-    return { center, radiusKm, leads: buildDemoLeads(center, radiusKm, branchen, keywords), notes: [DEMO_NOTE], demo: true };
+    diag.source = "demo";
+    return { center, radiusKm, leads: buildDemoLeads(center, radiusKm, branchen, keywords), notes: [DEMO_NOTE], demo: true, _diag: diag };
   }
 }
