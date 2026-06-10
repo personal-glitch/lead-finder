@@ -2,6 +2,8 @@ import { z } from "zod";
 import { jsonOk, jsonError } from "@/lib/api";
 import { runBrancheSearch } from "@/lib/leadgen/run-search";
 import { isBrancheKey, type BrancheKey } from "@/lib/leadgen/branchen";
+import { getOwnerId } from "@/lib/db";
+import { logUsage } from "@/lib/usage";
 
 // Overpass (Kategorie-Suche) + ggf. Nominatim-Fallback brauchen Luft.
 export const maxDuration = 60;
@@ -28,6 +30,8 @@ export async function POST(req: Request) {
       .map((k) => k.trim())
       .filter(Boolean);
     const result = await runBrancheSearch(plz, b.radiusKm ?? 15, branchen, keywords);
+    // Nutzungs-Statistik (Superadmin): Suche zählen – best effort, nicht blockierend.
+    void getOwnerId().then((oid) => logUsage("search", oid)).catch(() => logUsage("search", null));
     // _diag nur bei ausdrücklichem debug zurückgeben (Datenquelle bleibt sonst intern).
     if (!b.debug && "_diag" in result) {
       const { _diag, ...rest } = result;

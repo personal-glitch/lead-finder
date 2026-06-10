@@ -48,7 +48,29 @@ export async function GET() {
       })
       .sort((a, b) => (b.createdAt ?? "").localeCompare(a.createdAt ?? ""));
 
-    return jsonOk({ registered, confirmed, trialing, paying, customers });
+    // ── Nutzungs-Statistik (Suchen & aktive Nutzer) ──
+    const now = new Date();
+    const startToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+    const since7 = new Date(Date.now() - 7 * 86_400_000).toISOString();
+    let usage = { searchesToday: 0, searches7d: 0, activeToday: 0, active7d: 0 };
+    try {
+      const { data: ev } = await admin
+        .from("usage_events")
+        .select("owner_id, type, created_at")
+        .gte("created_at", since7);
+      const evs = ev ?? [];
+      const todayEvs = evs.filter((e) => (e.created_at as string) >= startToday);
+      usage = {
+        searches7d: evs.filter((e) => e.type === "search").length,
+        searchesToday: todayEvs.filter((e) => e.type === "search").length,
+        activeToday: new Set(todayEvs.filter((e) => e.owner_id).map((e) => e.owner_id)).size,
+        active7d: new Set(evs.filter((e) => e.owner_id).map((e) => e.owner_id)).size,
+      };
+    } catch {
+      /* Tabelle evtl. noch nicht migriert – Statistik bleibt auf 0 */
+    }
+
+    return jsonOk({ registered, confirmed, trialing, paying, usage, customers });
   } catch (err) {
     return jsonError(err);
   }

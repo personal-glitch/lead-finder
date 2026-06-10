@@ -16,7 +16,8 @@ interface Customer {
   createdAt: string | null;
   confirmed: boolean;
 }
-interface Stats { registered: number; confirmed: number; trialing: number; paying: number; customers: Customer[] }
+interface Usage { searchesToday: number; searches7d: number; activeToday: number; active7d: number }
+interface Stats { registered: number; confirmed: number; trialing: number; paying: number; usage?: Usage; customers: Customer[] }
 
 function fmt(iso: string | null) {
   if (!iso) return "–";
@@ -99,6 +100,22 @@ export default function AdminPage() {
               {cards.map((c) => (
                 <div key={c.label} className="rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] p-5">
                   <span className="grid h-10 w-10 place-items-center rounded-xl bg-[var(--color-brand-tint)] text-[var(--color-brand)]"><Icon name={c.icon} size={19} /></span>
+                  <div className="mt-3 text-3xl font-semibold tnum">{c.value}</div>
+                  <div className="text-sm font-medium">{c.label}</div>
+                </div>
+              ))}
+            </div>
+
+            <h2 className="mt-10 text-sm font-semibold">Aktivität</h2>
+            <div className="mt-3 grid grid-cols-2 gap-4 lg:grid-cols-4">
+              {[
+                { label: "Suchen heute", value: stats.usage?.searchesToday ?? 0, icon: "search" as const },
+                { label: "Aktive Nutzer heute", value: stats.usage?.activeToday ?? 0, icon: "user" as const },
+                { label: "Suchen (7 Tage)", value: stats.usage?.searches7d ?? 0, icon: "search" as const },
+                { label: "Aktive Nutzer (7 Tage)", value: stats.usage?.active7d ?? 0, icon: "agents" as const },
+              ].map((c) => (
+                <div key={c.label} className="rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] p-5">
+                  <span className="grid h-10 w-10 place-items-center rounded-xl bg-[var(--color-subtle)] text-[var(--color-ink-2)]"><Icon name={c.icon} size={19} /></span>
                   <div className="mt-3 text-3xl font-semibold tnum">{c.value}</div>
                   <div className="text-sm font-medium">{c.label}</div>
                 </div>
