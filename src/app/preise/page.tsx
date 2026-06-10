@@ -38,7 +38,7 @@ export default function PreisePage() {
 
       <H2>Vertragspartner</H2>
       <P>
-        Anbieter und Vertragspartner ist die Seciora GbR i.G. (in Gründung), Cihan Yildirim und Salih Aygün,
+        Anbieter und Vertragspartner ist das Einzelunternehmen Cihan Yildirim (Geschäftsbezeichnung „KundenRadar"),
         Rathenaustraße 135, 51373 Leverkusen. Es gelten ergänzend unsere{" "}
         <a href="/agb" className="text-[var(--color-brand)] hover:underline">AGB</a> und die{" "}
         <a href="/datenschutz" className="text-[var(--color-brand)] hover:underline">Datenschutzerklärung</a>.

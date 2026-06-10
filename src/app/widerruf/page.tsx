@@ -20,7 +20,7 @@ export default function WiderrufPage() {
         Widerrufsfrist beträgt vierzehn Tage ab dem Tag des Vertragsabschlusses.
       </P>
       <P>
-        Um Ihr Widerrufsrecht auszuüben, müssen Sie uns (Seciora GbR i.G., Cihan Yildirim und Salih Aygün,
+        Um Ihr Widerrufsrecht auszuüben, müssen Sie uns (Cihan Yildirim, Einzelunternehmen „KundenRadar",
         Rathenaustraße 135, 51373 Leverkusen, E-Mail: kontakt@seciora.de, Telefon: +49 15566 021171) mittels einer
         eindeutigen Erklärung (z. B. ein mit der Post versandter Brief oder eine E-Mail) über Ihren Entschluss, diesen
         Vertrag zu widerrufen, informieren. Sie können dafür das beigefügte Muster-Widerrufsformular verwenden, das
@@ -53,7 +53,7 @@ export default function WiderrufPage() {
       <H2>Muster-Widerrufsformular</H2>
       <P>(Wenn Sie den Vertrag widerrufen wollen, dann füllen Sie bitte dieses Formular aus und senden es zurück.)</P>
       <UL items={[
-        "An: Seciora GbR i.G., Cihan Yildirim und Salih Aygün, Rathenaustraße 135, 51373 Leverkusen, E-Mail: kontakt@seciora.de",
+        "An: Cihan Yildirim, Einzelunternehmen KundenRadar, Rathenaustraße 135, 51373 Leverkusen, E-Mail: kontakt@seciora.de",
         "Hiermit widerrufe(n) ich/wir (*) den von mir/uns (*) abgeschlossenen Vertrag über die Erbringung der folgenden Dienstleistung: Nutzung von KundenRadar",
         "Bestellt am (*) / erhalten am (*): ____________________",
         "Name des/der Verbraucher(s): ____________________",

@@ -7,23 +7,21 @@ export default function ImpressumPage() {
   return (
     <LegalShell title="Impressum">
       <H2>Angaben gemäß § 5 DDG</H2>
-      <P>Seciora GbR i.G. (in Gründung)</P>
+      <P>Cihan Yildirim</P>
+      <P>Einzelunternehmen · Geschäftsbezeichnung „KundenRadar"</P>
       <P>Rathenaustraße 135<br />51373 Leverkusen<br />Deutschland</P>
-
-      <H2>Vertreten durch die Gesellschafter</H2>
-      <P>Cihan Yildirim<br />Salih Aygün</P>
 
       <H2>Kontakt</H2>
       <P>Telefon: +49 15566 021171<br />E-Mail: kontakt@seciora.de</P>
 
       <H2>Rechtsform</H2>
-      <P>Gesellschaft bürgerlichen Rechts (GbR). Die Gesellschaft ist nicht im Handelsregister eingetragen.</P>
+      <P>Einzelunternehmen. Eine Eintragung im Handelsregister besteht nicht.</P>
 
       <H2>Umsatzsteuer-Identifikationsnummer</H2>
       <P>Eine Umsatzsteuer-Identifikationsnummer gemäß § 27 a Umsatzsteuergesetz wird nachgereicht, sobald sie vorliegt.</P>
 
       <H2>Verantwortlich für den Inhalt nach § 18 Abs. 2 MStV</H2>
-      <P>Cihan Yildirim, Salih Aygün<br />Anschrift wie oben.</P>
+      <P>Cihan Yildirim<br />Anschrift wie oben.</P>
 
       <H2>Verbraucherstreitbeilegung / Universalschlichtungsstelle</H2>
       <P>

@@ -16,7 +16,7 @@ export default function KontaktPage() {
             <p className="flex items-center gap-2"><Icon name="phone" size={15} /> +49 15566 021171</p>
             <p className="flex items-center gap-2"><Icon name="pin" size={15} /> Rathenaustraße 135, 51373 Leverkusen</p>
           </div>
-          <P>Anbieter: Seciora GbR i.G. (in Gründung). Mo–Fr, 9–17 Uhr. Für rechtliche Angaben siehe <a href="/impressum" className="text-[var(--color-brand)] hover:underline">Impressum</a>.</P>
+          <P>Anbieter: Cihan Yildirim, Einzelunternehmen „KundenRadar". Mo–Fr, 9–17 Uhr. Für rechtliche Angaben siehe <a href="/impressum" className="text-[var(--color-brand)] hover:underline">Impressum</a>.</P>
         </div>
         <ContactForm />
       </div>

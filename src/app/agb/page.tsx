@@ -11,8 +11,8 @@ export default function AgbPage() {
     >
       <H2>§ 1 Anbieter &amp; Geltungsbereich</H2>
       <P>
-        Anbieter des Dienstes „KundenRadar" (nachfolgend „Dienst") ist die Seciora GbR i.G. (in Gründung),
-        vertreten durch die Gesellschafter Cihan Yildirim und Salih Aygün, Rathenaustraße 135, 51373 Leverkusen
+        Anbieter des Dienstes „KundenRadar" (nachfolgend „Dienst") ist das Einzelunternehmen Cihan Yildirim
+        (Geschäftsbezeichnung „KundenRadar"), Rathenaustraße 135, 51373 Leverkusen
         (nachfolgend „Anbieter"). Diese AGB gelten für sämtliche Verträge über die Nutzung des Dienstes zwischen
         dem Anbieter und seinen Kundinnen und Kunden (nachfolgend „Nutzer").
       </P>
