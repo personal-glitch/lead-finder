@@ -68,6 +68,7 @@ export type BrancheKey =
   | "Tischler & Schreiner"
   | "Dachdecker"
   | "Garten- & Landschaftsbau"
+  | "Gebäudereinigung"
   // Allgemein (catch-all, bewusst zuletzt)
   | "Handwerksbetrieb"
   | "Büro & Unternehmen";
@@ -89,7 +90,7 @@ export const BRANCHEN_KATEGORIEN: BrancheKategorie[] = [
   { label: "Beauty & Wellness", icon: "user", branchen: ["Friseursalon", "Kosmetik & Nagelstudio", "Massage & Spa", "Tattoo & Piercing"] },
   { label: "Sport & Freizeit", icon: "play", branchen: ["Fitnessstudio", "Yoga- & Tanzstudio", "Sportanlage & Verein"] },
   { label: "Bildung", icon: "school", branchen: ["Kita & Kindergarten", "Schule", "Nachhilfe & Sprachschule"] },
-  { label: "Handwerk", icon: "wrench", branchen: ["Maler & Lackierer", "Elektriker", "Sanitär & Heizung", "Tischler & Schreiner", "Dachdecker", "Garten- & Landschaftsbau", "Handwerksbetrieb"] },
+  { label: "Handwerk & Dienstleistung", icon: "wrench", branchen: ["Maler & Lackierer", "Elektriker", "Sanitär & Heizung", "Tischler & Schreiner", "Dachdecker", "Garten- & Landschaftsbau", "Gebäudereinigung", "Handwerksbetrieb"] },
   { label: "Allgemein", icon: "building", branchen: ["Büro & Unternehmen"] },
 ];
 

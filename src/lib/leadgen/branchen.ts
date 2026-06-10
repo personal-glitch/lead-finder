@@ -140,6 +140,9 @@ export const BRANCHEN: Record<BrancheKey, BrancheDef> = {
   "Tischler & Schreiner": { tags: t("craft", "carpenter", "craft", "joiner"), roleTiers: ROLLEN_HANDWERK },
   Dachdecker: { tags: t("craft", "roofer"), roleTiers: ROLLEN_HANDWERK },
   "Garten- & Landschaftsbau": { tags: t("craft", "gardener"), roleTiers: ROLLEN_HANDWERK },
+  // In OSM kaum sauber getaggt – die eigentliche Treffer-Power kommt aus der
+  // Namens-Suche (Synonyme: Gebäudereiniger/Facility/…) in overpass-search.ts.
+  Gebäudereinigung: { tags: t("craft", "cleaning"), roleTiers: ROLLEN_HANDWERK },
 
   Handwerksbetrieb: { tags: t("craft", "yes"), roleTiers: ROLLEN_HANDWERK },
   "Büro & Unternehmen": { tags: t("office", "company", "office", "administrative", "office", "yes"), roleTiers: ROLLEN_BUERO },

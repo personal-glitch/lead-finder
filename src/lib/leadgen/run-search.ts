@@ -6,6 +6,7 @@ import { firstGermanPhone } from "@/lib/phone/parse-de";
 import type { LeadInput } from "@/lib/types";
 import { type GeneratedLead } from "./search-leads";
 import { searchLeadsNominatim } from "@/lib/osm/nominatim-search";
+import { searchLeadsOverpass } from "./overpass-search";
 import type { BrancheKey } from "./branchen";
 
 export interface BrancheSearchResult {
@@ -87,8 +88,22 @@ export async function runBrancheSearch(
   const center = await geocode(plz);
   if (!center) throw new AppError("no_geocode", `Für „${plz}" wurde kein Ort gefunden.`);
 
+  const softCodes = ["upstream", "timeout", "rate_limited"];
+
+  // 1) PRIMÄR: Kategorie-Suche über Overpass (findet nach Tätigkeit, nicht nach
+  //    Name). Liefert i. d. R. deutlich mehr & passendere Treffer.
   try {
-    // Echte Firmen über Nominatim (kostenlos, ohne Key, von Vercel erreichbar).
+    const leads = await searchLeadsOverpass(center, radiusKm, branchen, keywords);
+    if (leads.length > 0) return { center, radiusKm, leads, notes: [], demo: false };
+    // 0 Treffer → unten Namens-Suche als Ergänzung versuchen.
+  } catch (err) {
+    const code = err instanceof AppError ? err.code : "upstream";
+    if (!softCodes.includes(code)) throw err;
+    // Overpass nicht erreichbar → unten Nominatim-Fallback.
+  }
+
+  // 2) FALLBACK: Namens-Suche über Nominatim (kostenlos, sehr gut erreichbar).
+  try {
     const leads = (await searchLeadsNominatim(center, radiusKm, branchen, keywords)).map(toLeadInput);
     const notes = leads.length === 0
       ? ["Keine Treffer in diesem Umkreis – Umkreis vergrößern oder andere Branche/Stichwort wählen."]
@@ -97,7 +112,7 @@ export async function runBrancheSearch(
   } catch (err) {
     const code = err instanceof AppError ? err.code : "upstream";
     // Nur bei Upstream-/Timeout-/Rate-Limit-Fehlern auf Beispieldaten ausweichen.
-    if (!["upstream", "timeout", "rate_limited"].includes(code)) throw err;
+    if (!softCodes.includes(code)) throw err;
     return { center, radiusKm, leads: buildDemoLeads(center, radiusKm, branchen, keywords), notes: [DEMO_NOTE], demo: true };
   }
 }
