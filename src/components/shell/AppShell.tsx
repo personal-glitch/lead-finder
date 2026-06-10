@@ -94,7 +94,7 @@ function Sidebar({ flags }: { flags: FeatureFlags }) {
     api<{ isAdmin: boolean }>("/api/admin/me").then((r) => setIsAdmin(r.isAdmin)).catch(() => {});
   }, []);
   return (
-    <aside className="flex h-full w-64 shrink-0 flex-col border-r border-[var(--color-line)] bg-[var(--color-surface)]">
+    <aside className="flex h-full w-64 shrink-0 flex-col overflow-hidden border-r border-[var(--color-line)] bg-[var(--color-surface)]">
       <div className="flex items-center gap-3 px-4 py-4">
         <span className="grid h-9 w-9 place-items-center rounded-[10px] bg-[var(--color-brand)] text-[var(--color-on-brand)]">
           <Icon name="agents" size={18} strokeWidth={2.2} />
@@ -105,14 +105,14 @@ function Sidebar({ flags }: { flags: FeatureFlags }) {
         </div>
       </div>
 
-      <nav className="flex-1 space-y-0.5 px-3 pt-2">
+      <nav className="scroll-slim min-h-0 flex-1 space-y-0.5 overflow-y-auto px-3 pt-2">
         <div className="eyebrow px-3 pb-1.5">Arbeitsbereich</div>
         {NAV.map((n) => (
           <NavItem key={n.href} {...n} active={n.match(pathname)} />
         ))}
       </nav>
 
-      <div className="space-y-2 border-t border-[var(--color-line)] p-3">
+      <div className="shrink-0 space-y-2 border-t border-[var(--color-line)] p-3">
         <CallTracker />
         <div className="rounded-lg bg-[var(--color-subtle)] px-3 py-2.5">
           <div className="eyebrow mb-1">Datenbasis</div>
