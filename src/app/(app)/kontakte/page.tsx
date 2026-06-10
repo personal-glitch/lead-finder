@@ -6,6 +6,7 @@ import { useFlags, PageHeader } from "@/components/shell/AppShell";
 import { useLeadWorkspace } from "@/components/use-lead-workspace";
 import { LeadDetailDrawer } from "@/components/LeadDetailDrawer";
 import { EmailComposeModal, type ComposeContact } from "@/components/EmailComposeModal";
+import { QuickCallModal, type CallContact } from "@/components/QuickCallModal";
 import { Icon, InitialsAvatar } from "@/components/icons";
 import { Badge, Button, Card, EmptyState, Select, Spinner, TextInput, Toast } from "@/components/ui";
 
@@ -29,6 +30,7 @@ export default function KontaktePage() {
   const [branche, setBranche] = useState("");
   const [toast, setToast] = useState<string | null>(null);
   const [composeFor, setComposeFor] = useState<ComposeContact | null>(null);
+  const [callFor, setCallFor] = useState<CallContact | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkTemplateId, setBulkTemplateId] = useState("");
   const [bulkBusy, setBulkBusy] = useState(false);
@@ -161,8 +163,15 @@ export default function KontaktePage() {
                     </td>
                     <td className="px-2 py-2.5">
                       {k.phone ? (
-                        <a href={k.phoneE164 ? `tel:${k.phoneE164}` : undefined} onClick={(e) => e.stopPropagation()}
-                          className="inline-flex items-center gap-1 text-[var(--color-success)] tnum"><Icon name="phone" size={13} /> {k.phone}</a>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setCallFor({ leadId: k.leadId, name: k.name, phone: k.phone, phoneE164: k.phoneE164 }); }}
+                            title="Anruf erfassen"
+                            className="inline-flex shrink-0 items-center gap-1 rounded-md border border-[var(--color-line-strong)] bg-[var(--color-surface)] px-2 py-1 text-xs font-medium hover:border-[var(--color-success)] hover:bg-[var(--color-success-tint)]">
+                            <Icon name="phone" size={13} /> Anruf
+                          </button>
+                          <span className="truncate text-xs text-[var(--color-muted)] tnum">{k.phone}</span>
+                        </div>
                       ) : <span className="text-[var(--color-faint)]">—</span>}
                     </td>
                     <td className="px-2 py-2.5">
@@ -203,6 +212,12 @@ export default function KontaktePage() {
         templates={templates}
         onClose={() => setComposeFor(null)}
         onSent={(m) => { setToast(m); setComposeFor(null); ws.reload?.(); }}
+      />
+      <QuickCallModal
+        open={callFor !== null}
+        contact={callFor}
+        onClose={() => setCallFor(null)}
+        onLogged={(m) => { setToast(m); setCallFor(null); ws.reload?.(); }}
       />
       {(toast || ws.error) && <Toast message={toast ?? ws.error ?? ""} onClose={() => { setToast(null); ws.setError(null); }} />}
     </>
