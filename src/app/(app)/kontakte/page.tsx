@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useFlags, PageHeader } from "@/components/shell/AppShell";
 import { useLeadWorkspace } from "@/components/use-lead-workspace";
 import { LeadDetailDrawer } from "@/components/LeadDetailDrawer";
+import { EmailComposeModal, type ComposeContact } from "@/components/EmailComposeModal";
 import { Icon, InitialsAvatar } from "@/components/icons";
 import { Badge, Button, Card, EmptyState, Select, Spinner, TextInput, Toast } from "@/components/ui";
 
@@ -26,6 +27,7 @@ export default function KontaktePage() {
   const [q, setQ] = useState("");
   const [branche, setBranche] = useState("");
   const [toast, setToast] = useState<string | null>(null);
+  const [composeFor, setComposeFor] = useState<ComposeContact | null>(null);
 
   const kontakte = useMemo<Kontakt[]>(() => {
     return leads
@@ -110,7 +112,15 @@ export default function KontaktePage() {
                     </td>
                     <td className="px-2 py-2.5">
                       {k.email ? (
-                        <a href={`mailto:${k.email}`} onClick={(e) => e.stopPropagation()} className="truncate text-[var(--color-ink-2)] hover:underline">{k.email}</a>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setComposeFor({ leadId: k.leadId, name: k.name, email: k.email }); }}
+                            title="E-Mail schreiben"
+                            className="inline-flex shrink-0 items-center gap-1 rounded-md border border-[var(--color-line-strong)] bg-[var(--color-surface)] px-2 py-1 text-xs font-medium hover:border-[var(--color-brand)] hover:bg-[var(--color-brand-tint)]">
+                            <Icon name="mail" size={13} /> Mail
+                          </button>
+                          <span className="truncate text-xs text-[var(--color-muted)]">{k.email}</span>
+                        </div>
                       ) : <span className="text-[var(--color-faint)]">—</span>}
                     </td>
                   </tr>
@@ -131,6 +141,13 @@ export default function KontaktePage() {
         onEnrich={ws.enrichLead}
         onDelete={ws.deleteLead}
         onLeadChanged={ws.upsert}
+      />
+      <EmailComposeModal
+        open={composeFor !== null}
+        contact={composeFor}
+        templates={templates}
+        onClose={() => setComposeFor(null)}
+        onSent={(m) => { setToast(m); setComposeFor(null); ws.reload?.(); }}
       />
       {(toast || ws.error) && <Toast message={toast ?? ws.error ?? ""} onClose={() => { setToast(null); ws.setError(null); }} />}
     </>
