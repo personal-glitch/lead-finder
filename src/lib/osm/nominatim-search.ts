@@ -66,11 +66,28 @@ function viewbox(center: GeoPoint, radiusKm: number): string {
   return [center.lon - dLon, center.lat + dLat, center.lon + dLon, center.lat - dLat].join(",");
 }
 
+// Teilt das Suchgebiet in 2×2 Kacheln (mit Überlappung). Pro Kachel liefert
+// Nominatim wieder bis zu `limit` Treffer → in dichten Städten deutlich mehr
+// Datensätze als eine einzige Abfrage (die bei ~50 gedeckelt wäre).
+function gridTiles(center: GeoPoint, radiusKm: number): { c: GeoPoint; r: number }[] {
+  const cos = Math.cos((center.lat * Math.PI) / 180) || 1;
+  const dLat = radiusKm / 2 / 111;
+  const dLon = radiusKm / 2 / (111 * cos);
+  const r = radiusKm * 0.6; // Überlappung, damit keine Lücken am Kachelrand bleiben
+  const out: { c: GeoPoint; r: number }[] = [];
+  for (const sy of [-1, 1]) {
+    for (const sx of [-1, 1]) {
+      out.push({ c: { ...center, lat: center.lat + sy * dLat, lon: center.lon + sx * dLon }, r });
+    }
+  }
+  return out;
+}
+
 async function searchTerm(q: string, center: GeoPoint, radiusKm: number): Promise<NominatimItem[]> {
   const url = new URL(config.osm.nominatimUrl);
   url.searchParams.set("q", q);
   url.searchParams.set("format", "jsonv2");
-  url.searchParams.set("limit", "40");
+  url.searchParams.set("limit", "50");
   url.searchParams.set("addressdetails", "1");
   url.searchParams.set("extratags", "1");
   url.searchParams.set("countrycodes", "de");
@@ -127,20 +144,29 @@ export async function searchLeadsNominatim(
   let anyOk = false;
   let lastErr: unknown = null;
 
+  // Abfrage-Budget (Nominatim: 1/Sek.) auf Begriffe × Kacheln aufteilen. Bei
+  // wenigen Begriffen wird das Gebiet gekachelt → mehr Treffer; bei vielen
+  // Begriffen bleibt es bei einer Kachel, damit der Lauf schnell bleibt.
+  const MAX_QUERIES = 8;
+  const tilesPerTerm = Math.floor(MAX_QUERIES / Math.max(1, terms.length));
+  const tiles = tilesPerTerm >= 4 ? gridTiles(center, radiusKm) : [{ c: center, r: radiusKm }];
+
   for (const t of terms) {
-    let items: NominatimItem[];
-    try {
-      items = await searchTerm(t.q, center, radiusKm);
-      anyOk = true;
-    } catch (err) {
-      lastErr = err;
-      continue; // einzelnen Begriff überspringen
-    }
-    for (const it of items) {
-      const lead = toLead(it, t.label);
-      if (!lead) continue;
-      const key = (lead.website || `${lead.companyName}|${lead.zipCode ?? ""}|${lead.street ?? ""}`).toLowerCase();
-      if (!out.has(key)) out.set(key, lead);
+    for (const tile of tiles) {
+      let items: NominatimItem[];
+      try {
+        items = await searchTerm(t.q, tile.c, tile.r);
+        anyOk = true;
+      } catch (err) {
+        lastErr = err;
+        continue; // einzelne Abfrage überspringen
+      }
+      for (const it of items) {
+        const lead = toLead(it, t.label);
+        if (!lead) continue;
+        const key = (lead.website || `${lead.companyName}|${lead.zipCode ?? ""}|${lead.street ?? ""}`).toLowerCase();
+        if (!out.has(key)) out.set(key, lead);
+      }
     }
   }
 
