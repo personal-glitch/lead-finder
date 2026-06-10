@@ -41,11 +41,19 @@ export default function AgbPage() {
         vertraulich zu behandeln.
       </P>
 
-      <H2>§ 4 Kostenlose Testphase</H2>
+      <H2>§ 4 Kostenlose Testphase (3 Tage) &amp; automatischer Übergang ins Abo</H2>
       <P>
-        Sofern angeboten, kann der Dienst für einen begrenzten Zeitraum (derzeit 3 Tage) kostenlos getestet werden.
-        Ein Anspruch auf eine Testphase besteht nicht. Wird das Abonnement nicht vor Ablauf der Testphase gekündigt,
-        geht es – sofern bei der Anmeldung so vereinbart – in ein kostenpflichtiges Abonnement über.
+        KundenRadar kann zu Beginn <strong>3 (drei) Tage kostenlos</strong> getestet werden („Testphase"). Die
+        Testphase beginnt mit der Registrierung. Bereits bei der Anmeldung wird eine gültige Zahlungsmethode
+        hinterlegt; während der Testphase wird nichts berechnet. Ein Anspruch auf eine Testphase besteht nicht; es gibt
+        keine dauerhaft kostenlose Version.
+      </P>
+      <P>
+        <strong>Wichtig:</strong> Wird das Abonnement nicht vor Ablauf der 3-tägigen Testphase gekündigt, geht es
+        automatisch in ein <strong>kostenpflichtiges Monatsabonnement zu 49 € pro Monat</strong> über und die erste
+        Zahlung wird fällig. Die Kündigung ist jederzeit – auch während der Testphase – mit einem Klick im Tool oder per
+        Nachricht an den Anbieter möglich. Auf diesen automatischen Übergang wird vor Vertragsschluss ausdrücklich
+        hingewiesen (§ 312j BGB).
       </P>
 
       <H2>§ 5 Preise &amp; Zahlung</H2>
@@ -65,12 +73,13 @@ export default function AgbPage() {
         der Zugang zum Dienst.
       </P>
 
-      <H2>§ 7 Pflichten des Nutzers</H2>
+      <H2>§ 7 Pflichten des Nutzers (E-Mail-Versand &amp; Kaltakquise)</H2>
       <UL items={[
-        "Der Nutzer nutzt den Dienst ausschließlich im Rahmen der geltenden Gesetze, insbesondere des Datenschutz- (DSGVO), Wettbewerbs- (UWG) und Telekommunikationsrechts.",
+        "Der Nutzer nutzt den Dienst ausschließlich im Rahmen der geltenden Gesetze, insbesondere des Datenschutz- (DSGVO), Wettbewerbs- (UWG) und Telekommunikationsrechts (TDDDG).",
+        "Der Nutzer ist allein verantwortlich für Inhalt, Betreff, Empfängerauswahl, Versandhäufigkeit und die rechtliche Zulässigkeit jeder über den Dienst versendeten E-Mail. Werbe-E-Mails sind nur zulässig, wenn eine Einwilligung des Empfängers oder ein mutmaßliches Interesse im Sinne des § 7 UWG vorliegt. Massenhafter oder „auf Verdacht" versendeter Werbeversand ohne diese Voraussetzungen ist untersagt.",
+        "Vor dem ersten Versand hat der Nutzer ein vollständiges, korrektes Impressum zu hinterlegen. Ohne Impressum ist der Versand technisch gesperrt. Der Dienst fügt Impressum und einen funktionierenden Abmeldelink automatisch in jede Mail ein; für die inhaltliche Richtigkeit des Impressums und die Beachtung von Abmeldungen ist der Nutzer verantwortlich.",
         "Für die im Tool verarbeiteten Kontakt-/Lead-Daten ist der Nutzer datenschutzrechtlich Verantwortlicher; der Anbieter handelt insoweit als Auftragsverarbeiter (Abschluss eines AV-Vertrags auf Anfrage).",
-        "Die Kontaktaufnahme zu recherchierten Firmen (z. B. werbliche E-Mails, Telefonwerbung) erfolgt eigenverantwortlich und unter Beachtung der gesetzlichen Einwilligungs- und Informationspflichten.",
-        "Eine missbräuchliche Nutzung (z. B. Spam, automatisiertes Auslesen über den vorgesehenen Umfang hinaus, Rechtsverletzungen Dritter) ist untersagt.",
+        "Eine missbräuchliche Nutzung (z. B. Spam, irreführende Inhalte, automatisiertes Auslesen über den vorgesehenen Umfang hinaus, Rechtsverletzungen Dritter) ist untersagt. Der Anbieter darf bei Verstößen den Zugang vorübergehend sperren oder den Vertrag aus wichtigem Grund kündigen.",
       ]} />
 
       <H2>§ 8 Verfügbarkeit</H2>
@@ -88,14 +97,30 @@ export default function AgbPage() {
         ist die Haftung ausgeschlossen. Eine Haftung für die inhaltliche Richtigkeit recherchierter Drittdaten sowie
         für die rechtmäßige Verwendung dieser Daten durch den Nutzer ist ausgeschlossen.
       </P>
+      <P>
+        Für die vom Nutzer über den Dienst versendeten E-Mails – insbesondere Inhalt, Betreff, Empfängerauswahl,
+        Versandhäufigkeit und das Vorliegen erforderlicher Einwilligungen – sowie für sämtliche daraus resultierenden
+        Folgen (z. B. Abmahnungen, Schadensersatzforderungen, Sperrungen durch E-Mail-Anbieter, Zustell- oder
+        Reputationsprobleme) ist allein der Nutzer verantwortlich. Der Dienst stellt insoweit lediglich ein technisches
+        Werkzeug bereit und nimmt keine inhaltliche Prüfung der versendeten Nachrichten oder der Empfängerlisten vor.
+      </P>
 
-      <H2>§ 10 Datenschutz</H2>
+      <H2>§ 10 Freistellung</H2>
+      <P>
+        Der Nutzer stellt den Anbieter von sämtlichen Ansprüchen Dritter frei, die wegen einer rechtswidrigen oder
+        vertragswidrigen Nutzung des Dienstes durch den Nutzer gegen den Anbieter geltend gemacht werden – insbesondere
+        wegen unzulässiger Werbe-E-Mails oder Verstößen gegen UWG, DSGVO oder Telekommunikationsrecht. Die Freistellung
+        umfasst auch die angemessenen Kosten einer notwendigen Rechtsverteidigung (z. B. Abmahn-, Anwalts- und
+        Gerichtskosten). Der Nutzer wird den Anbieter über entsprechende Inanspruchnahmen unverzüglich informieren.
+      </P>
+
+      <H2>§ 11 Datenschutz</H2>
       <P>
         Informationen zur Verarbeitung personenbezogener Daten enthält die{" "}
         <a href="/datenschutz" className="text-[var(--color-brand)] hover:underline">Datenschutzerklärung</a>.
       </P>
 
-      <H2>§ 11 Änderungen der AGB</H2>
+      <H2>§ 12 Änderungen der AGB</H2>
       <P>
         Änderungen dieser AGB bedürfen der Zustimmung des Nutzers. Der Anbieter bietet Änderungen mindestens
         30 Tage vor dem geplanten Wirksamwerden in Textform an und weist dabei auf die geplanten Änderungen sowie auf
@@ -105,7 +130,7 @@ export default function AgbPage() {
         erfolgt ausschließlich mit ausdrücklicher Zustimmung des Nutzers.
       </P>
 
-      <H2>§ 12 Schlussbestimmungen</H2>
+      <H2>§ 13 Schlussbestimmungen</H2>
       <P>
         Es gilt das Recht der Bundesrepublik Deutschland. Ist der Nutzer Kaufmann, juristische Person des öffentlichen
         Rechts oder öffentlich-rechtliches Sondervermögen, ist Gerichtsstand der Sitz des Anbieters. Sollte eine

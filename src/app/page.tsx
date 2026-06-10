@@ -152,7 +152,7 @@ const FAQ: { q: string; a: string }[] = [
   { q: "Ist das DSGVO-konform?", a: "Ja. Es werden ausschließlich öffentliche, geschäftliche Quellen genutzt, die Herkunft jedes Kontakts wird gespeichert, ein Opt-out/Abmeldelink ist in jeder E-Mail Pflicht, und Auskunfts- bzw. Löschanfragen lassen sich jederzeit beantworten." },
   { q: "Brauche ich technisches Wissen?", a: "Nein. Zielbranche und Umkreis wählen, auf Suchen klicken – fertig. Anbieter-Vorlagen erleichtern den Start zusätzlich." },
   { q: "Bekomme ich echte Telefonnummern?", a: "Ja – aus geprüften, öffentlich zugänglichen Quellen. Wir priorisieren Datenqualität (echte, anrufbare Nummern + Ansprechpartner) statt möglichst vieler Treffer." },
-  { q: "Kann ich monatlich kündigen?", a: "Ja, die bezahlten Tarife sind monatlich kündbar. Die Free-Version kannst du dauerhaft nutzen." },
+  { q: "Wie laufen Testphase und Kündigung?", a: "Du testest KundenRadar 3 Tage kostenlos (dabei wird eine Zahlungsmethode hinterlegt). Kündigst du nicht vor Ablauf der 3 Tage, geht es automatisch in das Monatsabo zu 49 € über – jederzeit monatlich mit einem Klick kündbar. Eine dauerhaft kostenlose Version gibt es nicht." },
 ];
 
 function Check() {
@@ -160,7 +160,7 @@ function Check() {
 }
 
 function TrustLine() {
-  return <p className="mt-3 text-xs text-[var(--color-faint)]">Keine Kreditkarte · DSGVO-konform · monatlich kündbar</p>;
+  return <p className="mt-3 text-xs text-[var(--color-faint)]">3 Tage gratis · danach 49 €/Monat · monatlich kündbar</p>;
 }
 
 function Faq({ q, a }: { q: string; a: string }) {
@@ -282,7 +282,7 @@ export default function Landing() {
               <Icon name="search" size={15} /> Neukunden gratis prüfen
             </Link>
           </div>
-          <p className="mt-4 text-xs text-[var(--color-faint)]">Keine Kreditkarte · DSGVO-konform · Daten aus öffentlichen Quellen</p>
+          <p className="mt-4 text-xs text-[var(--color-faint)]">3 Tage gratis testen · DSGVO-konform · Daten aus öffentlichen Quellen</p>
         </div>
 
         {/* Interaktiver Köder – volle Breite, in sich ausgewogen */}
@@ -528,7 +528,7 @@ export default function Landing() {
 
       {/* Sticky CTA (mobil) */}
       <div className="fixed inset-x-0 bottom-0 z-40 flex items-center justify-between gap-3 border-t border-[var(--color-line)] bg-[var(--color-canvas)]/95 px-4 py-3 backdrop-blur md:hidden">
-        <span className="text-xs text-[var(--color-muted)]">Kostenlos testen · keine Kreditkarte</span>
+        <span className="text-xs text-[var(--color-muted)]">3 Tage gratis testen · monatlich kündbar</span>
         <Link href={signupHref} className="shrink-0 rounded-lg bg-[var(--color-brand)] px-4 py-2 text-sm font-semibold text-[var(--color-on-brand)]">Starten</Link>
       </div>
     </div>

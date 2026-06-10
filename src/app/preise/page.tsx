@@ -16,9 +16,12 @@ export default function PreisePage() {
         "Es fallen keine Einrichtungs- oder versteckten Gebühren an.",
       ]} />
 
-      <H2>Kostenlose Testphase</H2>
+      <H2>Kostenlose Testphase (3 Tage)</H2>
       <P>
-        Du kannst KundenRadar 3 Tage kostenlos testen. Kündigst du innerhalb der Testphase, entstehen keine Kosten.
+        Du kannst KundenRadar <strong>3 Tage kostenlos</strong> testen; dabei wird eine Zahlungsmethode hinterlegt, in
+        den ersten 3 Tagen wird nichts berechnet. <strong>Kündigst du nicht vor Ablauf der 3 Tage, geht der Test
+        automatisch in ein kostenpflichtiges Monatsabo zu 49 € pro Monat über</strong> und die erste Zahlung wird
+        fällig. Das Abo ist jederzeit monatlich mit einem Klick kündbar. Eine dauerhaft kostenlose Version gibt es nicht.
       </P>
 
       <H2>Abrechnung &amp; Zahlung</H2>
