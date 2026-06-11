@@ -24,7 +24,7 @@ export async function GET() {
 
     const { data: settings } = await admin
       .from("settings")
-      .select("owner_id, subscription_status, subscription_renews_at, cancel_at_period_end");
+      .select("owner_id, subscription_status, subscription_renews_at, cancel_at_period_end, admin_contacted_at");
     const rows = settings ?? [];
     const byOwner = new Map(rows.map((r) => [r.owner_id, r]));
     const trialing = rows.filter((r) => r.subscription_status === "trialing").length;
@@ -43,6 +43,7 @@ export async function GET() {
           status: st?.subscription_status ?? null,
           renewsAt: st?.subscription_renews_at ?? null,
           cancelAtPeriodEnd: Boolean(st?.cancel_at_period_end),
+          contactedAt: (st?.admin_contacted_at as string) ?? null,
           createdAt: u.created_at,
           confirmed: Boolean(u.email_confirmed_at),
         };

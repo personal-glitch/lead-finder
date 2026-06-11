@@ -21,8 +21,22 @@ interface Customer {
   status: string | null;
   renewsAt: string | null;
   cancelAtPeriodEnd: boolean;
+  contactedAt: string | null;
   createdAt: string | null;
   confirmed: boolean;
+}
+
+/** Telefonnummer → wa.me-Link (international). Null, wenn keine brauchbare Nummer. */
+function waFromPhone(phone: string | null, firstName?: string | null): string | null {
+  if (!phone) return null;
+  let p = phone.replace(/[^\d+]/g, "");
+  if (p.startsWith("+")) p = p.slice(1);
+  else if (p.startsWith("00")) p = p.slice(2);
+  else if (p.startsWith("0")) p = "49" + p.slice(1);
+  if (p.length < 8) return null;
+  const hi = firstName ? `Hallo ${firstName}, ` : "Hallo, ";
+  const text = encodeURIComponent(`${hi}hier Cihan von KundenRadar 👋 Kurze Frage zu deinem Test – passt es dir?`);
+  return `https://wa.me/${p}?text=${text}`;
 }
 interface Usage { searchesToday: number; searches7d: number; activeToday: number; active7d: number }
 interface Stats { registered: number; confirmed: number; trialing: number; paying: number; usage?: Usage; customers: Customer[] }
@@ -188,6 +202,16 @@ export default function AdminPage() {
     }
   };
 
+  const markContacted = async (ownerId: string, contacted: boolean) => {
+    // Optimistisch aktualisieren, dann speichern.
+    setStats((s) => s ? { ...s, customers: s.customers.map((c) => c.id === ownerId ? { ...c, contactedAt: contacted ? new Date().toISOString() : null } : c) } : s);
+    try {
+      await api("/api/admin/contacted", { json: { ownerId, contacted } });
+    } catch (e) {
+      setToast(e instanceof Error ? e.message : "Status konnte nicht gespeichert werden.");
+    }
+  };
+
   const cards = stats
     ? [
         { label: "Registriert", value: stats.registered, icon: "user" as const },
@@ -282,6 +306,7 @@ export default function AdminPage() {
                     <th className="px-4 py-2.5 font-medium">E-Mail</th>
                     <th className="px-4 py-2.5 font-medium">Telefon</th>
                     <th className="px-4 py-2.5 font-medium">Status</th>
+                    <th className="px-4 py-2.5 font-medium">Kontakt (WhatsApp)</th>
                     <th className="px-4 py-2.5 font-medium">Registriert</th>
                     <th className="px-4 py-2.5 font-medium">Test-Ablauf / Kündigung</th>
                     <th className="px-4 py-2.5 font-medium text-right">Test verlängern</th>
@@ -289,7 +314,7 @@ export default function AdminPage() {
                 </thead>
                 <tbody>
                   {stats.customers.length === 0 ? (
-                    <tr><td colSpan={8} className="px-4 py-6 text-center text-[var(--color-muted)]">Noch keine Kunden.</td></tr>
+                    <tr><td colSpan={9} className="px-4 py-6 text-center text-[var(--color-muted)]">Noch keine Kunden.</td></tr>
                   ) : stats.customers.map((c) => (
                     <tr key={c.email} className="border-b border-[var(--color-line)] last:border-0">
                       <td className="px-4 py-2.5 font-medium">{c.company ?? "–"}</td>
@@ -297,6 +322,32 @@ export default function AdminPage() {
                       <td className="px-4 py-2.5 text-[var(--color-muted)]">{c.email}</td>
                       <td className="px-4 py-2.5 text-[var(--color-muted)] tnum">{c.phone ?? "–"}</td>
                       <td className="px-4 py-2.5"><StatusBadge s={c.status} /></td>
+                      <td className="px-4 py-2.5">
+                        <div className="flex items-center gap-1.5">
+                          {waFromPhone(c.phone, c.name?.split(" ")[0]) ? (
+                            <a
+                              href={waFromPhone(c.phone, c.name?.split(" ")[0])!}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={() => markContacted(c.id, true)}
+                              title="Per WhatsApp kontaktieren"
+                              className="grid h-7 w-7 shrink-0 place-items-center rounded-md"
+                              style={{ background: "#25D366" }}
+                            >
+                              <svg viewBox="0 0 32 32" width="15" height="15" fill="#fff" aria-hidden="true"><path d="M16.04 4c-6.6 0-11.96 5.36-11.96 11.96 0 2.1.55 4.16 1.6 5.98L4 28l6.22-1.63a11.9 11.9 0 0 0 5.82 1.5c6.6 0 11.96-5.36 11.96-11.96C28.01 9.36 22.64 4 16.04 4zm5.46 16.45c-.25.7-1.45 1.34-2.02 1.42-.51.08-1.16.11-1.87-.12-.43-.13-.98-.31-1.69-.62-2.98-1.29-4.93-4.29-5.08-4.49-.15-.2-1.22-1.62-1.22-3.09s.78-2.19 1.05-2.49c.28-.3.6-.37.8-.37l.57.01c.18.01.43-.07.67.51.25.6.85 2.07.92 2.22.07.15.12.32.02.52-.1.2-.15.33-.3.5-.15.17-.32.39-.45.52-.15.15-.3.31-.13.61.17.3.77 1.28 1.66 2.07 1.14 1.02 2.1 1.33 2.4 1.48.3.15.48.13.65-.07.18-.2.75-.87.95-1.17.2-.3.4-.25.67-.15.27.1 1.74.82 2.04.97.3.15.5.23.57.35.08.12.08.72-.17 1.42z" /></svg>
+                            </a>
+                          ) : (
+                            <span className="text-[var(--color-faint)]">–</span>
+                          )}
+                          <button
+                            onClick={() => markContacted(c.id, !c.contactedAt)}
+                            title={c.contactedAt ? "Als nicht kontaktiert markieren" : "Als kontaktiert markieren"}
+                            className={`rounded-md px-2 py-1 text-[11px] font-medium ${c.contactedAt ? "bg-[var(--color-success-tint)] text-[var(--color-success)]" : "border border-[var(--color-line)] text-[var(--color-muted)] hover:bg-[var(--color-subtle)]"}`}
+                          >
+                            {c.contactedAt ? "✓ Kontaktiert" : "Kontaktiert?"}
+                          </button>
+                        </div>
+                      </td>
                       <td className="px-4 py-2.5 text-[var(--color-muted)] tnum">{fmt(c.createdAt)}</td>
                       <td className="px-4 py-2.5 text-xs tnum"><TrialInfo c={c} /></td>
                       <td className="px-4 py-2.5">
