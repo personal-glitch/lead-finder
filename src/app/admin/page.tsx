@@ -4,6 +4,13 @@ import Link from "next/link";
 import { api } from "@/lib/client";
 import { Icon } from "@/components/icons";
 import { Spinner, Toast } from "@/components/ui";
+import { renderNewsletterHtml, type NewsletterTemplate } from "@/lib/email/newsletter-template";
+
+const TEMPLATES: { id: NewsletterTemplate; label: string; emoji: string }[] = [
+  { id: "tipp", label: "Tipp der Woche", emoji: "💡" },
+  { id: "angebot", label: "Aktion / Angebot", emoji: "🔥" },
+  { id: "ankuendigung", label: "Ankündigung", emoji: "📣" },
+];
 
 interface Customer {
   id: string;
@@ -86,7 +93,11 @@ export default function AdminPage() {
   const [busy, setBusy] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [subject, setSubject] = useState("");
+  const [template, setTemplate] = useState<NewsletterTemplate>("tipp");
+  const [headline, setHeadline] = useState("");
   const [mailBody, setMailBody] = useState("");
+  const [ctaLabel, setCtaLabel] = useState("");
+  const [ctaUrl, setCtaUrl] = useState("");
   const [sending, setSending] = useState(false);
 
   const reloadNews = () => api<NewsletterData>("/api/admin/newsletter").then(setNews).catch(() => {});
@@ -99,10 +110,10 @@ export default function AdminPage() {
     try {
       const r = await api<{ recipients: number; sent: number; failed: number }>(
         "/api/admin/newsletter/send",
-        { json: { subject, body: mailBody } },
+        { json: { subject, template, headline, body: mailBody, ctaLabel, ctaUrl } },
       );
       setToast(`Versendet: ${r.sent}/${r.recipients}${r.failed ? ` · ${r.failed} fehlgeschlagen` : ""}`);
-      setSubject(""); setMailBody("");
+      setSubject(""); setHeadline(""); setMailBody(""); setCtaLabel(""); setCtaUrl("");
       reloadNews();
     } catch (e) {
       setToast(e instanceof Error ? e.message : "Versand fehlgeschlagen.");
@@ -328,24 +339,87 @@ export default function AdminPage() {
                   <p className="mt-1 text-xs text-[var(--color-muted)]">
                     Geht an alle <strong>{news.confirmed}</strong> bestätigten Abonnenten. Impressum &amp; Abmeldelink werden automatisch angehängt.
                   </p>
-                  <input
-                    value={subject}
-                    onChange={(e) => setSubject(e.target.value)}
-                    placeholder="Betreff"
-                    className="mt-3 w-full rounded-lg border border-[var(--color-line-strong)] bg-[var(--color-canvas)] px-3 py-2 text-sm outline-none focus:border-[var(--color-brand)]"
-                  />
-                  <textarea
-                    value={mailBody}
-                    onChange={(e) => setMailBody(e.target.value)}
-                    placeholder={"Hallo,\n\nhier dein Tipp der Woche …\n\nViele Grüße\nCihan"}
-                    rows={8}
-                    className="mt-2 w-full rounded-lg border border-[var(--color-line-strong)] bg-[var(--color-canvas)] px-3 py-2 text-sm outline-none focus:border-[var(--color-brand)]"
-                  />
-                  <div className="mt-2 flex items-center justify-between">
-                    <span className="text-xs text-[var(--color-muted)]">Leere Zeile = neuer Absatz.</span>
+
+                  {/* Vorlagen-Auswahl */}
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {TEMPLATES.map((t) => (
+                      <button
+                        key={t.id}
+                        onClick={() => setTemplate(t.id)}
+                        className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${
+                          template === t.id
+                            ? "border-[var(--color-brand)] bg-[var(--color-brand-tint)] text-[var(--color-brand)]"
+                            : "border-[var(--color-line-strong)] text-[var(--color-ink-2)] hover:bg-[var(--color-subtle)]"
+                        }`}
+                      >
+                        {t.emoji} {t.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="mt-4 grid gap-5 lg:grid-cols-2">
+                    {/* Formular */}
+                    <div className="space-y-2.5">
+                      <input
+                        value={subject}
+                        onChange={(e) => setSubject(e.target.value)}
+                        placeholder="Betreff (steht in der Inbox-Zeile)"
+                        className="w-full rounded-lg border border-[var(--color-line-strong)] bg-[var(--color-canvas)] px-3 py-2 text-sm outline-none focus:border-[var(--color-brand)]"
+                      />
+                      <input
+                        value={headline}
+                        onChange={(e) => setHeadline(e.target.value)}
+                        placeholder="Überschrift (große Zeile in der Mail)"
+                        className="w-full rounded-lg border border-[var(--color-line-strong)] bg-[var(--color-canvas)] px-3 py-2 text-sm outline-none focus:border-[var(--color-brand)]"
+                      />
+                      <textarea
+                        value={mailBody}
+                        onChange={(e) => setMailBody(e.target.value)}
+                        placeholder={"Hallo,\n\nhier dein Tipp der Woche …\n\nViele Grüße\nCihan"}
+                        rows={8}
+                        className="w-full rounded-lg border border-[var(--color-line-strong)] bg-[var(--color-canvas)] px-3 py-2 text-sm outline-none focus:border-[var(--color-brand)]"
+                      />
+                      <div className="grid grid-cols-2 gap-2">
+                        <input
+                          value={ctaLabel}
+                          onChange={(e) => setCtaLabel(e.target.value)}
+                          placeholder="Button-Text (optional)"
+                          className="w-full rounded-lg border border-[var(--color-line-strong)] bg-[var(--color-canvas)] px-3 py-2 text-sm outline-none focus:border-[var(--color-brand)]"
+                        />
+                        <input
+                          value={ctaUrl}
+                          onChange={(e) => setCtaUrl(e.target.value)}
+                          placeholder="Button-Link (https://…)"
+                          className="w-full rounded-lg border border-[var(--color-line-strong)] bg-[var(--color-canvas)] px-3 py-2 text-sm outline-none focus:border-[var(--color-brand)]"
+                        />
+                      </div>
+                      <p className="text-xs text-[var(--color-muted)]">Leere Zeile = neuer Absatz. Button erscheint nur, wenn Text &amp; Link gesetzt sind.</p>
+                    </div>
+
+                    {/* Live-Vorschau */}
+                    <div>
+                      <div className="mb-1.5 eyebrow">Vorschau</div>
+                      <iframe
+                        title="Newsletter-Vorschau"
+                        sandbox=""
+                        className="h-[460px] w-full rounded-lg border border-[var(--color-line)] bg-white"
+                        srcDoc={renderNewsletterHtml({
+                          template,
+                          headline: headline || "Deine Überschrift",
+                          body: mailBody || "Hier steht dein Text … schreib links los, die Vorschau aktualisiert sich live.",
+                          ctaLabel: ctaLabel || undefined,
+                          ctaUrl: ctaUrl || undefined,
+                          unsubscribeUrl: "#",
+                          impressum: "Seciora Solutions, Inhaber Cihan Yildirim, Charlottenstraße 37, 51149 Köln",
+                        })}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="mt-3 flex justify-end">
                     <button
                       onClick={sendNewsletter}
-                      disabled={sending || subject.trim().length < 3 || mailBody.trim().length < 10}
+                      disabled={sending || subject.trim().length < 3 || headline.trim().length < 3 || mailBody.trim().length < 10}
                       className="rounded-lg bg-[var(--color-brand)] px-4 py-2 text-sm font-semibold text-[var(--color-on-brand)] hover:bg-[var(--color-brand-ink)] disabled:opacity-50"
                     >
                       {sending ? "Sende …" : `An ${news.confirmed} senden`}

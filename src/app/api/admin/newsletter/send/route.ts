@@ -19,13 +19,26 @@ export async function POST(req: Request) {
       throw new AppError("auth", "Kein Zugriff.");
     }
 
-    const body = (await req.json().catch(() => ({}))) as { subject?: string; body?: string };
-    const subject = (body.subject ?? "").trim();
-    const text = (body.body ?? "").trim();
+    const p = (await req.json().catch(() => ({}))) as {
+      subject?: string; template?: string; headline?: string; body?: string; ctaLabel?: string; ctaUrl?: string;
+    };
+    const subject = (p.subject ?? "").trim();
+    const headline = (p.headline ?? "").trim();
+    const text = (p.body ?? "").trim();
+    const template = (["tipp", "angebot", "ankuendigung"].includes(p.template ?? "") ? p.template : "tipp") as
+      "tipp" | "angebot" | "ankuendigung";
     if (subject.length < 3) throw new AppError("bad_request", "Bitte einen Betreff angeben.");
+    if (headline.length < 3) throw new AppError("bad_request", "Bitte eine Überschrift angeben.");
     if (text.length < 10) throw new AppError("bad_request", "Bitte einen Inhalt schreiben.");
 
-    const result = await sendCampaign(subject, text);
+    const result = await sendCampaign({
+      subject,
+      template,
+      headline,
+      body: text,
+      ctaLabel: (p.ctaLabel ?? "").trim() || undefined,
+      ctaUrl: (p.ctaUrl ?? "").trim() || undefined,
+    });
     return jsonOk(result);
   } catch (err) {
     return jsonError(err);

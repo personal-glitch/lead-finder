@@ -2,6 +2,7 @@
 import { randomBytes } from "crypto";
 import { config } from "@/lib/config";
 import { sendSystemEmail } from "@/lib/email/system";
+import { renderNewsletterHtml, renderNewsletterText, type NewsletterContent } from "@/lib/email/newsletter-template";
 
 export type SubscriberStatus = "pending" | "confirmed" | "unsubscribed";
 
@@ -165,32 +166,30 @@ async function listConfirmed(): Promise<{ email: string; token: string }[]> {
   return (data ?? []).map((r) => ({ email: r.email as string, token: r.token as string }));
 }
 
-function buildCampaignEmail(body: string, token: string): { html: string; text: string } {
-  const unsub = unsubscribeUrl(token);
-  const impressum = config.resend.impressum ?? "Seciora Solutions, Inhaber Cihan Yildirim, Charlottenstraße 37, 51149 Köln";
-  const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-  const paragraphs = esc(body).split(/\n{2,}/).map((p) => `<p>${p.replace(/\n/g, "<br>")}</p>`).join("\n");
-  const html = `<!doctype html><html lang="de"><body style="font-family:system-ui,Arial,sans-serif;color:#0f172a;line-height:1.6">
-${paragraphs}
-<hr style="border:none;border-top:1px solid #e2e8f0;margin:24px 0">
-<p style="font-size:12px;color:#64748b">${esc(impressum)}</p>
-<p style="font-size:12px;color:#64748b">Du möchtest keine E-Mails mehr erhalten? <a href="${unsub}">Hier abmelden</a>.</p>
-</body></html>`;
-  const text = `${body}\n\n—\n${impressum}\nAbmelden: ${unsub}`;
-  return { html, text };
+export interface CampaignInput extends NewsletterContent { subject: string; }
+
+const DEFAULT_IMPRESSUM = "Seciora Solutions, Inhaber Cihan Yildirim, Charlottenstraße 37, 51149 Köln";
+
+function buildCampaignEmail(content: NewsletterContent, token: string): { html: string; text: string } {
+  const opts = {
+    ...content,
+    unsubscribeUrl: unsubscribeUrl(token),
+    impressum: config.resend.impressum ?? DEFAULT_IMPRESSUM,
+  };
+  return { html: renderNewsletterHtml(opts), text: renderNewsletterText(opts) };
 }
 
-/** Versendet einen Newsletter an alle bestätigten Abonnenten und protokolliert die Kampagne. */
-export async function sendCampaign(subject: string, body: string): Promise<CampaignResult> {
+/** Versendet einen gestalteten Newsletter an alle bestätigten Abonnenten und protokolliert die Kampagne. */
+export async function sendCampaign(input: CampaignInput): Promise<CampaignResult> {
   if (!newsletterEnabled()) throw new Error("Newsletter ist nicht konfiguriert.");
   const recipients = await listConfirmed();
   let sent = 0, failed = 0;
   for (const r of recipients) {
     try {
-      const { html, text } = buildCampaignEmail(body, r.token);
+      const { html, text } = buildCampaignEmail(input, r.token);
       await sendSystemEmail({
         to: r.email,
-        subject,
+        subject: input.subject,
         html,
         text,
         headers: {
@@ -204,10 +203,12 @@ export async function sendCampaign(subject: string, body: string): Promise<Campa
     }
     await new Promise((res) => setTimeout(res, 350)); // sanftes Throttling (IONOS-Limits)
   }
+  // Für die Historie eine lesbare Textfassung ablegen.
+  const storedBody = `${input.headline}\n\n${input.body}${input.ctaUrl ? `\n\n→ ${input.ctaLabel ?? "Mehr"}: ${input.ctaUrl}` : ""}`;
   try {
     const sb = await admin();
     await sb.from("newsletter_campaigns").insert({
-      subject, body, recipients: recipients.length, sent, failed, sent_at: new Date().toISOString(),
+      subject: input.subject, body: storedBody, recipients: recipients.length, sent, failed, sent_at: new Date().toISOString(),
     });
   } catch { /* Tabelle evtl. noch nicht migriert – Versand zählt trotzdem */ }
   return { recipients: recipients.length, sent, failed };
