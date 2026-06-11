@@ -13,6 +13,7 @@ interface Customer {
   phone: string | null;
   status: string | null;
   renewsAt: string | null;
+  cancelAtPeriodEnd: boolean;
   createdAt: string | null;
   confirmed: boolean;
 }
@@ -22,6 +23,35 @@ interface Stats { registered: number; confirmed: number; trialing: number; payin
 function fmt(iso: string | null) {
   if (!iso) return "–";
   return new Date(iso).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" });
+}
+
+/** Tage bis zum Datum (ganzzahlig, kann negativ sein). */
+function daysUntil(iso: string | null): number | null {
+  if (!iso) return null;
+  return Math.ceil((new Date(iso).getTime() - Date.now()) / 86_400_000);
+}
+
+/** Zeigt Test-Ablauf, Kündigung oder nächste Zahlung – klar pro Kunde. */
+function TrialInfo({ c }: { c: Customer }) {
+  const d = daysUntil(c.renewsAt);
+  const dayLabel = d == null ? "" : d < 0 ? "abgelaufen" : d === 0 ? "heute" : d === 1 ? "morgen" : `noch ${d} Tage`;
+  const tone = d != null && d <= 1 ? "text-[var(--color-danger)]" : d != null && d <= 2 ? "text-[var(--color-warn)]" : "text-[var(--color-muted)]";
+
+  if (c.cancelAtPeriodEnd && c.status !== "canceled") {
+    return <span className="text-[var(--color-warn)]">Gekündigt – endet {fmt(c.renewsAt)}</span>;
+  }
+  if (c.status === "canceled") return <span className="text-[var(--color-muted)]">beendet</span>;
+  if (c.status === "trialing") {
+    return (
+      <span className={tone}>
+        Test endet {fmt(c.renewsAt)}{dayLabel && <> · {dayLabel}</>}
+      </span>
+    );
+  }
+  if (c.status === "active") {
+    return <span className="text-[var(--color-muted)]">nächste Zahlung {fmt(c.renewsAt)}</span>;
+  }
+  return <span className="text-[var(--color-faint)]">–</span>;
 }
 
 function StatusBadge({ s }: { s: string | null }) {
@@ -122,6 +152,19 @@ export default function AdminPage() {
               ))}
             </div>
 
+            {(() => {
+              const soon = stats.customers.filter((c) => {
+                const d = daysUntil(c.renewsAt);
+                return c.status === "trialing" && !c.cancelAtPeriodEnd && d != null && d >= 0 && d <= 2;
+              });
+              return soon.length > 0 ? (
+                <div className="mt-8 rounded-xl border border-[var(--color-warn)]/40 bg-[var(--color-warn-tint)]/30 px-4 py-3 text-sm text-[var(--color-ink)]">
+                  ⏰ <strong>{soon.length}</strong> {soon.length > 1 ? "Tests enden" : "Test endet"} in den nächsten 2 Tagen
+                  {" – "}guter Moment für eine persönliche Nachfass-Mail oder eine Verlängerung.
+                </div>
+              ) : null;
+            })()}
+
             <h2 className="mt-10 text-sm font-semibold">Alle Kunden ({stats.customers.length})</h2>
             <div className="mt-3 overflow-x-auto rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)]">
               <table className="w-full text-sm">
@@ -133,7 +176,7 @@ export default function AdminPage() {
                     <th className="px-4 py-2.5 font-medium">Telefon</th>
                     <th className="px-4 py-2.5 font-medium">Status</th>
                     <th className="px-4 py-2.5 font-medium">Registriert</th>
-                    <th className="px-4 py-2.5 font-medium">Nächste Zahlung</th>
+                    <th className="px-4 py-2.5 font-medium">Test-Ablauf / Kündigung</th>
                     <th className="px-4 py-2.5 font-medium text-right">Test verlängern</th>
                   </tr>
                 </thead>
@@ -148,7 +191,7 @@ export default function AdminPage() {
                       <td className="px-4 py-2.5 text-[var(--color-muted)] tnum">{c.phone ?? "–"}</td>
                       <td className="px-4 py-2.5"><StatusBadge s={c.status} /></td>
                       <td className="px-4 py-2.5 text-[var(--color-muted)] tnum">{fmt(c.createdAt)}</td>
-                      <td className="px-4 py-2.5 text-[var(--color-muted)] tnum">{c.status === "canceled" ? "–" : fmt(c.renewsAt)}</td>
+                      <td className="px-4 py-2.5 text-xs tnum"><TrialInfo c={c} /></td>
                       <td className="px-4 py-2.5">
                         <div className="flex items-center justify-end gap-1.5">
                           {busy === c.id ? (
