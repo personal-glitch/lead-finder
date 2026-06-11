@@ -7,6 +7,7 @@ import { config } from "@/lib/config";
 import { ALLE_BRANCHEN, BRANCHEN_KATEGORIEN } from "@/lib/leadgen/branchen-catalog";
 import { LazyKalkulator } from "@/components/landing/LazyKalkulator";
 import { NewsletterSignup } from "@/components/NewsletterSignup";
+import { WhatsAppFab } from "@/components/WhatsAppFab";
 import { LazyExplainerVideo } from "@/components/landing/LazyExplainerVideo";
 import { StatStrip, Reveal } from "@/components/landing/anim";
 import { PlanButton } from "@/components/landing/PlanButton";
@@ -242,6 +243,7 @@ export default function Landing() {
   return (
     <div className="min-h-screen pb-20 md:pb-0">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD) }} />
+      <WhatsAppFab />
       {/* Header */}
       <header className="sticky top-0 z-30 border-b border-[var(--color-line)] bg-[var(--color-canvas)]/80 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3.5">

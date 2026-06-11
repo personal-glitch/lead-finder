@@ -9,7 +9,7 @@ export default function DatenschutzPage() {
       <H2>1. Verantwortlicher</H2>
       <P>
         Seciora Solutions, Inhaber Cihan Yildirim (Einzelunternehmen), Charlottenstraße 37,
-        51149 Köln · Telefon: +49 15566 021171 · E-Mail: kontakt@seciora-solutions.de. Die vollständigen Angaben findest du im{" "}
+        51149 Köln · Telefon: +49 1529 2627062 · E-Mail: kontakt@seciora-solutions.de. Die vollständigen Angaben findest du im{" "}
         <a href="/impressum" className="text-[var(--color-brand)] hover:underline">Impressum</a>.
       </P>
 

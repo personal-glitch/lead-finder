@@ -21,7 +21,7 @@ export default function WiderrufPage() {
       </P>
       <P>
         Um Ihr Widerrufsrecht auszuüben, müssen Sie uns (Seciora Solutions, Inhaber Cihan Yildirim,
-        Charlottenstraße 37, 51149 Köln, E-Mail: kontakt@seciora-solutions.de, Telefon: +49 15566 021171) mittels einer
+        Charlottenstraße 37, 51149 Köln, E-Mail: kontakt@seciora-solutions.de, Telefon: +49 1529 2627062) mittels einer
         eindeutigen Erklärung (z. B. ein mit der Post versandter Brief oder eine E-Mail) über Ihren Entschluss, diesen
         Vertrag zu widerrufen, informieren. Sie können dafür das beigefügte Muster-Widerrufsformular verwenden, das
         jedoch nicht vorgeschrieben ist.

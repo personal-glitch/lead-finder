@@ -12,7 +12,7 @@ export default function ImpressumPage() {
       <P>Charlottenstraße 37<br />51149 Köln<br />Deutschland</P>
 
       <H2>Kontakt</H2>
-      <P>Telefon: +49 15566 021171<br />E-Mail: kontakt@seciora-solutions.de</P>
+      <P>Telefon / WhatsApp: +49 1529 2627062<br />E-Mail: kontakt@seciora-solutions.de</P>
 
       <H2>Rechtsform</H2>
       <P>Einzelunternehmen. Eine Eintragung im Handelsregister besteht nicht.</P>
