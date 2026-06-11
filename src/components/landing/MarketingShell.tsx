@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Icon } from "@/components/icons";
 import { NewsletterSignup } from "@/components/NewsletterSignup";
+import { WhatsAppWidget } from "@/components/WhatsAppWidget";
 
 /** Gemeinsame Hülle (Header + Footer + CTA) für Blog & weitere SEO-Landingpages. */
 export function MarketingShell({
@@ -61,10 +62,13 @@ export function MarketingShell({
         {" · "}
         <Link href="/newsletter" className="hover:text-[var(--color-ink)]">Newsletter</Link>
         {" · "}
+        <a href="https://wa.me/4915292627062?text=Hallo%2C%20ich%20habe%20eine%20Frage%20zu%20KundenRadar." target="_blank" rel="noopener noreferrer" className="hover:text-[var(--color-ink)]">WhatsApp</a>
+        {" · "}
         <Link href="/impressum" className="hover:text-[var(--color-ink)]">Impressum</Link>
         {" · "}
         <Link href="/datenschutz" className="hover:text-[var(--color-ink)]">Datenschutz</Link>
       </footer>
+      <WhatsAppWidget />
     </div>
   );
 }

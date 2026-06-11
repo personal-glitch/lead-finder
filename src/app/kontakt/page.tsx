@@ -20,6 +20,11 @@ export default function KontaktPage() {
             </p>
             <p className="flex items-center gap-2"><Icon name="pin" size={15} /> Charlottenstraße 37, 51149 Köln</p>
           </div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <div className="pt-1">
+            <img src="/whatsapp-qr.png" alt="WhatsApp QR-Code – Chat mit KundenRadar" width={120} height={120} className="rounded-lg border border-[var(--color-line)] bg-white p-1" />
+            <p className="mt-1 text-xs text-[var(--color-faint)]">Handy-Kamera draufhalten → WhatsApp-Chat öffnet sich.</p>
+          </div>
           <P>Anbieter: Seciora Solutions, Inhaber Cihan Yildirim. Mo–Fr, 9–17 Uhr. Für rechtliche Angaben siehe <a href="/impressum" className="text-[var(--color-brand)] hover:underline">Impressum</a>.</P>
         </div>
         <ContactForm />

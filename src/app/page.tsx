@@ -7,7 +7,7 @@ import { config } from "@/lib/config";
 import { ALLE_BRANCHEN, BRANCHEN_KATEGORIEN } from "@/lib/leadgen/branchen-catalog";
 import { LazyKalkulator } from "@/components/landing/LazyKalkulator";
 import { NewsletterSignup } from "@/components/NewsletterSignup";
-import { WhatsAppFab } from "@/components/WhatsAppFab";
+import { WhatsAppWidget } from "@/components/WhatsAppWidget";
 import { LazyExplainerVideo } from "@/components/landing/LazyExplainerVideo";
 import { StatStrip, Reveal } from "@/components/landing/anim";
 import { PlanButton } from "@/components/landing/PlanButton";
@@ -243,7 +243,7 @@ export default function Landing() {
   return (
     <div className="min-h-screen pb-20 md:pb-0">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD) }} />
-      <WhatsAppFab />
+      <WhatsAppWidget />
       {/* Header */}
       <header className="sticky top-0 z-30 border-b border-[var(--color-line)] bg-[var(--color-canvas)]/80 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3.5">
@@ -302,6 +302,18 @@ export default function Landing() {
             </Link>
           </div>
           <p className="mt-4 text-xs text-[var(--color-faint)]">3 Tage gratis testen · DSGVO-konform · Daten aus öffentlichen Quellen</p>
+          <p className="mt-2 text-xs">
+            <a
+              href="https://wa.me/4915292627062?text=Hallo%2C%20ich%20habe%20eine%20Frage%20zu%20KundenRadar."
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 font-medium hover:underline"
+              style={{ color: "#1ca64c" }}
+            >
+              <svg viewBox="0 0 32 32" width="14" height="14" fill="#25D366" aria-hidden="true"><path d="M16.04 4c-6.6 0-11.96 5.36-11.96 11.96 0 2.1.55 4.16 1.6 5.98L4 28l6.22-1.63a11.9 11.9 0 0 0 5.82 1.5c6.6 0 11.96-5.36 11.96-11.96C28.01 9.36 22.64 4 16.04 4zm5.46 16.45c-.25.7-1.45 1.34-2.02 1.42-.51.08-1.16.11-1.87-.12-.43-.13-.98-.31-1.69-.62-2.98-1.29-4.93-4.29-5.08-4.49-.15-.2-1.22-1.62-1.22-3.09s.78-2.19 1.05-2.49c.28-.3.6-.37.8-.37l.57.01c.18.01.43-.07.67.51.25.6.85 2.07.92 2.22.07.15.12.32.02.52-.1.2-.15.33-.3.5-.15.17-.32.39-.45.52-.15.15-.3.31-.13.61.17.3.77 1.28 1.66 2.07 1.14 1.02 2.1 1.33 2.4 1.48.3.15.48.13.65-.07.18-.2.75-.87.95-1.17.2-.3.4-.25.67-.15.27.1 1.74.82 2.04.97.3.15.5.23.57.35.08.12.08.72-.17 1.42z" /></svg>
+              Fragen? Schreib uns auf WhatsApp
+            </a>
+          </p>
         </div>
 
         {/* Interaktiver Köder – volle Breite, in sich ausgewogen */}
@@ -551,6 +563,7 @@ export default function Landing() {
             <Link href="/preise" className="hover:text-[var(--color-ink)]">Preise</Link>
             <Link href="/kuendigung" className="hover:text-[var(--color-ink)]">Verträge hier kündigen</Link>
             <Link href="/kontakt" className="hover:text-[var(--color-ink)]">Kontakt</Link>
+            <a href="https://wa.me/4915292627062?text=Hallo%2C%20ich%20habe%20eine%20Frage%20zu%20KundenRadar." target="_blank" rel="noopener noreferrer" className="hover:text-[var(--color-ink)]">WhatsApp</a>
           </div>
         </div>
       </footer>
