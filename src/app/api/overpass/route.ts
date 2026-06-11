@@ -5,9 +5,10 @@
 export const runtime = "edge";
 
 const TARGETS = [
-  "https://overpass-api.de/api/interpreter",
   "https://overpass.kumi.systems/api/interpreter",
+  "https://overpass-api.de/api/interpreter",
 ];
+const PER_TRY_TIMEOUT_MS = 16_000;
 
 export async function GET() {
   return new Response("KundenRadar Overpass-Edge-Proxy ok", {
@@ -29,7 +30,7 @@ export async function POST(req: Request): Promise<Response> {
           Accept: "application/json",
         },
         body,
-        signal: AbortSignal.timeout(25_000),
+        signal: AbortSignal.timeout(PER_TRY_TIMEOUT_MS),
       });
       if (r.ok) {
         return new Response(r.body, {
