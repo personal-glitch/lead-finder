@@ -22,8 +22,21 @@ import {
 const BRANCHEN_N = Math.floor(ALLE_BRANCHEN.length / 10) * 10; // 50
 
 export const metadata: Metadata = {
-  title: "KundenRadar – Dein kompletter Vertrieb in einem Tool",
-  description: `Finde anrufbare B2B-Neukunden in ${BRANCHEN_N}+ Branchen, reichere Telefon & Ansprechpartner an und führe Anrufe, Pipeline, Aufgaben & E-Mails an einem Ort. Für jeden Dienstleister. Schluss mit Excel & Google-Suche. DSGVO-konform.`,
+  title: "Kostenloser Rechner für Gebäudereinigung, Handwerk & Dienstleister | KundenRadar",
+  description:
+    "Kostenlose Rechner & Kalkulatoren für Dienstleister: Stundensatz und Angebotspreis für Gebäudereinigung, Handwerk und Agenturen berechnen – plus KundenRadar, das Tool, das dir anrufbare B2B-Neukunden mit Telefon & Ansprechpartner liefert. 3 Tage gratis testen, DSGVO-konform.",
+  keywords: [
+    "kostenloser Rechner", "kostenloser Kalkulator", "Kalkulator Gebäudereinigung", "Reinigungskosten-Rechner",
+    "Stundensatz Handwerk berechnen", "Stundenverrechnungssatz Handwerk", "Stundensatz Agentur",
+    "Angebotspreis berechnen", "Neukunden für Dienstleister", "B2B-Leads finden", "KundenRadar",
+  ],
+  alternates: { canonical: "/" },
+  openGraph: {
+    title: "Kostenlose Rechner für Gebäudereinigung, Handwerk & Dienstleister – KundenRadar",
+    description:
+      "Stundensatz & Angebotspreis kostenlos berechnen – plus das Tool, das dir anrufbare B2B-Neukunden findet. 3 Tage gratis testen.",
+    url: "/",
+  },
 };
 
 // Anbieter ("Für wen?")
@@ -187,6 +200,8 @@ const JSON_LD = {
       url: config.appUrl,
       email: "kontakt@seciora-solutions.de",
       brand: "KundenRadar",
+      logo: `${config.appUrl}/logo.png`,
+      image: `${config.appUrl}/logo.png`,
     },
     {
       "@type": "WebSite",
