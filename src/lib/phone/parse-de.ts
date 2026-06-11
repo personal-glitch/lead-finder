@@ -133,6 +133,10 @@ export function parseGermanPhone(candidate: string): ParsedPhone | null {
   const e164 = /^\d{4,13}$/.test(nsn) ? `+49${nsn}` : null;
   if (!e164) return null;
 
+  // Aufzählungen / fortlaufende Ziffernfolgen (z. B. „0 1 2 3 4 5 …") sind keine
+  // Rufnummern, auch wenn die Länge passt.
+  if (/0123456789|1234567890|2345678901|3456789012|9876543210/.test(digits)) return null;
+
   return { raw, normalized, e164, label: null };
 }
 
@@ -149,6 +153,11 @@ export function extractPhoneNumbers(text: string): ParsedPhone[] {
   const seen = new Set<string>();
 
   for (const m of masked.matchAll(PHONE_RE)) {
+    // Viele einzelne, durch Trenner getrennte Einzelziffern → Aufzählung,
+    // keine Telefonnummer (z. B. „0 1 2 3 4 5 6 7 8 9 10 11").
+    const grp = m[0].trim().split(/\D+/).filter(Boolean);
+    if (grp.length >= 7 && grp.filter((g) => g.length === 1).length >= Math.ceil(grp.length * 0.6)) continue;
+
     const parsed = parseGermanPhone(m[0]);
     if (!parsed || !parsed.e164) continue;
 
