@@ -225,6 +225,7 @@ export async function listSubscribers(): Promise<NewsletterSubscriber[]> {
 export interface CampaignResult { recipients: number; sent: number; failed: number; }
 export interface NewsletterCampaign {
   id: string; subject: string; recipients: number; sent: number; failed: number; createdAt: string;
+  status: string; scheduledFor: string | null;
 }
 
 /** Alle bestätigten Empfänger inkl. Token (für den Abmeldelink). */
@@ -250,9 +251,8 @@ function buildCampaignEmail(content: NewsletterContent, token: string): { html: 
   return { html: renderNewsletterHtml(opts), text: renderNewsletterText(opts) };
 }
 
-/** Versendet einen gestalteten Newsletter an alle bestätigten Abonnenten und protokolliert die Kampagne. */
-export async function sendCampaign(input: CampaignInput): Promise<CampaignResult> {
-  if (!newsletterEnabled()) throw new Error("Newsletter ist nicht konfiguriert.");
+/** Reine Zustellung an alle bestätigten Abonnenten (mit {{Vorname}}-Personalisierung). */
+async function deliverToConfirmed(input: CampaignInput): Promise<CampaignResult> {
   const recipients = await listConfirmed();
   let sent = 0, failed = 0;
   for (const r of recipients) {
@@ -279,24 +279,85 @@ export async function sendCampaign(input: CampaignInput): Promise<CampaignResult
     }
     await new Promise((res) => setTimeout(res, 350)); // sanftes Throttling (IONOS-Limits)
   }
-  // Für die Historie eine lesbare Textfassung ablegen.
-  const storedBody = `${input.headline}\n\n${input.body}${input.ctaUrl ? `\n\n→ ${input.ctaLabel ?? "Mehr"}: ${input.ctaUrl}` : ""}`;
-  try {
-    const sb = await admin();
-    await sb.from("newsletter_campaigns").insert({
-      subject: input.subject, body: storedBody, recipients: recipients.length, sent, failed, sent_at: new Date().toISOString(),
-    });
-  } catch { /* Tabelle evtl. noch nicht migriert – Versand zählt trotzdem */ }
   return { recipients: recipients.length, sent, failed };
 }
 
-/** Versendete Kampagnen (Historie). */
+function campaignRow(input: CampaignInput) {
+  return {
+    subject: input.subject,
+    body: input.body,
+    template: input.template,
+    headline: input.headline,
+    cta_label: input.ctaLabel ?? null,
+    cta_url: input.ctaUrl ?? null,
+  };
+}
+
+/** Sofort an alle bestätigten Abonnenten senden + protokollieren. */
+export async function sendCampaign(input: CampaignInput): Promise<CampaignResult> {
+  if (!newsletterEnabled()) throw new Error("Newsletter ist nicht konfiguriert.");
+  const r = await deliverToConfirmed(input);
+  try {
+    const sb = await admin();
+    await sb.from("newsletter_campaigns").insert({
+      ...campaignRow(input), status: "sent", recipients: r.recipients, sent: r.sent, failed: r.failed, sent_at: new Date().toISOString(),
+    });
+  } catch { /* Tabelle evtl. noch nicht migriert – Versand zählt trotzdem */ }
+  return r;
+}
+
+/** Newsletter für einen späteren Zeitpunkt einplanen. */
+export async function createScheduledCampaign(input: CampaignInput, scheduledForIso: string): Promise<void> {
+  if (!newsletterEnabled()) throw new Error("Newsletter ist nicht konfiguriert.");
+  const sb = await admin();
+  await sb.from("newsletter_campaigns").insert({
+    ...campaignRow(input), status: "scheduled", scheduled_for: scheduledForIso, recipients: 0, sent: 0, failed: 0,
+  });
+}
+
+/** Fällige geplante Kampagnen senden (Cron + On-Demand). Liefert Anzahl verarbeiteter Kampagnen. */
+export async function processDueCampaigns(): Promise<number> {
+  if (!newsletterEnabled()) return 0;
+  const sb = await admin();
+  const nowIso = new Date().toISOString();
+  const { data } = await sb
+    .from("newsletter_campaigns")
+    .select("id, subject, body, template, headline, cta_label, cta_url")
+    .eq("status", "scheduled")
+    .lte("scheduled_for", nowIso)
+    .limit(20);
+  let processed = 0;
+  for (const c of data ?? []) {
+    // Doppelversand vermeiden: Kampagne erst „beanspruchen".
+    const { data: claim } = await sb
+      .from("newsletter_campaigns")
+      .update({ status: "sending" })
+      .eq("id", c.id).eq("status", "scheduled").select("id");
+    if (!claim || claim.length === 0) continue;
+    const input: CampaignInput = {
+      subject: c.subject as string,
+      template: ((c.template as string) || "tipp") as NewsletterContent["template"],
+      headline: (c.headline as string) || (c.subject as string),
+      body: c.body as string,
+      ctaLabel: (c.cta_label as string) || undefined,
+      ctaUrl: (c.cta_url as string) || undefined,
+    };
+    const r = await deliverToConfirmed(input);
+    await sb.from("newsletter_campaigns").update({
+      status: "sent", recipients: r.recipients, sent: r.sent, failed: r.failed, sent_at: new Date().toISOString(),
+    }).eq("id", c.id);
+    processed++;
+  }
+  return processed;
+}
+
+/** Versendete & geplante Kampagnen (Historie). */
 export async function listCampaigns(): Promise<NewsletterCampaign[]> {
   if (!newsletterEnabled()) return [];
   const sb = await admin();
   const { data } = await sb
     .from("newsletter_campaigns")
-    .select("id, subject, recipients, sent, failed, created_at")
+    .select("id, subject, recipients, sent, failed, created_at, status, scheduled_for")
     .order("created_at", { ascending: false })
     .limit(100);
   return (data ?? []).map((r) => ({
@@ -306,6 +367,8 @@ export async function listCampaigns(): Promise<NewsletterCampaign[]> {
     sent: (r.sent as number) ?? 0,
     failed: (r.failed as number) ?? 0,
     createdAt: r.created_at as string,
+    status: (r.status as string) ?? "sent",
+    scheduledFor: (r.scheduled_for as string) ?? null,
   }));
 }
 

@@ -31,7 +31,12 @@ interface Subscriber {
   id: string; email: string; status: string; source: string | null;
   consentAt: string; confirmedAt: string | null; unsubscribedAt: string | null; createdAt: string;
 }
-interface Campaign { id: string; subject: string; recipients: number; sent: number; failed: number; createdAt: string }
+interface Campaign { id: string; subject: string; recipients: number; sent: number; failed: number; createdAt: string; status?: string; scheduledFor?: string | null }
+
+function fmtDateTime(iso: string | null | undefined) {
+  if (!iso) return "–";
+  return new Date(iso).toLocaleString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
+}
 interface NewsletterData { total: number; confirmed: number; pending: number; unsubscribed: number; subscribers: Subscriber[]; campaigns?: Campaign[] }
 
 const SUB_BADGE: Record<string, { t: string; c: string }> = {
@@ -98,6 +103,7 @@ export default function AdminPage() {
   const [mailBody, setMailBody] = useState("");
   const [ctaLabel, setCtaLabel] = useState("");
   const [ctaUrl, setCtaUrl] = useState("");
+  const [scheduledFor, setScheduledFor] = useState("");
   const [sending, setSending] = useState(false);
 
   const reloadNews = () => api<NewsletterData>("/api/admin/newsletter").then(setNews).catch(() => {});
@@ -105,18 +111,23 @@ export default function AdminPage() {
   const sendNewsletter = async () => {
     if (!news) return;
     if (news.confirmed === 0) { setToast("Noch keine bestätigten Abonnenten."); return; }
-    if (!window.confirm(`Newsletter „${subject}" an ${news.confirmed} bestätigte Abonnenten senden?`)) return;
+    const planned = scheduledFor.trim().length > 0;
+    const when = planned ? new Date(scheduledFor).toLocaleString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "";
+    const ask = planned
+      ? `Newsletter „${subject}" für ${when} Uhr einplanen (an dann bestätigte Abonnenten)?`
+      : `Newsletter „${subject}" jetzt an ${news.confirmed} bestätigte Abonnenten senden?`;
+    if (!window.confirm(ask)) return;
     setSending(true);
     try {
-      const r = await api<{ recipients: number; sent: number; failed: number }>(
+      const r = await api<{ recipients?: number; sent?: number; failed?: number; scheduled?: boolean; scheduledFor?: string }>(
         "/api/admin/newsletter/send",
-        { json: { subject, template, headline, body: mailBody, ctaLabel, ctaUrl } },
+        { json: { subject, template, headline, body: mailBody, ctaLabel, ctaUrl, scheduledFor: planned ? new Date(scheduledFor).toISOString() : "" } },
       );
-      setToast(`Versendet: ${r.sent}/${r.recipients}${r.failed ? ` · ${r.failed} fehlgeschlagen` : ""}`);
-      setSubject(""); setHeadline(""); setMailBody(""); setCtaLabel(""); setCtaUrl("");
+      setToast(r.scheduled ? `Eingeplant für ${when} Uhr.` : `Versendet: ${r.sent}/${r.recipients}${r.failed ? ` · ${r.failed} fehlgeschlagen` : ""}`);
+      setSubject(""); setHeadline(""); setMailBody(""); setCtaLabel(""); setCtaUrl(""); setScheduledFor("");
       reloadNews();
     } catch (e) {
-      setToast(e instanceof Error ? e.message : "Versand fehlgeschlagen.");
+      setToast(e instanceof Error ? e.message : "Aktion fehlgeschlagen.");
     } finally {
       setSending(false);
     }
@@ -416,13 +427,22 @@ export default function AdminPage() {
                     </div>
                   </div>
 
-                  <div className="mt-3 flex justify-end">
+                  <div className="mt-3 flex flex-wrap items-end justify-end gap-3">
+                    <label className="text-xs text-[var(--color-muted)]">
+                      <span className="mb-1 block">Später senden (optional)</span>
+                      <input
+                        type="datetime-local"
+                        value={scheduledFor}
+                        onChange={(e) => setScheduledFor(e.target.value)}
+                        className="rounded-lg border border-[var(--color-line-strong)] bg-[var(--color-canvas)] px-3 py-2 text-sm outline-none focus:border-[var(--color-brand)]"
+                      />
+                    </label>
                     <button
                       onClick={sendNewsletter}
                       disabled={sending || subject.trim().length < 3 || headline.trim().length < 3 || mailBody.trim().length < 10}
                       className="rounded-lg bg-[var(--color-brand)] px-4 py-2 text-sm font-semibold text-[var(--color-on-brand)] hover:bg-[var(--color-brand-ink)] disabled:opacity-50"
                     >
-                      {sending ? "Sende …" : `An ${news.confirmed} senden`}
+                      {sending ? "…" : scheduledFor.trim() ? "Einplanen" : `An ${news.confirmed} senden`}
                     </button>
                   </div>
                 </div>
@@ -434,20 +454,33 @@ export default function AdminPage() {
                       <thead>
                         <tr className="border-b border-[var(--color-line)] text-left text-xs text-[var(--color-muted)]">
                           <th className="px-4 py-2.5 font-medium">Betreff</th>
+                          <th className="px-4 py-2.5 font-medium">Status</th>
                           <th className="px-4 py-2.5 font-medium">Empfänger</th>
                           <th className="px-4 py-2.5 font-medium">Versendet</th>
-                          <th className="px-4 py-2.5 font-medium">Datum</th>
+                          <th className="px-4 py-2.5 font-medium">Zeitpunkt</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {news.campaigns.map((c) => (
-                          <tr key={c.id} className="border-b border-[var(--color-line)] last:border-0">
-                            <td className="px-4 py-2.5">{c.subject}</td>
-                            <td className="px-4 py-2.5 text-[var(--color-muted)] tnum">{c.recipients}</td>
-                            <td className="px-4 py-2.5 tnum">{c.sent}{c.failed ? <span className="text-[var(--color-danger)]"> · {c.failed} ✗</span> : null}</td>
-                            <td className="px-4 py-2.5 text-[var(--color-muted)] tnum">{fmt(c.createdAt)}</td>
-                          </tr>
-                        ))}
+                        {news.campaigns.map((c) => {
+                          const scheduled = c.status === "scheduled" || c.status === "sending";
+                          return (
+                            <tr key={c.id} className="border-b border-[var(--color-line)] last:border-0">
+                              <td className="px-4 py-2.5">{c.subject}</td>
+                              <td className="px-4 py-2.5">
+                                {c.status === "scheduled" ? (
+                                  <span className="rounded-full bg-[var(--color-warn-tint)] px-2 py-0.5 text-[11px] font-medium text-[var(--color-warn)]">⏰ Geplant</span>
+                                ) : c.status === "sending" ? (
+                                  <span className="rounded-full bg-[var(--color-brand-tint)] px-2 py-0.5 text-[11px] font-medium text-[var(--color-brand)]">Wird gesendet…</span>
+                                ) : (
+                                  <span className="rounded-full bg-[var(--color-success-tint)] px-2 py-0.5 text-[11px] font-medium text-[var(--color-success)]">Versendet</span>
+                                )}
+                              </td>
+                              <td className="px-4 py-2.5 text-[var(--color-muted)] tnum">{scheduled ? "–" : c.recipients}</td>
+                              <td className="px-4 py-2.5 tnum">{scheduled ? "–" : <>{c.sent}{c.failed ? <span className="text-[var(--color-danger)]"> · {c.failed} ✗</span> : null}</>}</td>
+                              <td className="px-4 py-2.5 text-[var(--color-muted)] tnum">{scheduled ? fmtDateTime(c.scheduledFor) : fmt(c.createdAt)}</td>
+                            </tr>
+                          );
+                        })}
                       </tbody>
                     </table>
                   </div>

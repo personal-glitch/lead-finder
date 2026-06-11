@@ -1,7 +1,7 @@
 import { jsonOk, jsonError } from "@/lib/api";
 import { AppError } from "@/lib/errors";
 import { config } from "@/lib/config";
-import { listSubscribers, listCampaigns } from "@/lib/newsletter";
+import { listSubscribers, listCampaigns, processDueCampaigns } from "@/lib/newsletter";
 
 // Newsletter-Abonnenten – NUR für die Superadmin-E-Mail.
 export async function GET() {
@@ -15,6 +15,8 @@ export async function GET() {
     if (!email || !config.admin.email || email !== config.admin.email) {
       throw new AppError("auth", "Kein Zugriff.");
     }
+    // Sicherung: fällige geplante Newsletter beim Öffnen mitverarbeiten.
+    await processDueCampaigns().catch(() => {});
     const subscribers = await listSubscribers();
     const campaigns = await listCampaigns();
     return jsonOk({
