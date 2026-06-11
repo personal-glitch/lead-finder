@@ -37,24 +37,31 @@ function inlineMd(s: string): string {
     .replace(/(^|[^*])\*([^*\n]+)\*/g, "$1<em>$2</em>");
 }
 
-/** Einfaches Markdown -> E-Mail-HTML (Absätze, Aufzählungen, Inline-Formatierung). */
+/** Einfaches Markdown -> E-Mail-HTML (Absätze, Aufzählungen, Inline-Formatierung).
+ *  Zeilenbasiert: aufeinanderfolgende „- "-Zeilen werden zur Liste – auch ohne Leerzeile davor. */
 function bodyToHtml(body: string): string {
-  const blocks = esc(body.trim()).split(/\n{2,}/);
-  return blocks
-    .map((block) => {
-      const lines = block.split("\n");
-      const hasBullets = lines.some((l) => /^\s*[-*]\s+/.test(l));
-      const allBullets = lines.every((l) => l.trim() === "" || /^\s*[-*]\s+/.test(l));
-      if (hasBullets && allBullets) {
-        const items = lines
-          .filter((l) => /^\s*[-*]\s+/.test(l))
-          .map((l) => `<li style="margin:0 0 6px">${inlineMd(l.replace(/^\s*[-*]\s+/, ""))}</li>`)
-          .join("");
-        return `<ul style="margin:0 0 16px;padding-left:20px;font-size:16px;line-height:1.6;color:#334155">${items}</ul>`;
-      }
-      return `<p style="margin:0 0 16px;font-size:16px;line-height:1.6;color:#334155">${inlineMd(block.replace(/\n/g, "<br>"))}</p>`;
-    })
-    .join("\n");
+  const lines = esc(body.trim()).split("\n");
+  const PARA = "margin:0 0 16px;font-size:16px;line-height:1.6;color:#334155";
+  let html = "";
+  let para: string[] = [];
+  let list: string[] = [];
+  const flushPara = () => { if (para.length) { html += `<p style="${PARA}">${para.join("<br>")}</p>`; para = []; } };
+  const flushList = () => {
+    if (list.length) {
+      const items = list.map((li) => `<li style="margin:0 0 6px">${inlineMd(li)}</li>`).join("");
+      html += `<ul style="${PARA};padding-left:20px">${items}</ul>`;
+      list = [];
+    }
+  };
+  for (const line of lines) {
+    if (line.trim() === "") { flushList(); flushPara(); continue; }
+    const m = line.match(/^\s*[-*]\s+(.*)$/);
+    if (m) { flushPara(); list.push(m[1]); }
+    else { flushList(); para.push(inlineMd(line)); }
+  }
+  flushList();
+  flushPara();
+  return html;
 }
 
 export function renderNewsletterHtml(o: RenderOptions): string {
