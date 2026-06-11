@@ -69,7 +69,7 @@ export default function CheckClient() {
           <form onSubmit={run} className="grid gap-4 sm:grid-cols-[1.2fr_1fr_auto] sm:items-end">
             <div>
               <label className="mb-1 block text-xs text-[var(--color-muted)]">PLZ oder Ort</label>
-              <TextInput value={plz} onChange={(e) => setPlz(e.target.value)} placeholder="z. B. 51373 oder Leverkusen" className={INPUT} />
+              <TextInput value={plz} onChange={(e) => setPlz(e.target.value)} placeholder="z. B. 50667 oder Köln" className={INPUT} />
             </div>
             <div>
               <label className="mb-1 block text-xs text-[var(--color-muted)]">Branche</label>

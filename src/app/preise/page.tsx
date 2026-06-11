@@ -42,7 +42,7 @@ export default function PreisePage() {
       <H2>Vertragspartner</H2>
       <P>
         Anbieter und Vertragspartner ist Seciora Solutions, Inhaber Cihan Yildirim (Einzelunternehmen),
-        Windthorststraße 15, 51373 Leverkusen. Es gelten ergänzend unsere{" "}
+        Charlottenstraße 37, 51149 Köln. Es gelten ergänzend unsere{" "}
         <a href="/agb" className="text-[var(--color-brand)] hover:underline">AGB</a> und die{" "}
         <a href="/datenschutz" className="text-[var(--color-brand)] hover:underline">Datenschutzerklärung</a>.
       </P>

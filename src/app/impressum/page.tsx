@@ -9,7 +9,7 @@ export default function ImpressumPage() {
       <H2>Angaben gemäß § 5 DDG</H2>
       <P>Seciora Solutions</P>
       <P>Inhaber: Cihan Yildirim (Einzelunternehmen)<br />Geschäftsbezeichnung „KundenRadar"</P>
-      <P>Windthorststraße 15<br />51373 Leverkusen<br />Deutschland</P>
+      <P>Charlottenstraße 37<br />51149 Köln<br />Deutschland</P>
 
       <H2>Kontakt</H2>
       <P>Telefon: +49 15566 021171<br />E-Mail: kontakt@seciora-solutions.de</P>

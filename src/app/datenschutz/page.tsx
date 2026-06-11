@@ -8,8 +8,8 @@ export default function DatenschutzPage() {
     <LegalShell title="Datenschutzerklärung" intro="Wir nehmen den Schutz personenbezogener Daten ernst. Nachfolgend informieren wir über Art, Umfang und Zweck der Verarbeitung.">
       <H2>1. Verantwortlicher</H2>
       <P>
-        Seciora Solutions, Inhaber Cihan Yildirim (Einzelunternehmen), Windthorststraße 15,
-        51373 Leverkusen · Telefon: +49 15566 021171 · E-Mail: kontakt@seciora-solutions.de. Die vollständigen Angaben findest du im{" "}
+        Seciora Solutions, Inhaber Cihan Yildirim (Einzelunternehmen), Charlottenstraße 37,
+        51149 Köln · Telefon: +49 15566 021171 · E-Mail: kontakt@seciora-solutions.de. Die vollständigen Angaben findest du im{" "}
         <a href="/impressum" className="text-[var(--color-brand)] hover:underline">Impressum</a>.
       </P>
 
