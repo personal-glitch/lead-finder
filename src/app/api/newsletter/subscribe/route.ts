@@ -9,6 +9,7 @@ export async function POST(req: NextRequest) {
   try {
     const body = (await req.json().catch(() => ({}))) as {
       email?: string;
+      name?: string;
       source?: string;
       website?: string; // Honeypot – muss leer bleiben
     };
@@ -28,8 +29,9 @@ export async function POST(req: NextRequest) {
       req.headers.get("x-real-ip") ||
       null;
     const source = (body.source ?? "homepage").slice(0, 40);
+    const name = (body.name ?? "").trim().slice(0, 80) || null;
 
-    const result = await subscribeNewsletter({ email, ip, source });
+    const result = await subscribeNewsletter({ email, name, ip, source });
     if (!result.ok) throw new AppError("bad_request", result.error);
 
     return jsonOk({

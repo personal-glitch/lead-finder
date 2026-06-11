@@ -6,7 +6,7 @@ import { api } from "@/lib/client";
 import { PageHeader, refreshStats } from "@/components/shell/AppShell";
 import { Icon, type IconName } from "@/components/icons";
 import { Badge, Button, Card, EmptyState, Spinner } from "@/components/ui";
-import { NewsletterSignup } from "@/components/NewsletterSignup";
+import { NewsletterOptInCard } from "@/components/NewsletterOptInCard";
 
 const ACT_ICON: Record<ActivityType, IconName> = {
   created: "plus", enriched: "search", stage_changed: "pipeline",
@@ -246,11 +246,7 @@ export default function DashboardPage() {
           </div>
         )}
 
-        <NewsletterSignup
-          source="dashboard"
-          title="KundenRadar-Newsletter"
-          subtitle="Akquise-Tipps & neue Funktionen – direkt ins Postfach. Jederzeit abbestellbar."
-        />
+        <NewsletterOptInCard />
       </div>
     </>
   );

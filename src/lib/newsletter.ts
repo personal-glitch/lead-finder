@@ -41,8 +41,14 @@ export function newsletterEnabled(): boolean {
 
 export interface SubscribeInput {
   email: string;
+  name?: string | null;
   ip?: string | null;
   source?: string | null;
+}
+
+/** Ersetzt {{Vorname}} (case-insensitive) durch den Namen, sonst „zusammen". */
+export function personalize(text: string, name?: string | null): string {
+  return text.replace(/\{\{\s*vorname\s*\}\}/gi, name && name.trim() ? name.trim() : "zusammen");
 }
 export type SubscribeResult =
   | { ok: true; state: "pending" | "already_confirmed" }
@@ -76,6 +82,7 @@ export async function subscribeNewsletter(input: SubscribeInput): Promise<Subscr
     status: "pending" as const,
     token,
     source: input.source ?? null,
+    name: input.name ?? null,
     consent_ip: input.ip ?? null,
     consent_at: nowIso,
     confirmed_at: null,
@@ -93,13 +100,75 @@ export async function subscribeNewsletter(input: SubscribeInput): Promise<Subscr
   return { ok: true, state: "pending" };
 }
 
+/**
+ * Trägt eine bereits verifizierte Adresse (eingeloggter Nutzer) direkt als
+ * 'confirmed' ein – Einwilligung per ausdrücklichem Klick im Tool, dokumentiert.
+ */
+export async function subscribeConfirmed(input: SubscribeInput): Promise<SubscribeResult> {
+  if (!newsletterEnabled()) return { ok: false, error: "Newsletter ist nicht konfiguriert." };
+  if (!isValidEmail(input.email)) return { ok: false, error: "Ungültige E-Mail-Adresse." };
+  const sb = await admin();
+  const email = input.email.trim();
+  const email_norm = normEmail(email);
+
+  const { data: existing } = await sb
+    .from("newsletter_subscribers")
+    .select("id, status")
+    .eq("email_norm", email_norm)
+    .maybeSingle();
+  if (existing && existing.status === "confirmed") return { ok: true, state: "already_confirmed" };
+
+  const token = newToken();
+  const now = new Date().toISOString();
+  const row = {
+    email, email_norm, status: "confirmed" as const, token,
+    source: input.source ?? "tool", name: input.name ?? null,
+    consent_ip: input.ip ?? null, consent_at: now, confirmed_at: now,
+    unsubscribed_at: null, updated_at: now,
+  };
+  if (existing) await sb.from("newsletter_subscribers").update(row).eq("id", existing.id);
+  else await sb.from("newsletter_subscribers").insert(row);
+
+  await sendWelcomeEmail(email, input.name ?? null, token).catch(() => {});
+  return { ok: true, state: "pending" };
+}
+
+// Automatische Willkommens-Mail nach Bestätigung / Opt-in.
+const WELCOME_CONTENT: NewsletterContent = {
+  template: "tipp",
+  headline: "Schön, dass du dabei bist 👋",
+  body:
+    "Hallo {{Vorname}},\n\n" +
+    "willkommen beim KundenRadar-Newsletter! Ab jetzt bekommst du jede Woche einen umsetzbaren Tipp für mehr Neukunden, mehr Anfragen und mehr Umsatz.\n\n" +
+    "Kleiner Starter zum Loslegen: Die meisten gewinnen nicht durch mehr Aufwand mehr Kunden, sondern durch einen festen Akquise-Slot. Trag dir diese Woche 30 Minuten fest ein – wie einen Termin – und telefonier in der Zeit fünf neue Kontakte an.\n\n" +
+    "Bis nächste Woche!\nCihan",
+  ctaLabel: "KundenRadar 3 Tage gratis testen",
+  ctaUrl: "https://seciora-solutions.de/registrieren",
+};
+
+async function sendWelcomeEmail(email: string, name: string | null, token: string): Promise<void> {
+  const content = {
+    ...WELCOME_CONTENT,
+    headline: personalize(WELCOME_CONTENT.headline, name),
+    body: personalize(WELCOME_CONTENT.body, name),
+    unsubscribeUrl: unsubscribeUrl(token),
+    impressum: config.resend.impressum ?? DEFAULT_IMPRESSUM,
+  };
+  await sendSystemEmail({
+    to: email,
+    subject: "Willkommen beim KundenRadar-Newsletter 🎉",
+    html: renderNewsletterHtml(content),
+    text: renderNewsletterText(content),
+  });
+}
+
 /** Bestätigt die Anmeldung anhand des Tokens. Liefert die E-Mail oder null. */
 export async function confirmNewsletter(token: string): Promise<string | null> {
   if (!token || !newsletterEnabled()) return null;
   const sb = await admin();
   const { data } = await sb
     .from("newsletter_subscribers")
-    .select("id, email, status")
+    .select("id, email, status, name")
     .eq("token", token)
     .maybeSingle();
   if (!data) return null;
@@ -108,6 +177,8 @@ export async function confirmNewsletter(token: string): Promise<string | null> {
     .from("newsletter_subscribers")
     .update({ status: "confirmed", confirmed_at: new Date().toISOString(), updated_at: new Date().toISOString() })
     .eq("id", data.id);
+  // Willkommens-Mail automatisch nach Double-Opt-In.
+  await sendWelcomeEmail(data.email as string, (data.name as string) ?? null, token).catch(() => {});
   return data.email;
 }
 
@@ -157,13 +228,13 @@ export interface NewsletterCampaign {
 }
 
 /** Alle bestätigten Empfänger inkl. Token (für den Abmeldelink). */
-async function listConfirmed(): Promise<{ email: string; token: string }[]> {
+async function listConfirmed(): Promise<{ email: string; token: string; name: string | null }[]> {
   const sb = await admin();
   const { data } = await sb
     .from("newsletter_subscribers")
-    .select("email, token")
+    .select("email, token, name")
     .eq("status", "confirmed");
-  return (data ?? []).map((r) => ({ email: r.email as string, token: r.token as string }));
+  return (data ?? []).map((r) => ({ email: r.email as string, token: r.token as string, name: (r.name as string) ?? null }));
 }
 
 export interface CampaignInput extends NewsletterContent { subject: string; }
@@ -186,10 +257,15 @@ export async function sendCampaign(input: CampaignInput): Promise<CampaignResult
   let sent = 0, failed = 0;
   for (const r of recipients) {
     try {
-      const { html, text } = buildCampaignEmail(input, r.token);
+      const personalized = {
+        ...input,
+        headline: personalize(input.headline, r.name),
+        body: personalize(input.body, r.name),
+      };
+      const { html, text } = buildCampaignEmail(personalized, r.token);
       await sendSystemEmail({
         to: r.email,
-        subject: input.subject,
+        subject: personalize(input.subject, r.name),
         html,
         text,
         headers: {

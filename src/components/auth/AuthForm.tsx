@@ -46,6 +46,7 @@ export function AuthForm({
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [consent, setConsent] = useState(false);
+  const [newsletterOptIn, setNewsletterOptIn] = useState(false);
   const [show, setShow] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -87,6 +88,16 @@ export function AuthForm({
           },
         });
         if (error) { setError(translate(error.message)); return; }
+        // Optionales Newsletter-Abo (Double-Opt-In) – darf die Registrierung nie blockieren.
+        if (newsletterOptIn) {
+          try {
+            await fetch("/api/newsletter/subscribe", {
+              method: "POST",
+              headers: { "content-type": "application/json" },
+              body: JSON.stringify({ email: email.trim(), name: firstName.trim(), source: "registrierung" }),
+            });
+          } catch { /* ignorieren */ }
+        }
         if (!data.session) { setSentTo(email.trim()); return; }
         if (plan) {
           try {
@@ -184,6 +195,13 @@ export function AuthForm({
         <label className="flex cursor-pointer items-start gap-2 text-xs text-[var(--color-muted)]">
           <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-0.5 h-4 w-4 shrink-0 accent-[var(--color-brand)]" />
           <span>Ich handle als Unternehmer (gewerblich oder selbstständig) und akzeptiere die <Link href="/agb" target="_blank" className="text-[var(--color-brand)] hover:underline">AGB</Link> und die <Link href="/datenschutz" target="_blank" className="text-[var(--color-brand)] hover:underline">Datenschutzerklärung</Link>.</span>
+        </label>
+      )}
+
+      {isSignup && (
+        <label className="flex cursor-pointer items-start gap-2 text-xs text-[var(--color-muted)]">
+          <input type="checkbox" checked={newsletterOptIn} onChange={(e) => setNewsletterOptIn(e.target.checked)} className="mt-0.5 h-4 w-4 shrink-0 accent-[var(--color-brand)]" />
+          <span>Schickt mir den kostenlosen Newsletter mit Tipps für mehr Neukunden (jederzeit abbestellbar). Du bekommst eine kurze Bestätigungs-Mail.</span>
         </label>
       )}
 
