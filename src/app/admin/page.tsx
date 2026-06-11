@@ -24,7 +24,8 @@ interface Subscriber {
   id: string; email: string; status: string; source: string | null;
   consentAt: string; confirmedAt: string | null; unsubscribedAt: string | null; createdAt: string;
 }
-interface NewsletterData { total: number; confirmed: number; pending: number; unsubscribed: number; subscribers: Subscriber[] }
+interface Campaign { id: string; subject: string; recipients: number; sent: number; failed: number; createdAt: string }
+interface NewsletterData { total: number; confirmed: number; pending: number; unsubscribed: number; subscribers: Subscriber[]; campaigns?: Campaign[] }
 
 const SUB_BADGE: Record<string, { t: string; c: string }> = {
   confirmed: { t: "Bestätigt", c: "bg-[var(--color-success-tint)] text-[var(--color-success)]" },
@@ -84,6 +85,31 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+  const [subject, setSubject] = useState("");
+  const [mailBody, setMailBody] = useState("");
+  const [sending, setSending] = useState(false);
+
+  const reloadNews = () => api<NewsletterData>("/api/admin/newsletter").then(setNews).catch(() => {});
+
+  const sendNewsletter = async () => {
+    if (!news) return;
+    if (news.confirmed === 0) { setToast("Noch keine bestätigten Abonnenten."); return; }
+    if (!window.confirm(`Newsletter „${subject}" an ${news.confirmed} bestätigte Abonnenten senden?`)) return;
+    setSending(true);
+    try {
+      const r = await api<{ recipients: number; sent: number; failed: number }>(
+        "/api/admin/newsletter/send",
+        { json: { subject, body: mailBody } },
+      );
+      setToast(`Versendet: ${r.sent}/${r.recipients}${r.failed ? ` · ${r.failed} fehlgeschlagen` : ""}`);
+      setSubject(""); setMailBody("");
+      reloadNews();
+    } catch (e) {
+      setToast(e instanceof Error ? e.message : "Versand fehlgeschlagen.");
+    } finally {
+      setSending(false);
+    }
+  };
 
   const load = () =>
     api<Stats>("/api/admin/stats")
@@ -295,6 +321,63 @@ export default function AdminPage() {
                     </tbody>
                   </table>
                 </div>
+
+                {/* Newsletter verfassen & senden */}
+                <div className="mt-6 rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] p-5">
+                  <h3 className="text-sm font-semibold">Newsletter verfassen &amp; senden</h3>
+                  <p className="mt-1 text-xs text-[var(--color-muted)]">
+                    Geht an alle <strong>{news.confirmed}</strong> bestätigten Abonnenten. Impressum &amp; Abmeldelink werden automatisch angehängt.
+                  </p>
+                  <input
+                    value={subject}
+                    onChange={(e) => setSubject(e.target.value)}
+                    placeholder="Betreff"
+                    className="mt-3 w-full rounded-lg border border-[var(--color-line-strong)] bg-[var(--color-canvas)] px-3 py-2 text-sm outline-none focus:border-[var(--color-brand)]"
+                  />
+                  <textarea
+                    value={mailBody}
+                    onChange={(e) => setMailBody(e.target.value)}
+                    placeholder={"Hallo,\n\nhier dein Tipp der Woche …\n\nViele Grüße\nCihan"}
+                    rows={8}
+                    className="mt-2 w-full rounded-lg border border-[var(--color-line-strong)] bg-[var(--color-canvas)] px-3 py-2 text-sm outline-none focus:border-[var(--color-brand)]"
+                  />
+                  <div className="mt-2 flex items-center justify-between">
+                    <span className="text-xs text-[var(--color-muted)]">Leere Zeile = neuer Absatz.</span>
+                    <button
+                      onClick={sendNewsletter}
+                      disabled={sending || subject.trim().length < 3 || mailBody.trim().length < 10}
+                      className="rounded-lg bg-[var(--color-brand)] px-4 py-2 text-sm font-semibold text-[var(--color-on-brand)] hover:bg-[var(--color-brand-ink)] disabled:opacity-50"
+                    >
+                      {sending ? "Sende …" : `An ${news.confirmed} senden`}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Versendete Kampagnen */}
+                {news.campaigns && news.campaigns.length > 0 && (
+                  <div className="mt-4 overflow-x-auto rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)]">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-[var(--color-line)] text-left text-xs text-[var(--color-muted)]">
+                          <th className="px-4 py-2.5 font-medium">Betreff</th>
+                          <th className="px-4 py-2.5 font-medium">Empfänger</th>
+                          <th className="px-4 py-2.5 font-medium">Versendet</th>
+                          <th className="px-4 py-2.5 font-medium">Datum</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {news.campaigns.map((c) => (
+                          <tr key={c.id} className="border-b border-[var(--color-line)] last:border-0">
+                            <td className="px-4 py-2.5">{c.subject}</td>
+                            <td className="px-4 py-2.5 text-[var(--color-muted)] tnum">{c.recipients}</td>
+                            <td className="px-4 py-2.5 tnum">{c.sent}{c.failed ? <span className="text-[var(--color-danger)]"> · {c.failed} ✗</span> : null}</td>
+                            <td className="px-4 py-2.5 text-[var(--color-muted)] tnum">{fmt(c.createdAt)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </>
             )}
           </>

@@ -11,6 +11,7 @@ export interface SystemMail {
   subject: string;
   html: string;
   text: string;
+  headers?: Record<string, string>;
 }
 
 /** Lädt die Einstellungen (inkl. SMTP) des Superadmin-Kontos, falls vorhanden. */

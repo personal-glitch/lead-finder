@@ -1,7 +1,7 @@
 import { jsonOk, jsonError } from "@/lib/api";
 import { AppError } from "@/lib/errors";
 import { config } from "@/lib/config";
-import { listSubscribers } from "@/lib/newsletter";
+import { listSubscribers, listCampaigns } from "@/lib/newsletter";
 
 // Newsletter-Abonnenten – NUR für die Superadmin-E-Mail.
 export async function GET() {
@@ -16,12 +16,14 @@ export async function GET() {
       throw new AppError("auth", "Kein Zugriff.");
     }
     const subscribers = await listSubscribers();
+    const campaigns = await listCampaigns();
     return jsonOk({
       total: subscribers.length,
       confirmed: subscribers.filter((s) => s.status === "confirmed").length,
       pending: subscribers.filter((s) => s.status === "pending").length,
       unsubscribed: subscribers.filter((s) => s.status === "unsubscribed").length,
       subscribers,
+      campaigns,
     });
   } catch (err) {
     return jsonError(err);
