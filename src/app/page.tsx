@@ -5,9 +5,9 @@ import { Icon, type IconName } from "@/components/icons";
 import { PLANS } from "@/lib/plans";
 import { config } from "@/lib/config";
 import { ALLE_BRANCHEN, BRANCHEN_KATEGORIEN } from "@/lib/leadgen/branchen-catalog";
-import { Kalkulator } from "@/components/Kalkulator";
+import { LazyKalkulator } from "@/components/landing/LazyKalkulator";
 import { NewsletterSignup } from "@/components/NewsletterSignup";
-import { ExplainerVideo } from "@/components/landing/ExplainerVideo";
+import { LazyExplainerVideo } from "@/components/landing/LazyExplainerVideo";
 import { StatStrip, Reveal } from "@/components/landing/anim";
 import { PlanButton } from "@/components/landing/PlanButton";
 import {
@@ -307,7 +307,7 @@ export default function Landing() {
           <div className="mb-2 flex items-center justify-center gap-1.5 text-xs font-medium text-[var(--color-brand)]">
             <Icon name="calculator" size={14} /> Gratis-Rechner – sofort testen
           </div>
-          <Kalkulator teaser />
+          <LazyKalkulator teaser />
         </div>
       </section>
 
@@ -409,7 +409,7 @@ export default function Landing() {
       <section id="demo" className="mx-auto max-w-6xl scroll-mt-20 px-6 py-16">
         <h2 className="text-center text-3xl font-semibold tracking-[-0.01em]">In 30 Sekunden erklärt</h2>
         <p className="mt-2 text-center text-sm text-[var(--color-muted)]">Der ganze Ablauf – vom Suchen bis zum gewonnenen Auftrag.</p>
-        <div className="mt-8"><ExplainerVideo /></div>
+        <div className="mt-8"><LazyExplainerVideo /></div>
       </section>
 
       {/* Für wen + Branchen-Breite */}
