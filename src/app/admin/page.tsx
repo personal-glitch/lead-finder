@@ -63,18 +63,18 @@ function TrialInfo({ c }: { c: Customer }) {
   const tone = d != null && d <= 1 ? "text-[var(--color-danger)]" : d != null && d <= 2 ? "text-[var(--color-warn)]" : "text-[var(--color-muted)]";
 
   if (c.cancelAtPeriodEnd && c.status !== "canceled") {
-    return <span className="text-[var(--color-warn)]">Gekündigt – endet {fmt(c.renewsAt)}</span>;
+    return <span className="text-[var(--color-warn)]">Gekündigt – endet {fmtDateTime(c.renewsAt)}</span>;
   }
   if (c.status === "canceled") return <span className="text-[var(--color-muted)]">beendet</span>;
   if (c.status === "trialing") {
     return (
       <span className={tone}>
-        Test endet {fmt(c.renewsAt)}{dayLabel && <> · {dayLabel}</>}
+        Test endet {fmtDateTime(c.renewsAt)}{dayLabel && <> · {dayLabel}</>}
       </span>
     );
   }
   if (c.status === "active") {
-    return <span className="text-[var(--color-muted)]">nächste Zahlung {fmt(c.renewsAt)}</span>;
+    return <span className="text-[var(--color-muted)]">nächste Zahlung {fmtDateTime(c.renewsAt)}</span>;
   }
   return <span className="text-[var(--color-faint)]">–</span>;
 }
@@ -97,6 +97,8 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+  const [syncing, setSyncing] = useState(false);
+  const [importing, setImporting] = useState(false);
   const [subject, setSubject] = useState("");
   const [template, setTemplate] = useState<NewsletterTemplate>("tipp");
   const [headline, setHeadline] = useState("");
@@ -107,6 +109,33 @@ export default function AdminPage() {
   const [sending, setSending] = useState(false);
 
   const reloadNews = () => api<NewsletterData>("/api/admin/newsletter").then(setNews).catch(() => {});
+
+  const syncStripe = async () => {
+    setSyncing(true);
+    try {
+      const r = await api<{ updated: number }>("/api/admin/sync-subscriptions", { json: {} });
+      setToast(`${r.updated} Kunden mit Stripe synchronisiert.`);
+      await load();
+    } catch (e) {
+      setToast(e instanceof Error ? e.message : "Synchronisierung fehlgeschlagen.");
+    } finally {
+      setSyncing(false);
+    }
+  };
+
+  const importCustomers = async () => {
+    if (!window.confirm("Alle registrierten Kunden in den Newsletter-Verteiler übernehmen?\n\nRechtsgrundlage: § 7 Abs. 3 UWG (Bestandskunden, Abmeldung in jeder Mail). Bereits abgemeldete Kunden bleiben ausgenommen.")) return;
+    setImporting(true);
+    try {
+      const r = await api<{ added: number; skipped: number }>("/api/admin/newsletter/import-customers", { json: {} });
+      setToast(`${r.added} Kunden übernommen, ${r.skipped} übersprungen (bereits drin/abgemeldet).`);
+      reloadNews();
+    } catch (e) {
+      setToast(e instanceof Error ? e.message : "Import fehlgeschlagen.");
+    } finally {
+      setImporting(false);
+    }
+  };
 
   const sendNewsletter = async () => {
     if (!news) return;
@@ -179,8 +208,20 @@ export default function AdminPage() {
       </header>
 
       <main className="mx-auto max-w-6xl px-6 py-10">
-        <h1 className="text-2xl font-semibold tracking-[-0.01em]">Übersicht</h1>
-        <p className="mt-1 text-sm text-[var(--color-muted)]">Nur für dich sichtbar.</p>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-semibold tracking-[-0.01em]">Übersicht</h1>
+            <p className="mt-1 text-sm text-[var(--color-muted)]">Nur für dich sichtbar.</p>
+          </div>
+          <button
+            onClick={syncStripe}
+            disabled={syncing}
+            title="Status & Ablaufdatum aller Kunden frisch aus Stripe holen"
+            className="shrink-0 rounded-lg border border-[var(--color-line-strong)] px-3 py-2 text-sm font-medium text-[var(--color-ink-2)] hover:bg-[var(--color-subtle)] disabled:opacity-60"
+          >
+            {syncing ? "Synchronisiere …" : "↻ Stripe synchronisieren"}
+          </button>
+        </div>
 
         {loading ? (
           <p className="mt-8 text-sm text-[var(--color-muted)]">Lädt …</p>
@@ -285,14 +326,24 @@ export default function AdminPage() {
               <h2 className="text-sm font-semibold">
                 Newsletter-Verteiler{news ? ` (${news.total})` : ""}
               </h2>
-              {news && news.total > 0 && (
-                <a
-                  href="/api/admin/newsletter/export"
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--color-line-strong)] px-3 py-1.5 text-xs font-medium text-[var(--color-ink-2)] hover:bg-[var(--color-subtle)]"
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={importCustomers}
+                  disabled={importing}
+                  title="Registrierte Kunden in den Verteiler übernehmen (§ 7 Abs. 3 UWG)"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--color-line-strong)] px-3 py-1.5 text-xs font-medium text-[var(--color-ink-2)] hover:bg-[var(--color-subtle)] disabled:opacity-60"
                 >
-                  <Icon name="search" size={13} /> Als CSV exportieren
-                </a>
-              )}
+                  <Icon name="user" size={13} /> {importing ? "Übernehme …" : "Kunden übernehmen"}
+                </button>
+                {news && news.total > 0 && (
+                  <a
+                    href="/api/admin/newsletter/export"
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--color-line-strong)] px-3 py-1.5 text-xs font-medium text-[var(--color-ink-2)] hover:bg-[var(--color-subtle)]"
+                  >
+                    <Icon name="search" size={13} /> Als CSV exportieren
+                  </a>
+                )}
+              </div>
             </div>
 
             {!news ? (

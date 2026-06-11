@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { config } from "@/lib/config";
 import { getStore } from "@/lib/db";
-import { getStripe } from "@/lib/billing/stripe";
+import { getStripe, subPeriodEnd } from "@/lib/billing/stripe";
 
 // Stripe-Webhook: aktualisiert den Abo-Status pro Nutzer. Signatur wird geprüft.
 export async function POST(req: Request) {
@@ -25,10 +25,29 @@ export async function POST(req: Request) {
       const s = event.data.object as Stripe.Checkout.Session;
       const ownerId = s.metadata?.ownerId;
       if (ownerId) {
-        await store.updateSettings(ownerId, {
-          subscriptionStatus: "trialing", // Testphase startet; subscription.updated hält es danach aktuell
-          stripeCustomerId: typeof s.customer === "string" ? s.customer : null,
-        });
+        const customerId = typeof s.customer === "string" ? s.customer : null;
+        // Abo direkt abrufen, damit Ablaufdatum/Status sofort vorhanden sind
+        // (unabhängig davon, welche subscription.*-Events aktiviert sind).
+        const subId = typeof s.subscription === "string" ? s.subscription : s.subscription?.id;
+        let synced = false;
+        if (subId) {
+          try {
+            const sub = await getStripe().subscriptions.retrieve(subId);
+            await store.updateSettings(ownerId, {
+              subscriptionStatus: sub.status,
+              subscriptionRenewsAt: subPeriodEnd(sub),
+              cancelAtPeriodEnd: Boolean(sub.cancel_at_period_end),
+              stripeCustomerId: customerId,
+            });
+            synced = true;
+          } catch { /* Fallback unten */ }
+        }
+        if (!synced) {
+          await store.updateSettings(ownerId, {
+            subscriptionStatus: "trialing",
+            stripeCustomerId: customerId,
+          });
+        }
       }
     } else if (
       event.type === "customer.subscription.created" ||
@@ -38,10 +57,9 @@ export async function POST(req: Request) {
       const sub = event.data.object as Stripe.Subscription;
       const ownerId = sub.metadata?.ownerId;
       if (ownerId) {
-        const periodEnd = (sub as unknown as { current_period_end?: number }).current_period_end;
         await store.updateSettings(ownerId, {
           subscriptionStatus: event.type === "customer.subscription.deleted" ? "canceled" : sub.status,
-          subscriptionRenewsAt: periodEnd ? new Date(periodEnd * 1000).toISOString() : null,
+          subscriptionRenewsAt: subPeriodEnd(sub),
           cancelAtPeriodEnd: Boolean(sub.cancel_at_period_end),
         });
       }

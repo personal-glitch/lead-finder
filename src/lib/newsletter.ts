@@ -104,7 +104,10 @@ export async function subscribeNewsletter(input: SubscribeInput): Promise<Subscr
  * Trägt eine bereits verifizierte Adresse (eingeloggter Nutzer) direkt als
  * 'confirmed' ein – Einwilligung per ausdrücklichem Klick im Tool, dokumentiert.
  */
-export async function subscribeConfirmed(input: SubscribeInput): Promise<SubscribeResult> {
+export async function subscribeConfirmed(
+  input: SubscribeInput,
+  opts: { sendWelcome?: boolean; skipUnsubscribed?: boolean } = {},
+): Promise<SubscribeResult> {
   if (!newsletterEnabled()) return { ok: false, error: "Newsletter ist nicht konfiguriert." };
   if (!isValidEmail(input.email)) return { ok: false, error: "Ungültige E-Mail-Adresse." };
   const sb = await admin();
@@ -117,6 +120,8 @@ export async function subscribeConfirmed(input: SubscribeInput): Promise<Subscri
     .eq("email_norm", email_norm)
     .maybeSingle();
   if (existing && existing.status === "confirmed") return { ok: true, state: "already_confirmed" };
+  // Abgemeldete beim Massen-Import nicht reaktivieren (Opt-out respektieren).
+  if (existing && existing.status === "unsubscribed" && opts.skipUnsubscribed) return { ok: true, state: "already_confirmed" };
 
   const token = newToken();
   const now = new Date().toISOString();
@@ -129,7 +134,7 @@ export async function subscribeConfirmed(input: SubscribeInput): Promise<Subscri
   if (existing) await sb.from("newsletter_subscribers").update(row).eq("id", existing.id);
   else await sb.from("newsletter_subscribers").insert(row);
 
-  await sendWelcomeEmail(email, input.name ?? null, token).catch(() => {});
+  if (opts.sendWelcome !== false) await sendWelcomeEmail(email, input.name ?? null, token).catch(() => {});
   return { ok: true, state: "pending" };
 }
 
