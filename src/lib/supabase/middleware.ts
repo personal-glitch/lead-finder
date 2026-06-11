@@ -10,6 +10,7 @@ const PUBLIC_PREFIXES = [
   "/auth",
   "/check",
   "/rechner",
+  "/blog",
   "/impressum",
   "/datenschutz",
   "/agb",
