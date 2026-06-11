@@ -53,10 +53,12 @@ export default function SuchePage() {
 
   const keywordList = keyword.split(/[;,\n]/).map((k) => k.trim()).filter(Boolean);
 
-  const search = async () => {
-    if (!plz.trim() || (branchen.size === 0 && keywordList.length === 0)) return;
+  const search = async (plzArg?: string) => {
+    const override = typeof plzArg === "string" ? plzArg : undefined;
+    const p = (override ?? plz).trim();
+    if (!p || (branchen.size === 0 && keywordList.length === 0)) return;
     setSearching(true); setResult(null);
-    const payload = { plz: plz.trim(), radiusKm, branchen: [...branchen], keywords: keywordList };
+    const payload = { plz: p, radiusKm, branchen: [...branchen], keywords: keywordList };
     try {
       const res = await api<SearchResult>("/api/leads/search", { json: payload });
       setResult(res); setSelected(new Set(res.leads.map(dedupeKey))); setTaken(new Set());
@@ -65,6 +67,17 @@ export default function SuchePage() {
     } catch (e) { setToast(e instanceof Error ? e.message : "Suche fehlgeschlagen."); }
     finally { setSearching(false); }
   };
+
+  // Geführte Beispiel-Suche: kommt der Nutzer mit ?demo aus dem Dashboard,
+  // wird eine echte Beispielstadt vorbelegt und sofort gesucht (Aha-Moment).
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (new URLSearchParams(window.location.search).get("demo")) {
+      setPlz("Köln");
+      void search("Köln");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const applyEnrichment = (key: string, e: EnrichResp) => {
     const patch = (l: LeadInput): LeadInput => dedupeKey(l) === key ? {
@@ -173,7 +186,7 @@ export default function SuchePage() {
             <span className="eyebrow mb-1.5 block">Zielbranchen</span>
             <TargetPicker selected={branchen as Set<string>} onToggle={toggleBranche} keyword={keyword} onKeyword={setKeyword} />
           </div>
-          <Button onClick={search} disabled={!canSearch}>
+          <Button onClick={() => search()} disabled={!canSearch}>
             {searching ? <><Spinner /> Suche läuft …</> : <><Icon name="search" size={16} /> Suchen</>}
           </Button>
         </Card>

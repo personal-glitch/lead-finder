@@ -30,6 +30,12 @@ export async function GET() {
       ziel,
       offeneAufgaben: openTasks.length,
       faelligHeute,
+      // Abo-/Test-Status für den In-App-Countdown.
+      subscription: {
+        status: settings.subscriptionStatus ?? null,
+        renewsAt: settings.subscriptionRenewsAt ?? null,
+        cancelAtPeriodEnd: settings.cancelAtPeriodEnd ?? false,
+      },
     });
   } catch (err) {
     return jsonError(err);

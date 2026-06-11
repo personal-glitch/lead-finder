@@ -107,6 +107,19 @@ export default function DashboardPage() {
           <Kpi label="Gewonnen" value={gewonnen} icon="check" tone={T.green} />
         </div>
 
+        {!loading && leads.length === 0 && (
+          <div className="rounded-2xl border border-[var(--color-brand)]/30 bg-[var(--color-brand-tint)]/15 p-6">
+            <h2 className="text-lg font-semibold">👋 Willkommen! In 60 Sekunden zum ersten Ergebnis</h2>
+            <p className="mt-1 max-w-xl text-sm text-[var(--color-muted)]">
+              Gib einfach deine Stadt ein – KundenRadar liefert dir sofort anrufbare Firmen mit Telefon &amp;
+              Ansprechpartner. Starte mit einer Beispiel-Suche und sieh dir das Ergebnis an:
+            </p>
+            <Link href="/suche?demo=1" className="mt-3 inline-flex items-center gap-2 rounded-lg bg-[var(--color-brand)] px-4 py-2.5 text-sm font-semibold text-[var(--color-on-brand)] hover:bg-[var(--color-brand-ink)]">
+              <Icon name="search" size={15} /> Beispiel-Suche starten
+            </Link>
+          </div>
+        )}
+
         {!loading && (() => {
           const hasOutreach = activities.some((a) => a.type === "call" || a.type === "email");
           const steps = [

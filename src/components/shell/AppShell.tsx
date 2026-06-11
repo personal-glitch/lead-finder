@@ -6,6 +6,8 @@ import type { FeatureFlags } from "@/lib/types";
 import { api } from "@/lib/client";
 import { Icon, type IconName } from "../icons";
 import { cx } from "../ui";
+import { TrialBanner } from "./TrialBanner";
+import { HelpWidget } from "./HelpWidget";
 
 const FlagsContext = createContext<FeatureFlags>({ supabase: false, resend: false, stripe: false });
 export const useFlags = () => useContext(FlagsContext);
@@ -206,9 +208,11 @@ export function AppShell({ flags, children }: { flags: FeatureFlags; children: R
             <span className="text-sm font-semibold">KundenRadar</span>
           </header>
 
+          <TrialBanner />
           <main className="scroll-slim flex-1 overflow-y-auto">{children}</main>
         </div>
       </div>
+      <HelpWidget />
     </FlagsContext.Provider>
   );
 }
