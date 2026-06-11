@@ -194,7 +194,7 @@ export function AuthForm({
       {isSignup && (
         <label className="flex cursor-pointer items-start gap-2 text-xs text-[var(--color-muted)]">
           <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-0.5 h-4 w-4 shrink-0 accent-[var(--color-brand)]" />
-          <span>Ich handle als Unternehmer (gewerblich oder selbstständig) und akzeptiere die <Link href="/agb" target="_blank" className="text-[var(--color-brand)] hover:underline">AGB</Link> und die <Link href="/datenschutz" target="_blank" className="text-[var(--color-brand)] hover:underline">Datenschutzerklärung</Link>.</span>
+          <span>Ich handle als Unternehmer (gewerblich oder selbstständig) und akzeptiere die <Link href="/agb" target="_blank" className="text-[var(--color-brand)] hover:underline">AGB</Link> und die <Link href="/datenschutz" target="_blank" className="text-[var(--color-brand)] hover:underline">Datenschutzerklärung</Link>. Mir ist bewusst, dass nach der 3-tägigen kostenlosen Testphase automatisch ein <strong>kostenpflichtiges Abo zu 49 €/Monat</strong> beginnt (monatlich kündbar).</span>
         </label>
       )}
 

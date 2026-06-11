@@ -50,10 +50,12 @@ export default function AgbPage() {
       </P>
       <P>
         <strong>Wichtig:</strong> Wird das Abonnement nicht vor Ablauf der 3-tägigen Testphase gekündigt, geht es
-        automatisch in ein <strong>kostenpflichtiges Monatsabonnement zu 49 € pro Monat</strong> über und die erste
-        Zahlung wird fällig. Die Kündigung ist jederzeit – auch während der Testphase – mit einem Klick im Tool oder per
-        Nachricht an den Anbieter möglich. Auf diesen automatischen Übergang wird vor Vertragsschluss ausdrücklich
-        hingewiesen (§ 312j BGB).
+        automatisch in ein <strong>kostenpflichtiges Monatsabonnement zu 49 € pro Monat</strong> über. Nach Ablauf der
+        3-tägigen Testphase wird das Abonnement automatisch aktiviert; die <strong>erste Abbuchung von 49 € erfolgt am
+        ersten Tag nach Ende der Testphase</strong> (d. h. am 4. Tag nach der Registrierung) und danach jeweils zu Beginn
+        des folgenden Abrechnungsmonats. Die Kündigung ist jederzeit – auch während der Testphase – mit einem Klick im
+        Tool oder per Nachricht an den Anbieter möglich. Auf diesen automatischen Übergang und das erste Abrechnungsdatum
+        wird vor Vertragsschluss ausdrücklich hingewiesen (§ 312j BGB).
       </P>
 
       <H2>§ 5 Preise &amp; Zahlung</H2>
@@ -67,10 +69,11 @@ export default function AgbPage() {
 
       <H2>§ 6 Laufzeit &amp; Kündigung</H2>
       <P>
-        Das Abonnement läuft auf unbestimmte Zeit und kann jederzeit zum Ende des laufenden Abrechnungszeitraums
-        (monatlich) gekündigt werden. Die Kündigung ist im Tool bzw. per Nachricht an den Anbieter möglich. Das Recht
-        zur außerordentlichen Kündigung aus wichtigem Grund bleibt unberührt. Mit Wirksamwerden der Kündigung endet
-        der Zugang zum Dienst.
+        Das Abonnement läuft auf unbestimmte Zeit und <strong>verlängert sich automatisch um jeweils einen weiteren
+        Monat</strong>. Es ist <strong>monatlich kündbar</strong> und kann jederzeit zum Ende des laufenden
+        Abrechnungsmonats gekündigt werden. Die Kündigung ist im Tool (Kündigungsbutton) bzw. per Nachricht an den
+        Anbieter möglich. Das Recht zur außerordentlichen Kündigung aus wichtigem Grund bleibt unberührt. Mit
+        Wirksamwerden der Kündigung endet der Zugang zum Dienst.
       </P>
 
       <H2>§ 7 Pflichten des Nutzers (E-Mail-Versand &amp; Kaltakquise)</H2>
