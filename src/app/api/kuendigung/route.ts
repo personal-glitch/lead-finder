@@ -2,6 +2,53 @@ import { z } from "zod";
 import { jsonOk, jsonError } from "@/lib/api";
 import { AppError } from "@/lib/errors";
 import { config } from "@/lib/config";
+import { sendSystemEmail } from "@/lib/email/system";
+
+const IMPRESSUM = "Seciora Solutions, Inhaber Cihan Yildirim, Charlottenstraße 37, 51149 Köln · kontakt@seciora-solutions.de";
+const fmtDE = (iso: string) => new Date(iso).toLocaleString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
+const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+/** § 312k BGB: Kündigungsbestätigung in Textform an den Kunden + Info an den Betreiber. */
+async function sendCancellationConfirmation(o: {
+  to: string; name: string | null; kind: "ordentlich" | "ausserordentlich";
+  receivedAt: string; endsAtIso: string | null; desiredDate: string | null; contractRef: string | null;
+}): Promise<void> {
+  const hi = o.name ? `Hallo ${o.name},` : "Hallo,";
+  const art = o.kind === "ausserordentlich"
+    ? "außerordentliche Kündigung (sofortige Beendigung)"
+    : "ordentliche Kündigung zum Ende des laufenden Abrechnungszeitraums";
+  const endTxt = o.endsAtIso ? fmtDE(o.endsAtIso) : "zum Ende des laufenden Abrechnungszeitraums – keine weitere Abbuchung";
+  const refLine = o.contractRef ? `\nReferenz: ${o.contractRef}` : "";
+
+  const text =
+    `${hi}\n\nhiermit bestätigen wir den Eingang deiner Kündigung für KundenRadar.\n\n` +
+    `Eingegangen am: ${fmtDE(o.receivedAt)}\nArt der Kündigung: ${art}\nBeendigung: ${endTxt}${refLine}\n\n` +
+    `Es erfolgt keine weitere Abbuchung. Bei Fragen antworte einfach auf diese E-Mail.\n\nViele Grüße\n${IMPRESSUM}`;
+  const html = `<!doctype html><html lang="de"><body style="font-family:system-ui,Arial,sans-serif;color:#0f172a;line-height:1.6">
+<p>${esc(hi)}</p>
+<p>hiermit bestätigen wir den <strong>Eingang deiner Kündigung</strong> für KundenRadar.</p>
+<ul>
+<li><strong>Eingegangen am:</strong> ${esc(fmtDE(o.receivedAt))}</li>
+<li><strong>Art der Kündigung:</strong> ${esc(art)}</li>
+<li><strong>Beendigung:</strong> ${esc(endTxt)}</li>
+${o.contractRef ? `<li><strong>Referenz:</strong> ${esc(o.contractRef)}</li>` : ""}
+</ul>
+<p>Es erfolgt keine weitere Abbuchung. Bei Fragen antworte einfach auf diese E-Mail.</p>
+<hr style="border:none;border-top:1px solid #e2e8f0;margin:20px 0">
+<p style="font-size:12px;color:#64748b">${esc(IMPRESSUM)}</p>
+</body></html>`;
+
+  await sendSystemEmail({ to: o.to, subject: "Bestätigung deiner Kündigung – KundenRadar", html, text });
+  // Info-Kopie an den Betreiber (best effort).
+  try {
+    await sendSystemEmail({
+      to: "kontakt@seciora-solutions.de",
+      subject: `Kündigung eingegangen: ${o.to}`,
+      html: `<p>Kündigung über den Kündigungsbutton.</p><p>E-Mail: ${esc(o.to)}<br>Art: ${esc(art)}<br>Eingang: ${esc(fmtDE(o.receivedAt))}<br>Beendigung: ${esc(endTxt)}</p>`,
+      text: `Kündigung über den Kündigungsbutton.\nE-Mail: ${o.to}\nArt: ${art}\nEingang: ${fmtDE(o.receivedAt)}\nBeendigung: ${endTxt}`,
+    });
+  } catch { /* Info-Kopie ist optional */ }
+}
 
 // Öffentliche Kündigung gemäß § 312k BGB (Kündigungsbutton). Nimmt die
 // Kündigungserklärung entgegen, speichert sie und bestätigt den Eingang.
@@ -40,9 +87,10 @@ export async function POST(req: Request) {
     // Zuordnung über die angegebene Konto-E-Mail. Der Stripe-Webhook hält danach
     // den Status in Supabase automatisch aktuell.
     let subscriptionsCancelled = 0;
+    let endsAtIso: string | null = null;
     if (config.stripe.enabled) {
       try {
-        const { getStripe } = await import("@/lib/billing/stripe");
+        const { getStripe, subPeriodEnd } = await import("@/lib/billing/stripe");
         const stripe = getStripe();
         const customers = await stripe.customers.list({ email: b.email, limit: 20 });
         for (const customer of customers.data) {
@@ -52,11 +100,13 @@ export async function POST(req: Request) {
               if (b.kind === "ausserordentlich") {
                 // Sofortige Beendigung (außerordentliche Kündigung).
                 await stripe.subscriptions.cancel(sub.id);
+                endsAtIso = receivedAt;
               } else {
                 // Ordentliche Kündigung zum Ende des Abrechnungszeitraums – während der
                 // Testphase bedeutet das: keine Umwandlung in ein kostenpflichtiges Abo,
                 // also keine Abbuchung.
                 await stripe.subscriptions.update(sub.id, { cancel_at_period_end: true });
+                endsAtIso = endsAtIso ?? subPeriodEnd(sub);
               }
               subscriptionsCancelled++;
             }
@@ -66,6 +116,22 @@ export async function POST(req: Request) {
         // Nicht blockieren – die Kündigung ist gespeichert und wird ansonsten manuell verarbeitet.
         console.error("[kuendigung] Stripe-Kündigung fehlgeschlagen:", e);
       }
+    }
+
+    // § 312k BGB: Kündigungsbestätigung unverzüglich in Textform (E-Mail) an den Kunden,
+    // mit Inhalt, Datum/Uhrzeit des Eingangs und Beendigungszeitpunkt. Best-effort.
+    try {
+      await sendCancellationConfirmation({
+        to: b.email,
+        name: b.name ?? null,
+        kind: b.kind,
+        receivedAt,
+        endsAtIso,
+        desiredDate: b.desiredDate ?? null,
+        contractRef: b.contractRef ?? null,
+      });
+    } catch (e) {
+      console.error("[kuendigung] Bestätigungsmail fehlgeschlagen:", e);
     }
 
     return jsonOk({ ok: true, receivedAt, subscriptionsCancelled });
