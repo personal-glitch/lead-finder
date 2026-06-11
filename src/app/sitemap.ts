@@ -14,6 +14,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: "/blog", priority: 0.7 },
     { path: "/blog/kaltakquise-b2b-erlaubt", priority: 0.8 },
     { path: "/blog/neukunden-reinigungsfirma", priority: 0.8 },
+    { path: "/newsletter", priority: 0.5 },
     { path: "/preise", priority: 0.6 },
     { path: "/impressum", priority: 0.3 },
     { path: "/datenschutz", priority: 0.3 },

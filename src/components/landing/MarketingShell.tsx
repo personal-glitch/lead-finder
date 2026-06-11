@@ -1,8 +1,17 @@
 import Link from "next/link";
 import { Icon } from "@/components/icons";
+import { NewsletterSignup } from "@/components/NewsletterSignup";
 
 /** Gemeinsame Hülle (Header + Footer + CTA) für Blog & weitere SEO-Landingpages. */
-export function MarketingShell({ children, cta = true }: { children: React.ReactNode; cta?: boolean }) {
+export function MarketingShell({
+  children,
+  cta = true,
+  newsletter = true,
+}: {
+  children: React.ReactNode;
+  cta?: boolean;
+  newsletter?: boolean;
+}) {
   return (
     <div className="min-h-screen bg-[var(--color-canvas)] text-[var(--color-ink)]">
       <header className="sticky top-0 z-20 border-b border-[var(--color-line)] bg-[var(--color-canvas)]/80 backdrop-blur">
@@ -37,12 +46,20 @@ export function MarketingShell({ children, cta = true }: { children: React.React
             <p className="mt-2 text-xs text-[var(--color-muted)]">3 Tage gratis · keine Vorab-Zahlung · jederzeit kündbar</p>
           </section>
         )}
+
+        {newsletter && (
+          <section className="mt-12">
+            <NewsletterSignup source="marketing" />
+          </section>
+        )}
       </main>
 
       <footer className="mx-auto max-w-5xl px-6 py-8 text-center text-xs text-[var(--color-faint)]">
         <Link href="/blog" className="hover:text-[var(--color-ink)]">Blog</Link>
         {" · "}
         <Link href="/rechner" className="hover:text-[var(--color-ink)]">Rechner</Link>
+        {" · "}
+        <Link href="/newsletter" className="hover:text-[var(--color-ink)]">Newsletter</Link>
         {" · "}
         <Link href="/impressum" className="hover:text-[var(--color-ink)]">Impressum</Link>
         {" · "}

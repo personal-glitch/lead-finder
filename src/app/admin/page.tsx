@@ -20,6 +20,18 @@ interface Customer {
 interface Usage { searchesToday: number; searches7d: number; activeToday: number; active7d: number }
 interface Stats { registered: number; confirmed: number; trialing: number; paying: number; usage?: Usage; customers: Customer[] }
 
+interface Subscriber {
+  id: string; email: string; status: string; source: string | null;
+  consentAt: string; confirmedAt: string | null; unsubscribedAt: string | null; createdAt: string;
+}
+interface NewsletterData { total: number; confirmed: number; pending: number; unsubscribed: number; subscribers: Subscriber[] }
+
+const SUB_BADGE: Record<string, { t: string; c: string }> = {
+  confirmed: { t: "Bestätigt", c: "bg-[var(--color-success-tint)] text-[var(--color-success)]" },
+  pending: { t: "Wartet auf Bestätigung", c: "bg-[var(--color-warn-tint)] text-[var(--color-warn)]" },
+  unsubscribed: { t: "Abgemeldet", c: "bg-[var(--color-subtle)] text-[var(--color-muted)]" },
+};
+
 function fmt(iso: string | null) {
   if (!iso) return "–";
   return new Date(iso).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" });
@@ -67,6 +79,7 @@ function StatusBadge({ s }: { s: string | null }) {
 
 export default function AdminPage() {
   const [stats, setStats] = useState<Stats | null>(null);
+  const [news, setNews] = useState<NewsletterData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
@@ -78,7 +91,10 @@ export default function AdminPage() {
       .catch((e) => setError(e instanceof Error ? e.message : "Kein Zugriff."))
       .finally(() => setLoading(false));
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+    api<NewsletterData>("/api/admin/newsletter").then(setNews).catch(() => {});
+  }, []);
 
   const extendTrial = async (ownerId: string, days: number) => {
     setBusy(ownerId);
@@ -215,6 +231,72 @@ export default function AdminPage() {
                 </tbody>
               </table>
             </div>
+
+            {/* Newsletter-Verteiler */}
+            <div className="mt-10 flex items-center justify-between">
+              <h2 className="text-sm font-semibold">
+                Newsletter-Verteiler{news ? ` (${news.total})` : ""}
+              </h2>
+              {news && news.total > 0 && (
+                <a
+                  href="/api/admin/newsletter/export"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--color-line-strong)] px-3 py-1.5 text-xs font-medium text-[var(--color-ink-2)] hover:bg-[var(--color-subtle)]"
+                >
+                  <Icon name="search" size={13} /> Als CSV exportieren
+                </a>
+              )}
+            </div>
+
+            {!news ? (
+              <p className="mt-3 text-sm text-[var(--color-muted)]">
+                Verteiler lädt … oder die Tabelle <code>newsletter_subscribers</code> ist noch nicht migriert.
+              </p>
+            ) : (
+              <>
+                <div className="mt-3 grid grid-cols-3 gap-4">
+                  {[
+                    { label: "Bestätigt (aktiv)", value: news.confirmed, c: "text-[var(--color-success)]" },
+                    { label: "Wartet auf Bestätigung", value: news.pending, c: "text-[var(--color-warn)]" },
+                    { label: "Abgemeldet", value: news.unsubscribed, c: "text-[var(--color-muted)]" },
+                  ].map((k) => (
+                    <div key={k.label} className="rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] p-5">
+                      <div className={`text-3xl font-semibold tnum ${k.c}`}>{k.value}</div>
+                      <div className="text-sm font-medium">{k.label}</div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mt-3 overflow-x-auto rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)]">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-[var(--color-line)] text-left text-xs text-[var(--color-muted)]">
+                        <th className="px-4 py-2.5 font-medium">E-Mail</th>
+                        <th className="px-4 py-2.5 font-medium">Status</th>
+                        <th className="px-4 py-2.5 font-medium">Quelle</th>
+                        <th className="px-4 py-2.5 font-medium">Angemeldet</th>
+                        <th className="px-4 py-2.5 font-medium">Bestätigt</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {news.subscribers.length === 0 ? (
+                        <tr><td colSpan={5} className="px-4 py-6 text-center text-[var(--color-muted)]">Noch keine Anmeldungen.</td></tr>
+                      ) : news.subscribers.map((s) => {
+                        const b = SUB_BADGE[s.status] ?? { t: s.status, c: "bg-[var(--color-subtle)] text-[var(--color-muted)]" };
+                        return (
+                          <tr key={s.id} className="border-b border-[var(--color-line)] last:border-0">
+                            <td className="px-4 py-2.5">{s.email}</td>
+                            <td className="px-4 py-2.5"><span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${b.c}`}>{b.t}</span></td>
+                            <td className="px-4 py-2.5 text-[var(--color-muted)]">{s.source ?? "–"}</td>
+                            <td className="px-4 py-2.5 text-[var(--color-muted)] tnum">{fmt(s.consentAt)}</td>
+                            <td className="px-4 py-2.5 text-[var(--color-muted)] tnum">{fmt(s.confirmedAt)}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            )}
           </>
         ) : null}
       </main>

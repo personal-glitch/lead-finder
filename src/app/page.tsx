@@ -6,6 +6,7 @@ import { PLANS } from "@/lib/plans";
 import { config } from "@/lib/config";
 import { ALLE_BRANCHEN, BRANCHEN_KATEGORIEN } from "@/lib/leadgen/branchen-catalog";
 import { Kalkulator } from "@/components/Kalkulator";
+import { NewsletterSignup } from "@/components/NewsletterSignup";
 import { ExplainerVideo } from "@/components/landing/ExplainerVideo";
 import { StatStrip, Reveal } from "@/components/landing/anim";
 import { PlanButton } from "@/components/landing/PlanButton";
@@ -508,6 +509,13 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* Newsletter */}
+      <section className="border-t border-[var(--color-line)]">
+        <div className="mx-auto max-w-2xl px-6 py-12">
+          <NewsletterSignup source="homepage-footer" />
+        </div>
+      </section>
+
       {/* Footer */}
       <footer className="border-t border-[var(--color-line)]">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-6 py-8 text-xs text-[var(--color-muted)] sm:flex-row">
@@ -518,6 +526,7 @@ export default function Landing() {
           <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
             <Link href="/blog" className="hover:text-[var(--color-ink)]">Blog</Link>
             <Link href="/rechner" className="hover:text-[var(--color-ink)]">Rechner</Link>
+            <Link href="/newsletter" className="hover:text-[var(--color-ink)]">Newsletter</Link>
             <Link href="/impressum" className="hover:text-[var(--color-ink)]">Impressum</Link>
             <Link href="/datenschutz" className="hover:text-[var(--color-ink)]">Datenschutz</Link>
             <Link href="/agb" className="hover:text-[var(--color-ink)]">AGB</Link>

@@ -68,6 +68,22 @@ export default function DatenschutzPage() {
         "E-Mail-Versand: über den von der Nutzerin/dem Nutzer hinterlegten eigenen Mailanbieter (SMTP) bzw. einen E-Mail-Dienstleister; Zugangsdaten werden verschlüsselt gespeichert.",
       ]} />
 
+      <H2>5a. Newsletter (Double-Opt-In)</H2>
+      <P>
+        Wenn du dich für unseren Newsletter anmeldest, verarbeiten wir deine E-Mail-Adresse, um dir
+        Informationen und Tipps rund um Neukundengewinnung und KundenRadar zu senden. Die Anmeldung
+        erfolgt im Double-Opt-In-Verfahren: Nach der Eintragung senden wir dir eine Bestätigungs-E-Mail;
+        erst nach deinem Klick auf den Bestätigungslink nehmen wir dich in den Verteiler auf.
+        Rechtsgrundlage ist deine Einwilligung (Art. 6 Abs. 1 lit. a DSGVO, § 7 Abs. 2 UWG).
+      </P>
+      <P>
+        Zum Nachweis der Einwilligung speichern wir den Zeitpunkt der Anmeldung und Bestätigung sowie die
+        dabei verwendete IP-Adresse. Du kannst den Newsletter jederzeit über den Abmeldelink in jeder
+        E-Mail oder per Nachricht an uns abbestellen; deine Daten werden dann aus dem Verteiler entfernt.
+        Die Verteilerdaten werden in unserer Datenbank (Supabase, EU-Region) gespeichert; der Versand
+        erfolgt über unser eigenes Postfach bzw. einen E-Mail-Dienstleister als Auftragsverarbeiter.
+      </P>
+
       <H2>6. Verarbeitung geschäftlicher Kontaktdaten (B2B-Leads)</H2>
       <P>
         Im Tool werden geschäftliche Kontaktdaten verarbeitet (Firmenname, Anschrift, geschäftliche Telefonnummer,

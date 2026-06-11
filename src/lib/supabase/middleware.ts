@@ -11,6 +11,7 @@ const PUBLIC_PREFIXES = [
   "/check",
   "/rechner",
   "/blog",
+  "/newsletter",
   "/impressum",
   "/datenschutz",
   "/agb",
