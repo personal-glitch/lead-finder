@@ -238,7 +238,8 @@ export default function Landing() {
             <a href="#ablauf" className="hover:text-[var(--color-ink)]">Ablauf</a>
             <a href="#zielgruppe" className="hover:text-[var(--color-ink)]">Für wen?</a>
             <a href="#preise" className="hover:text-[var(--color-ink)]">Preise</a>
-            <a href="#kalkulator" className="hover:text-[var(--color-ink)]">Rechner</a>
+            <a href="/rechner" className="hover:text-[var(--color-ink)]">Rechner</a>
+            <a href="/blog" className="hover:text-[var(--color-ink)]">Blog</a>
             <a href="#faq" className="hover:text-[var(--color-ink)]">FAQ</a>
           </nav>
           <div className="flex items-center gap-3">
@@ -515,6 +516,8 @@ export default function Landing() {
             <span>© {new Date().getFullYear()} KundenRadar</span>
           </div>
           <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+            <Link href="/blog" className="hover:text-[var(--color-ink)]">Blog</Link>
+            <Link href="/rechner" className="hover:text-[var(--color-ink)]">Rechner</Link>
             <Link href="/impressum" className="hover:text-[var(--color-ink)]">Impressum</Link>
             <Link href="/datenschutz" className="hover:text-[var(--color-ink)]">Datenschutz</Link>
             <Link href="/agb" className="hover:text-[var(--color-ink)]">AGB</Link>

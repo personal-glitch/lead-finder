@@ -40,6 +40,23 @@ export default function RechnerClient() {
           Den vollen Kalkulator gibt's dauerhaft im Tool – inkl. Neukunden-Suche, Pipeline & Anruf-Verwaltung.{" "}
           <Link href="/registrieren" className="font-medium text-[var(--color-brand)] hover:underline">Jetzt kostenlos starten →</Link>
         </p>
+
+        <div className="mx-auto mt-12 max-w-3xl text-center">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-[var(--color-muted)]">Alle Gratis-Rechner</h2>
+          <div className="mt-3 flex flex-wrap justify-center gap-2">
+            {[
+              { href: "/rechner/gebaeudereinigung", label: "Reinigungskosten" },
+              { href: "/rechner/handwerk-stundensatz", label: "Handwerk-Stundensatz" },
+              { href: "/rechner/agentur-stundensatz", label: "Agentur-Stundensatz" },
+              { href: "/rechner/neukunde-kosten", label: "Was kostet ein Neukunde?" },
+            ].map((r) => (
+              <Link key={r.href} href={r.href} className="rounded-lg border border-[var(--color-line-strong)] px-3 py-2 text-sm font-medium text-[var(--color-ink-2)] hover:bg-[var(--color-subtle)]">
+                {r.label}
+              </Link>
+            ))}
+            <Link href="/blog" className="rounded-lg border border-[var(--color-line-strong)] px-3 py-2 text-sm font-medium text-[var(--color-ink-2)] hover:bg-[var(--color-subtle)]">Blog →</Link>
+          </div>
+        </div>
       </main>
 
       <footer className="mx-auto max-w-5xl px-6 py-8 text-center text-xs text-[var(--color-faint)]">
