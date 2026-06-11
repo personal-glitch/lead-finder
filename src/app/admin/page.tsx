@@ -105,6 +105,8 @@ export default function AdminPage() {
   const [mailBody, setMailBody] = useState("");
   const [ctaLabel, setCtaLabel] = useState("");
   const [ctaUrl, setCtaUrl] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
+  const [useRawHtml, setUseRawHtml] = useState(false);
   const [scheduledFor, setScheduledFor] = useState("");
   const [sending, setSending] = useState(false);
 
@@ -150,10 +152,10 @@ export default function AdminPage() {
     try {
       const r = await api<{ recipients?: number; sent?: number; failed?: number; scheduled?: boolean; scheduledFor?: string }>(
         "/api/admin/newsletter/send",
-        { json: { subject, template, headline, body: mailBody, ctaLabel, ctaUrl, scheduledFor: planned ? new Date(scheduledFor).toISOString() : "" } },
+        { json: { subject, template, headline, body: mailBody, ctaLabel, ctaUrl, imageUrl, rawHtml: useRawHtml, scheduledFor: planned ? new Date(scheduledFor).toISOString() : "" } },
       );
       setToast(r.scheduled ? `Eingeplant für ${when} Uhr.` : `Versendet: ${r.sent}/${r.recipients}${r.failed ? ` · ${r.failed} fehlgeschlagen` : ""}`);
-      setSubject(""); setHeadline(""); setMailBody(""); setCtaLabel(""); setCtaUrl(""); setScheduledFor("");
+      setSubject(""); setHeadline(""); setMailBody(""); setCtaLabel(""); setCtaUrl(""); setImageUrl(""); setScheduledFor("");
       reloadNews();
     } catch (e) {
       setToast(e instanceof Error ? e.message : "Aktion fehlgeschlagen.");
@@ -455,7 +457,21 @@ export default function AdminPage() {
                           className="w-full rounded-lg border border-[var(--color-line-strong)] bg-[var(--color-canvas)] px-3 py-2 text-sm outline-none focus:border-[var(--color-brand)]"
                         />
                       </div>
-                      <p className="text-xs text-[var(--color-muted)]">Leere Zeile = neuer Absatz. Button erscheint nur, wenn Text &amp; Link gesetzt sind. Tipp: <code>{"{{Vorname}}"}</code> wird je Empfänger ersetzt (sonst „zusammen").</p>
+                      <input
+                        value={imageUrl}
+                        onChange={(e) => setImageUrl(e.target.value)}
+                        placeholder="Bild-URL für den Kopf (optional, https://…)"
+                        className="w-full rounded-lg border border-[var(--color-line-strong)] bg-[var(--color-canvas)] px-3 py-2 text-sm outline-none focus:border-[var(--color-brand)]"
+                      />
+                      <label className="flex items-center gap-2 text-xs text-[var(--color-ink-2)]">
+                        <input type="checkbox" checked={useRawHtml} onChange={(e) => setUseRawHtml(e.target.checked)} className="h-4 w-4 accent-[var(--color-brand)]" />
+                        Eigenes HTML schreiben (Profi-Modus)
+                      </label>
+                      {useRawHtml ? (
+                        <p className="text-xs text-[var(--color-muted)]">Der Textbereich wird als <strong>HTML</strong> gesendet. Kopf, Bild, Fuß &amp; Abmeldelink kommen automatisch dazu. <code>{"{{Vorname}}"}</code> funktioniert weiter.</p>
+                      ) : (
+                        <p className="text-xs text-[var(--color-muted)]">Formatierung: <code>**fett**</code> · <code>*kursiv*</code> · <code>[Text](https://…)</code> · Zeilen mit <code>- </code> = Aufzählung · <code>![](Bild-URL)</code> = Bild. Leerzeile = neuer Absatz. <code>{"{{Vorname}}"}</code> wird je Empfänger ersetzt.</p>
+                      )}
                     </div>
 
                     {/* Live-Vorschau */}
@@ -471,6 +487,8 @@ export default function AdminPage() {
                           body: mailBody || "Hier steht dein Text … schreib links los, die Vorschau aktualisiert sich live.",
                           ctaLabel: ctaLabel || undefined,
                           ctaUrl: ctaUrl || undefined,
+                          imageUrl: imageUrl || undefined,
+                          rawHtml: useRawHtml,
                           unsubscribeUrl: "#",
                           impressum: "Seciora Solutions, Inhaber Cihan Yildirim, Charlottenstraße 37, 51149 Köln",
                         })}

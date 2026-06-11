@@ -9,6 +9,8 @@ export interface NewsletterContent {
   body: string;
   ctaLabel?: string;
   ctaUrl?: string;
+  imageUrl?: string;   // optionales Kopfbild (oben in der Mail)
+  rawHtml?: boolean;    // true = body ist fertiges HTML (Profi-Modus)
 }
 
 export interface RenderOptions extends NewsletterContent {
@@ -26,10 +28,32 @@ function esc(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
-function paragraphs(body: string): string {
-  return esc(body.trim())
-    .split(/\n{2,}/)
-    .map((p) => `<p style="margin:0 0 16px;font-size:16px;line-height:1.6;color:#334155">${p.replace(/\n/g, "<br>")}</p>`)
+/** Inline-Formatierung auf bereits HTML-escaptem Text: Bild, Link, fett, kursiv. */
+function inlineMd(s: string): string {
+  return s
+    .replace(/!\[([^\]]*)\]\(([^)\s]+)\)/g, (_m, alt, url) => `<img src="${url}" alt="${alt}" style="max-width:100%;height:auto;border-radius:8px;margin:6px 0">`)
+    .replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (_m, t, url) => `<a href="${url}" style="color:#2563eb;text-decoration:underline">${t}</a>`)
+    .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+    .replace(/(^|[^*])\*([^*\n]+)\*/g, "$1<em>$2</em>");
+}
+
+/** Einfaches Markdown -> E-Mail-HTML (Absätze, Aufzählungen, Inline-Formatierung). */
+function bodyToHtml(body: string): string {
+  const blocks = esc(body.trim()).split(/\n{2,}/);
+  return blocks
+    .map((block) => {
+      const lines = block.split("\n");
+      const hasBullets = lines.some((l) => /^\s*[-*]\s+/.test(l));
+      const allBullets = lines.every((l) => l.trim() === "" || /^\s*[-*]\s+/.test(l));
+      if (hasBullets && allBullets) {
+        const items = lines
+          .filter((l) => /^\s*[-*]\s+/.test(l))
+          .map((l) => `<li style="margin:0 0 6px">${inlineMd(l.replace(/^\s*[-*]\s+/, ""))}</li>`)
+          .join("");
+        return `<ul style="margin:0 0 16px;padding-left:20px;font-size:16px;line-height:1.6;color:#334155">${items}</ul>`;
+      }
+      return `<p style="margin:0 0 16px;font-size:16px;line-height:1.6;color:#334155">${inlineMd(block.replace(/\n/g, "<br>"))}</p>`;
+    })
     .join("\n");
 }
 
@@ -43,6 +67,10 @@ export function renderNewsletterHtml(o: RenderOptions): string {
            </td></tr>
          </table>`
       : "";
+  const hero = o.imageUrl
+    ? `<tr><td style="padding:0"><img src="${esc(o.imageUrl)}" alt="" style="display:block;width:100%;height:auto"></td></tr>`
+    : "";
+  const bodyHtml = o.rawHtml ? o.body : bodyToHtml(o.body);
 
   return `<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
 <body style="margin:0;padding:0;background:#f1f5f9">
@@ -52,9 +80,10 @@ export function renderNewsletterHtml(o: RenderOptions): string {
     <tr><td style="background:${a.bar};padding:14px 24px;color:${a.barText};font-family:Arial,Helvetica,sans-serif;font-size:14px;font-weight:700">
       KundenRadar &nbsp;·&nbsp; ${a.emoji} ${esc(a.label)}
     </td></tr>
+    ${hero}
     <tr><td style="padding:28px 28px 8px;font-family:Arial,Helvetica,sans-serif">
       <h1 style="margin:0 0 16px;font-size:24px;line-height:1.25;color:#0f172a">${esc(o.headline)}</h1>
-      ${paragraphs(o.body)}
+      ${bodyHtml}
       ${cta}
     </td></tr>
     <tr><td style="padding:20px 28px 26px;font-family:Arial,Helvetica,sans-serif">
@@ -70,5 +99,8 @@ export function renderNewsletterHtml(o: RenderOptions): string {
 
 export function renderNewsletterText(o: RenderOptions): string {
   const cta = o.ctaUrl && o.ctaLabel ? `\n\n${o.ctaLabel}: ${o.ctaUrl}` : "";
-  return `${o.headline}\n\n${o.body.trim()}${cta}\n\n—\n${o.impressum}\nAbmelden: ${o.unsubscribeUrl}`;
+  const plainBody = o.rawHtml
+    ? o.body.replace(/<[^>]+>/g, " ").replace(/[ \t]+/g, " ").replace(/\n\s+/g, "\n").trim()
+    : o.body.trim();
+  return `${o.headline}\n\n${plainBody}${cta}\n\n—\n${o.impressum}\nAbmelden: ${o.unsubscribeUrl}`;
 }

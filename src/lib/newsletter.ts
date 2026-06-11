@@ -295,6 +295,8 @@ function campaignRow(input: CampaignInput) {
     headline: input.headline,
     cta_label: input.ctaLabel ?? null,
     cta_url: input.ctaUrl ?? null,
+    image_url: input.imageUrl ?? null,
+    raw_html: input.rawHtml ?? false,
   };
 }
 
@@ -327,7 +329,7 @@ export async function processDueCampaigns(): Promise<number> {
   const nowIso = new Date().toISOString();
   const { data } = await sb
     .from("newsletter_campaigns")
-    .select("id, subject, body, template, headline, cta_label, cta_url")
+    .select("id, subject, body, template, headline, cta_label, cta_url, image_url, raw_html")
     .eq("status", "scheduled")
     .lte("scheduled_for", nowIso)
     .limit(20);
@@ -346,6 +348,8 @@ export async function processDueCampaigns(): Promise<number> {
       body: c.body as string,
       ctaLabel: (c.cta_label as string) || undefined,
       ctaUrl: (c.cta_url as string) || undefined,
+      imageUrl: (c.image_url as string) || undefined,
+      rawHtml: Boolean(c.raw_html),
     };
     const r = await deliverToConfirmed(input);
     await sb.from("newsletter_campaigns").update({

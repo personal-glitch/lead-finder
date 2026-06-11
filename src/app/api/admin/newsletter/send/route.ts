@@ -20,7 +20,8 @@ export async function POST(req: Request) {
     }
 
     const p = (await req.json().catch(() => ({}))) as {
-      subject?: string; template?: string; headline?: string; body?: string; ctaLabel?: string; ctaUrl?: string; scheduledFor?: string;
+      subject?: string; template?: string; headline?: string; body?: string; ctaLabel?: string; ctaUrl?: string;
+      imageUrl?: string; rawHtml?: boolean; scheduledFor?: string;
     };
     const subject = (p.subject ?? "").trim();
     const headline = (p.headline ?? "").trim();
@@ -38,6 +39,8 @@ export async function POST(req: Request) {
       body: text,
       ctaLabel: (p.ctaLabel ?? "").trim() || undefined,
       ctaUrl: (p.ctaUrl ?? "").trim() || undefined,
+      imageUrl: (p.imageUrl ?? "").trim() || undefined,
+      rawHtml: Boolean(p.rawHtml),
     };
 
     // Geplanter Versand?
