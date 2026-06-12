@@ -8,7 +8,6 @@ import { TextInput, cx } from "@/components/ui";
 // (z. B. „Facility" statt „Gebäudereinigung") → mehr Treffer.
 const SUGGEST: Partial<Record<BrancheKey, string[]>> = {
   Gebäudereinigung: ["Facility", "Unterhaltsreinigung", "Glasreinigung", "Gebäudeservice", "Hausmeisterservice"],
-  Anwaltskanzlei: ["Rechtsanwalt", "Kanzlei", "Fachanwalt"],
   Steuerberater: ["Steuerkanzlei", "Buchhaltung", "Lohnbüro"],
   Unternehmensberatung: ["Consulting", "Beratung", "Coaching"],
   Arztpraxis: ["Hausarzt", "Facharzt", "MVZ", "Praxisklinik"],

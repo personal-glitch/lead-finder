@@ -7,7 +7,7 @@ describe("brancheForTags – Tag → Branche", () => {
     expect(brancheForTags({ healthcare: "dentist" }, ["Zahnarztpraxis", "Büro & Unternehmen"])).toBe("Zahnarztpraxis");
   });
   it("bevorzugt spezifische Branche vor dem Catch-all", () => {
-    expect(brancheForTags({ office: "lawyer" }, ["Anwaltskanzlei", "Büro & Unternehmen"])).toBe("Anwaltskanzlei");
+    expect(brancheForTags({ office: "tax_advisor" }, ["Steuerberater", "Büro & Unternehmen"])).toBe("Steuerberater");
   });
   it("erkennt allgemeines Büro (office=yes)", () => {
     expect(brancheForTags({ office: "yes" }, ["Büro & Unternehmen"])).toBe("Büro & Unternehmen");

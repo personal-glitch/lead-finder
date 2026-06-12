@@ -12,6 +12,7 @@ function publicSettings(s: Settings) {
   return {
     callGoal: s.callGoal ?? config.targets.callsPerDay,
     senderImpressum: s.senderImpressum ?? config.resend.impressum ?? "",
+    workspaceType: s.workspaceType ?? null,
     senderSignature: s.senderSignature ?? "",
     plan: planOf(s.plan).key,
     senderName: s.senderName ?? "",
@@ -45,6 +46,7 @@ export async function GET() {
 const Body = z.object({
   callGoal: z.number().int().positive().max(1000).optional(),
   senderImpressum: z.string().nullish(),
+  workspaceType: z.enum(["dienstleister", "webdesign", "personalvermittlung"]).nullish(),
   senderSignature: z.string().max(2000).nullish(),
   plan: z.string().optional(),
   senderName: z.string().max(120).nullish(),
@@ -65,6 +67,7 @@ export async function PATCH(req: Request) {
     const patch: Partial<Settings> = {};
     if (b.callGoal !== undefined) patch.callGoal = b.callGoal;
     if (b.senderImpressum !== undefined) patch.senderImpressum = clean(b.senderImpressum);
+    if (b.workspaceType !== undefined) patch.workspaceType = b.workspaceType ?? null;
     if (b.senderSignature !== undefined) patch.senderSignature = clean(b.senderSignature);
     if (b.plan !== undefined && isPlanKey(b.plan)) patch.plan = b.plan;
     if (b.senderName !== undefined) patch.senderName = clean(b.senderName);

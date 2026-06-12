@@ -454,6 +454,7 @@ export function createLocalStore(): DataStore {
         return {
           callGoal: f?.callGoal ?? null,
           senderImpressum: f?.senderImpressum ?? null,
+          workspaceType: f?.workspaceType ?? null,
           senderSignature: f?.senderSignature ?? null,
           plan: f?.plan ?? null,
           senderName: f?.senderName ?? null,
@@ -475,14 +476,14 @@ export function createLocalStore(): DataStore {
         let f = s.settings.find((x) => x.ownerId === ownerId);
         if (!f) {
           f = {
-            ownerId, callGoal: null, senderImpressum: null, senderSignature: null, plan: null,
+            ownerId, callGoal: null, senderImpressum: null, workspaceType: null, senderSignature: null, plan: null,
             senderName: null, senderEmail: null, smtpHost: null, smtpPort: null, smtpUser: null, smtpPass: null,
             stripeCustomerId: null, subscriptionStatus: null, subscriptionRenewsAt: null, cancelAtPeriodEnd: null,
           };
           s.settings.push(f);
         }
         const keys = [
-          "callGoal", "senderImpressum", "senderSignature", "plan",
+          "callGoal", "senderImpressum", "workspaceType", "senderSignature", "plan",
           "senderName", "senderEmail", "smtpHost", "smtpPort", "smtpUser", "smtpPass",
           "stripeCustomerId", "subscriptionStatus", "subscriptionRenewsAt", "cancelAtPeriodEnd",
         ] as const;

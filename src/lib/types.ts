@@ -179,6 +179,8 @@ export interface Suppression {
 export interface Settings {
   callGoal: number | null;
   senderImpressum: string | null;
+  /** Persona / Anwendungsfall des Kontos (steuert Module & Oberfläche). null = noch nicht gewählt. */
+  workspaceType: string | null;
   /** Gewähltes Paket; null = Default. */
   plan: string | null;
   /** Persönliche E-Mail-Signatur; wird unter den Mailtext (über dem Pflicht-Footer) gesetzt. */

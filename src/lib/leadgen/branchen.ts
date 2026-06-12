@@ -91,9 +91,7 @@ export const BRANCHEN: Record<BrancheKey, BrancheDef> = {
   Architekturbüro: { tags: t("office", "architect"), roleTiers: ROLLEN_BUERO },
   Bauunternehmen: { tags: t("office", "construction_company", "craft", "builder"), roleTiers: ROLLEN_HANDWERK },
 
-  Anwaltskanzlei: { tags: t("office", "lawyer"), roleTiers: ROLLEN_BUERO },
   Steuerberater: { tags: t("office", "tax_advisor", "office", "accountant"), roleTiers: ROLLEN_BUERO },
-  Notar: { tags: t("office", "notary"), roleTiers: ROLLEN_BUERO },
   Versicherungsbüro: { tags: t("office", "insurance"), roleTiers: ROLLEN_BUERO },
   Finanzberatung: { tags: t("office", "financial", "office", "financial_advisor"), roleTiers: ROLLEN_BUERO },
   Unternehmensberatung: { tags: t("office", "consulting"), roleTiers: ROLLEN_BUERO },

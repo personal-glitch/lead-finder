@@ -19,7 +19,7 @@ export const AGENT_TEMPLATES: AgentTemplate[] = [
     group: "Vor-Ort-Dienstleister",
     icon: "broom",
     color: "emerald",
-    branchen: ["Arztpraxis", "Zahnarztpraxis", "Hausverwaltung", "Anwaltskanzlei", "Steuerberater", "Büro & Unternehmen", "Hotel & Pension", "Fitnessstudio"],
+    branchen: ["Arztpraxis", "Zahnarztpraxis", "Hausverwaltung", "Steuerberater", "Büro & Unternehmen", "Hotel & Pension", "Fitnessstudio"],
   },
   {
     label: "Handwerk & Bau",
@@ -56,7 +56,7 @@ export const AGENT_TEMPLATES: AgentTemplate[] = [
     group: "Agenturen & Kreativ",
     icon: "bolt",
     color: "violet",
-    branchen: ["Restaurant", "Hotel & Pension", "Anwaltskanzlei", "Autohaus", "Mode & Bekleidung", "Friseursalon"],
+    branchen: ["Restaurant", "Hotel & Pension", "Steuerberater", "Autohaus", "Mode & Bekleidung", "Friseursalon"],
   },
 
   // ── IT & Business-Services ──
@@ -65,7 +65,7 @@ export const AGENT_TEMPLATES: AgentTemplate[] = [
     group: "IT & Business-Services",
     icon: "bolt",
     color: "blue",
-    branchen: ["Steuerberater", "Anwaltskanzlei", "Arztpraxis", "Autohaus", "Hausverwaltung", "Büro & Unternehmen"],
+    branchen: ["Steuerberater", "Arztpraxis", "Autohaus", "Hausverwaltung", "Büro & Unternehmen"],
   },
   {
     label: "Unternehmensberatung & Coaching",

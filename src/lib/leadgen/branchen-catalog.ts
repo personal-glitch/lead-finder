@@ -19,9 +19,7 @@ export type BrancheKey =
   | "Architekturbüro"
   | "Bauunternehmen"
   // Recht & Finanzen
-  | "Anwaltskanzlei"
   | "Steuerberater"
-  | "Notar"
   | "Versicherungsbüro"
   | "Finanzberatung"
   | "Unternehmensberatung"
@@ -82,7 +80,7 @@ export interface BrancheKategorie {
 export const BRANCHEN_KATEGORIEN: BrancheKategorie[] = [
   { label: "Gesundheit & Pflege", icon: "health", branchen: ["Arztpraxis", "Zahnarztpraxis", "Physiotherapie", "Tierarztpraxis", "Apotheke", "Pflege & Senioren", "Heilpraktiker & Therapie"] },
   { label: "Immobilien & Bau", icon: "key", branchen: ["Hausverwaltung", "Immobilienmakler", "Architekturbüro", "Bauunternehmen"] },
-  { label: "Recht & Finanzen", icon: "building", branchen: ["Anwaltskanzlei", "Steuerberater", "Notar", "Versicherungsbüro", "Finanzberatung", "Unternehmensberatung"] },
+  { label: "Steuer & Finanzen", icon: "building", branchen: ["Steuerberater", "Versicherungsbüro", "Finanzberatung", "Unternehmensberatung"] },
   { label: "IT & Medien", icon: "bolt", branchen: ["IT- & Software-Firma", "Werbe- & Marketingagentur", "Foto- & Videostudio"] },
   { label: "Gastronomie & Hotel", icon: "utensils", branchen: ["Restaurant", "Café & Bäckerei", "Bar & Kneipe", "Hotel & Pension", "Catering"] },
   { label: "Handel & Geschäfte", icon: "cart", branchen: ["Supermarkt & Lebensmittel", "Mode & Bekleidung", "Möbel & Einrichtung", "Baumarkt & Garten", "Elektronik & Technik", "Optiker & Schmuck"] },
