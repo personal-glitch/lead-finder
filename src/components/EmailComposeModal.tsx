@@ -36,10 +36,11 @@ export function EmailComposeModal({
   const [body, setBody] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [consent, setConsent] = useState(false);
 
   // Beim Öffnen / Kontaktwechsel Felder zurücksetzen.
   useEffect(() => {
-    if (open) { setTemplateId(""); setSubject(""); setBody(""); setError(null); setBusy(false); }
+    if (open) { setTemplateId(""); setSubject(""); setBody(""); setError(null); setBusy(false); setConsent(false); }
   }, [open, contact?.leadId]);
 
   const loadTemplate = (id: string) => {
@@ -82,7 +83,7 @@ export function EmailComposeModal({
       footer={
         <>
           <Button variant="ghost" onClick={onClose}>Abbrechen</Button>
-          <Button onClick={send} disabled={busy || !subject.trim() || !body.trim() || !contact?.email}>
+          <Button onClick={send} disabled={busy || !subject.trim() || !body.trim() || !contact?.email || !consent}>
             {busy ? <Spinner size={14} /> : "Senden"}
           </Button>
         </>
@@ -118,9 +119,15 @@ export function EmailComposeModal({
             Deine <b>Signatur</b>, dein <b>Impressum</b> und ein <b>Abmeldelink</b> werden automatisch unter die Mail gesetzt.
             Versand erfolgt über dein in den Einstellungen hinterlegtes Postfach.
           </p>
-          <div className="rounded-lg border border-amber-300/50 bg-amber-50/60 px-3 py-2 text-xs leading-relaxed text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200">
-            ⚖️ Schreibe nur mit sachlichem Bezug zum Empfänger (§ 7 UWG) – am sichersten nach einem Erstkontakt.
+          <div className="rounded-lg border border-amber-300/60 bg-amber-50/70 px-3 py-2.5 text-xs leading-relaxed text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200">
+            <div className="mb-1 font-semibold">So machst du es richtig – und rechtssicher:</div>
+            <div>1. <b>Zuerst anrufen</b> und Bedarf klären. &nbsp;2. Wenn der Kontakt <b>Infos/ein Angebot anfordert</b> oder einwilligt. &nbsp;3. <b>Dann erst mailen.</b></div>
+            <div className="mt-1.5">Reine Kaltakquise per E-Mail ohne Einwilligung ist in Deutschland (§ 7 UWG) <b>nicht erlaubt</b> und abmahnfähig.</div>
           </div>
+          <label className="flex cursor-pointer items-start gap-2 rounded-lg border border-[var(--color-line-strong)] px-3 py-2.5 text-xs text-[var(--color-ink-2)]">
+            <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-0.5 h-4 w-4 shrink-0 accent-[var(--color-brand)]" />
+            <span>Ich bestätige: <b>{contact?.name ?? "Dieser Kontakt"}</b> hat eingewilligt oder hat aktiv Infos/ein Angebot angefordert (z.&nbsp;B. nach einem Telefonat). Das ist keine unaufgeforderte Kaltakquise.</span>
+          </label>
           {error && <p className="text-sm text-[var(--color-danger)]">{error}</p>}
         </div>
       )}

@@ -133,7 +133,7 @@ const FEATURES: { icon: IconName; title: string; text: string }[] = [
   { icon: "tasks", title: "Automatischer Nachfass", text: "Nach dem Erstkontakt erinnert dich das Tool ans Follow-up – senden mit einem Klick." },
   { icon: "user", title: "Kontakte & Unternehmen", text: "Alle Firmen & Ansprechpartner sauber gespeichert – filter-, sortier- und durchsuchbar." },
   { icon: "settings", title: "Eine Logik – alles verknüpft", text: "Ein Anruf bewegt die Pipeline, erzeugt Aufgaben und aktualisiert dein Dashboard. Automatisch." },
-  { icon: "check", title: "DSGVO- & §7-UWG-konform", text: "Impressum & Abmeldelink in jeder Mail, Opt-out-Liste, EU-Hosting – rechtssicher aufgesetzt." },
+  { icon: "check", title: "Auf Datenschutz & Recht ausgelegt", text: "Impressum & Abmeldelink automatisch in jeder Mail, Opt-out-Liste, EU-Hosting. Werbe-Mails nur mit Einwilligung – das Tool weist dich aktiv darauf hin." },
   { icon: "calculator", title: "Preis-Kalkulator", text: "Angebotspreis, Stundenverrechnungssatz & Marge für Reinigung, Handwerk und Dienstleistung – in Sekunden." },
 ];
 

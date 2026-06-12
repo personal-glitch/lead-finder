@@ -61,6 +61,7 @@ export function LeadDetailDrawer({
   const [activities, setActivities] = useState<Activity[]>([]);
   const [panel, setPanel] = useState<"call" | "email" | "task" | null>(null);
   const [templateId, setTemplateId] = useState("");
+  const [emailConsent, setEmailConsent] = useState(false);
   const [enriching, setEnriching] = useState(false);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
@@ -114,6 +115,7 @@ export function LeadDetailDrawer({
 
   const send = async () => {
     if (!templateId) return;
+    if (!emailConsent) { setMsg("Bitte zuerst bestätigen, dass eine Einwilligung/Anfrage vorliegt."); return; }
     setBusy(true); setMsg(null);
     try {
       const { results } = await api<{ results: Array<{ status: string; error: string | null }> }>(
@@ -197,8 +199,14 @@ export function LeadDetailDrawer({
                   </Select>
                 </Field>
               </div>
-              <Button onClick={send} disabled={busy || !templateId || !lead.email}>{busy ? <Spinner size={14} /> : "Senden"}</Button>
+              <Button onClick={send} disabled={busy || !templateId || !lead.email || !emailConsent}>{busy ? <Spinner size={14} /> : "Senden"}</Button>
             </div>
+            {lead.email && (
+              <label className="flex cursor-pointer items-start gap-2 text-xs text-[var(--color-ink-2)]">
+                <input type="checkbox" checked={emailConsent} onChange={(e) => setEmailConsent(e.target.checked)} className="mt-0.5 h-4 w-4 shrink-0 accent-[var(--color-brand)]" />
+                <span>Einwilligung/Anfrage liegt vor (z.&nbsp;B. nach Anruf). Keine unaufgeforderte Kaltakquise (§&nbsp;7 UWG).</span>
+              </label>
+            )}
             {!lead.email && <p className="text-xs text-[var(--color-muted)]">Kein E-Mail-Kontakt – zuerst anreichern.</p>}
           </div>
         )}

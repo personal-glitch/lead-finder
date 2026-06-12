@@ -36,6 +36,7 @@ export default function KontaktePage() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkTemplateId, setBulkTemplateId] = useState("");
   const [bulkBusy, setBulkBusy] = useState(false);
+  const [bulkConsent, setBulkConsent] = useState(false);
   const [confirmDel, setConfirmDel] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
 
@@ -69,10 +70,11 @@ export default function KontaktePage() {
 
   const toggle = (id: string) => setSelected((p) => { const n = new Set(p); n.has(id) ? n.delete(id) : n.add(id); return n; });
   const toggleAll = () => setSelected((p) => p.size === filtered.length ? new Set() : new Set(filtered.map((k) => k.leadId)));
-  const clearSel = () => setSelected(new Set());
+  const clearSel = () => { setSelected(new Set()); setBulkConsent(false); };
 
   const bulkSend = async () => {
     if (!bulkTemplateId || selWithMail.length === 0) { setToast("Keine ausgewählten Kontakte mit E-Mail."); return; }
+    if (!bulkConsent) { setToast("Bitte bestätige zuerst, dass für diese Kontakte eine Einwilligung/Anfrage vorliegt."); return; }
     setBulkBusy(true);
     try {
       const { results } = await api<{ results: Array<{ status: string }> }>(
@@ -121,12 +123,16 @@ export default function KontaktePage() {
               <option value="">Vorlage wählen …</option>
               {templates.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
             </Select>
-            <Button onClick={bulkSend} disabled={bulkBusy || !bulkTemplateId}>
+            <Button onClick={bulkSend} disabled={bulkBusy || !bulkTemplateId || !bulkConsent}>
               {bulkBusy ? <Spinner size={14} /> : <><Icon name="mail" size={15} /> An Auswahl senden</>}
             </Button>
             <Button variant="danger" onClick={() => setConfirmDel(true)} disabled={bulkBusy}>
               <Icon name="trash" size={15} /> Löschen
             </Button>
+            <label className="flex w-full cursor-pointer items-start gap-2 border-t border-[var(--color-brand)]/20 pt-2 text-xs text-[var(--color-ink-2)]">
+              <input type="checkbox" checked={bulkConsent} onChange={(e) => setBulkConsent(e.target.checked)} className="mt-0.5 h-4 w-4 shrink-0 accent-[var(--color-brand)]" />
+              <span>Ich bestätige: Für <b>alle</b> ausgewählten Kontakte liegt eine Einwilligung oder eine konkrete Anfrage vor (z.&nbsp;B. nach einem Anruf). Massen-Kaltakquise per E-Mail ohne Einwilligung ist nicht erlaubt (§&nbsp;7 UWG) und abmahnfähig.</span>
+            </label>
             <button onClick={clearSel} className="text-xs text-[var(--color-muted)] hover:text-[var(--color-ink)]">Auswahl aufheben</button>
             <span className="ml-auto text-xs text-[var(--color-muted)]">Max. 50 E-Mails/Tag (Zustellbarkeit). Platzhalter & Signatur werden eingesetzt.</span>
           </div>

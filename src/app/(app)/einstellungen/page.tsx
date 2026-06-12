@@ -252,6 +252,11 @@ export default function EinstellungenPage() {
           <Field label="Absender-Impressum" required hint="Pflicht – ohne Impressum kannst du keine E-Mails versenden. Es wird automatisch in den Footer jeder Mail gesetzt.">
             <Textarea rows={3} value={impressum} onChange={(e) => setImpressum(e.target.value)}
               placeholder="Deine Firma GmbH · Musterstr. 1 · 50667 Köln · GF: Max Muster · HRB 12345 Amtsgericht Köln" />
+            <p className="mt-1.5 text-xs text-[var(--color-muted)]">
+              Noch kein Impressum? Kostenlos erstellen mit dem{" "}
+              <a href="https://www.e-recht24.de/impressum-generator.html" target="_blank" rel="noopener noreferrer" className="text-[var(--color-brand)] hover:underline">eRecht24 Impressum-Generator</a>{" "}
+              (gratis, ohne Anmeldung).
+            </p>
           </Field>
           {!impressum.trim() && (
             <div className="rounded-lg border border-amber-300/50 bg-amber-50/60 px-3 py-2 text-xs text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200">
