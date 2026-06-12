@@ -8,6 +8,7 @@ import { Icon, type IconName } from "../icons";
 import { cx } from "../ui";
 import { TrialBanner } from "./TrialBanner";
 import { HelpWidget } from "./HelpWidget";
+import { OnboardingWizard } from "@/components/OnboardingWizard";
 
 const FlagsContext = createContext<FeatureFlags>({ supabase: false, resend: false, stripe: false });
 export const useFlags = () => useContext(FlagsContext);
@@ -213,6 +214,7 @@ export function AppShell({ flags, children }: { flags: FeatureFlags; children: R
         </div>
       </div>
       <HelpWidget />
+      <OnboardingWizard />
     </FlagsContext.Provider>
   );
 }

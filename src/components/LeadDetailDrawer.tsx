@@ -8,6 +8,7 @@ import { Icon, type IconName } from "./icons";
 import { Badge, Button, Drawer, Field, Select, Spinner, TextInput, Textarea, cx } from "./ui";
 import { ConfirmDialog } from "./ConfirmDialog";
 import { LeadContactWays } from "./LeadContactWays";
+import { WebsiteAudit } from "./WebsiteAudit";
 
 const ACT_ICON: Record<ActivityType, IconName> = {
   created: "plus",
@@ -159,6 +160,8 @@ export function LeadDetailDrawer({
             <Icon name="tasks" size={15} /> Aufgabe
           </Button>
         </div>
+
+        <WebsiteAudit url={lead.website} />
 
         {/* Anruf-Panel */}
         {panel === "call" && (
