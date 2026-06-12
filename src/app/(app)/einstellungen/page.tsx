@@ -362,6 +362,11 @@ export default function EinstellungenPage() {
             (sachlicher Bezug zu seinem Geschäft) – oder eine Einwilligung vorliegt. Versende gezielt &amp; relevant,
             nie in Masse „auf Verdacht". Pflicht in jeder Mail: <b>Impressum</b> und ein funktionierender
             <b> Abmeldelink</b> (setzt das Tool automatisch). Abmeldungen werden dauerhaft gesperrt.
+            <div className="mt-2">
+              <b>Auftragsverarbeitung (DSGVO):</b> Schließe einmalig den{" "}
+              <a href="/avv" target="_blank" className="underline">Auftragsverarbeitungsvertrag (AVV)</a>{" "}
+              ab – ein Klick, wird mit Datum gespeichert.
+            </div>
           </div>
 
           {/* Zustellbarkeit – damit Mails nicht im Spam landen. */}
