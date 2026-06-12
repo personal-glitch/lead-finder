@@ -15,12 +15,17 @@ export function ExplainerVideo() {
         </div>
         <video
           className="block w-full bg-black"
-          src="/erklaervideo.mp4"
           poster="/erklaervideo-poster.jpg"
           controls
-          preload="none"
+          preload="metadata"
           playsInline
-        />
+          // @ts-expect-error – nicht-standardisiertes iOS-Attribut, hilft bei Inline-Wiedergabe
+          webkit-playsinline="true"
+        >
+          <source src="/erklaervideo.mp4" type="video/mp4" />
+          Dein Browser kann das Video nicht abspielen.{" "}
+          <a href="/erklaervideo.mp4" className="underline">Video herunterladen</a>.
+        </video>
       </div>
       <p className="mt-3 text-center text-sm text-[var(--color-muted)]">
         In 2:46 Minuten erklärt: von der Suche bis zum gewonnenen Kunden – Schritt für Schritt.
