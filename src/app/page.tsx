@@ -448,7 +448,7 @@ export default function Landing() {
               <Reveal key={b.label} delay={i * 40}>
                 <div className="flex items-center gap-3 rounded-xl border border-[var(--color-line)] bg-[var(--color-surface)] p-4 transition-all hover:-translate-y-0.5 hover:border-[var(--color-brand)]/40">
                   <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[var(--color-brand-tint)] text-[var(--color-brand)]"><Icon name={b.icon} size={18} /></span>
-                  <span className="text-sm font-medium">{b.label}</span>
+                  <span className="min-w-0 break-words hyphens-auto text-sm font-medium leading-snug">{b.label}</span>
                 </div>
               </Reveal>
             ))}
@@ -463,8 +463,8 @@ export default function Landing() {
                 <Reveal key={c.label} delay={(i % 3) * 60}>
                   <div className="h-full rounded-xl border border-[var(--color-line)] bg-[var(--color-surface)] p-4">
                     <div className="mb-2 flex items-center gap-2">
-                      <span className="grid h-7 w-7 place-items-center rounded-lg bg-[var(--color-brand-tint)] text-[var(--color-brand)]"><Icon name={c.icon} size={15} /></span>
-                      <span className="text-sm font-semibold">{c.label}</span>
+                      <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-[var(--color-brand-tint)] text-[var(--color-brand)]"><Icon name={c.icon} size={15} /></span>
+                      <span className="min-w-0 break-words text-sm font-semibold leading-snug">{c.label}</span>
                     </div>
                     <div className="flex flex-wrap gap-1.5">
                       {c.branchen.slice(0, 5).map((b) => (
