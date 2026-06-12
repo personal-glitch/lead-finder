@@ -421,8 +421,9 @@ export default function Landing() {
 
       {/* Erklärvideo */}
       <section id="demo" className="mx-auto max-w-6xl scroll-mt-20 px-6 py-16">
-        <h2 className="text-center text-3xl font-semibold tracking-[-0.01em]">In 30 Sekunden erklärt</h2>
-        <p className="mt-2 text-center text-sm text-[var(--color-muted)]">Der ganze Ablauf – vom Suchen bis zum gewonnenen Auftrag.</p>
+        <span id="erklaervideo" className="block -mt-20 pt-20" aria-hidden="true" />
+        <h2 className="text-center text-3xl font-semibold tracking-[-0.01em]">In 2:46 Minuten erklärt</h2>
+        <p className="mt-2 text-center text-sm text-[var(--color-muted)]">Der ganze Ablauf – vom Suchen bis zum gewonnenen Auftrag. Mit Ton.</p>
         <div className="mt-8"><LazyExplainerVideo /></div>
       </section>
 

@@ -108,24 +108,29 @@ export default function DashboardPage() {
           <Kpi label="Gewonnen" value={gewonnen} icon="check" tone={T.green} />
         </div>
 
-        {/* Persönliche Einführung / Schulung per WhatsApp – starker Conversion-Hebel */}
-        <a
-          href="https://wa.me/4915292627062?text=Hallo%2C%20ich%20h%C3%A4tte%20gerne%20eine%20kurze%20Einf%C3%BChrung%2FSchulung%20zu%20KundenRadar."
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex flex-col items-start gap-3 rounded-2xl border border-[#25D366]/40 bg-gradient-to-r from-[#25D366]/15 to-[#25D366]/5 p-5 transition hover:from-[#25D366]/25 hover:to-[#25D366]/10 sm:flex-row sm:items-center sm:justify-between"
-        >
+        {/* Erklärvideo + persönliche Einführung per WhatsApp – starker Conversion-Hebel */}
+        <div className="flex flex-col gap-4 rounded-2xl border border-[#25D366]/40 bg-gradient-to-r from-[#25D366]/15 to-[#25D366]/5 p-5 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-4">
             <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-[#25D366] text-white text-2xl">💬</span>
             <div>
-              <div className="text-base font-bold text-[var(--color-ink)]">Kostenlose Einführung gewünscht? Wir zeigen dir KundenRadar persönlich.</div>
-              <div className="mt-0.5 text-sm text-[var(--color-muted)]">In ~15 Minuten per WhatsApp oder Video – damit du sofort die ersten Neukunden findest. Einfach klicken und schreiben.</div>
+              <div className="text-base font-bold text-[var(--color-ink)]">Neu hier? Schau dir kurz das Erklärvideo an – oder hol dir eine persönliche Einführung.</div>
+              <div className="mt-0.5 text-sm text-[var(--color-muted)]">Das Video zeigt dir in 2:46 Min alles Schritt für Schritt. Lieber persönlich? Wir zeigen dir KundenRadar in ~15 Min per WhatsApp.</div>
             </div>
           </div>
-          <span className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-[#25D366] px-5 py-3 text-sm font-bold text-white shadow-sm hover:bg-[#1ebe5d]">
-            💬 Schulung per WhatsApp anfragen
-          </span>
-        </a>
+          <div className="flex shrink-0 flex-col gap-2 sm:items-end">
+            <Link href="/erklaervideo" className="inline-flex items-center justify-center gap-2 rounded-xl border border-[var(--color-line-strong)] bg-[var(--color-surface)] px-5 py-3 text-sm font-bold text-[var(--color-ink)] hover:border-[var(--color-brand)]">
+              ▶ Erklärvideo ansehen
+            </Link>
+            <a
+              href="https://wa.me/4915292627062?text=Hallo%2C%20ich%20h%C3%A4tte%20gerne%20eine%20kurze%20kostenlose%20Einf%C3%BChrung%20zu%20KundenRadar."
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#25D366] px-5 py-3 text-sm font-bold text-white shadow-sm hover:bg-[#1ebe5d]"
+            >
+              💬 Kostenlose Einführung per WhatsApp
+            </a>
+          </div>
+        </div>
 
         {!loading && leads.length === 0 && (
           <div className="rounded-2xl border border-[var(--color-brand)]/30 bg-[var(--color-brand-tint)]/15 p-6">

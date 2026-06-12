@@ -6,6 +6,10 @@ const KUENDIGUNG_URL = `${config.appUrl.replace(/\/$/, "")}/kuendigung`;
 const WHATSAPP_URL =
   "https://wa.me/4915292627062?text=" +
   encodeURIComponent("Hallo, ich habe noch eine Frage zu meinem KundenRadar-Test.");
+const WHATSAPP_SCHULUNG_URL =
+  "https://wa.me/4915292627062?text=" +
+  encodeURIComponent("Hallo, ich hätte gerne eine kurze kostenlose Einführung zu KundenRadar.");
+const ERKLAERVIDEO_URL = `${config.appUrl.replace(/\/$/, "")}/erklaervideo`;
 const IMPRESSUM = "Seciora Solutions, Inhaber Cihan Yildirim, Charlottenstraße 37, 51149 Köln · kontakt@seciora-solutions.de";
 
 const fmtDE = (iso: string) =>
@@ -21,7 +25,9 @@ export async function sendTrialEndingEmail(to: string, name: string, endsAtIso: 
     `Danach startet automatisch dein Abo zu 49 € pro Monat (monatlich kündbar).\n\n` +
     `• Du möchtest dabei bleiben? Super – du musst nichts tun.\n` +
     `• Du möchtest nicht weitermachen? Dann kündige einfach vorher mit einem Klick, es wird dann nichts berechnet:\n${KUENDIGUNG_URL}\n\n` +
-    `Noch Fragen oder unsicher, ob KundenRadar zu dir passt? Schreib uns gerne direkt per WhatsApp, wir helfen dir persönlich weiter:\n${WHATSAPP_URL}\n\n` +
+    `Noch unsicher, ob KundenRadar zu dir passt?\n` +
+    `• Erklärvideo ansehen (2:46 Min, alles Schritt für Schritt): ${ERKLAERVIDEO_URL}\n` +
+    `• Kostenlose persönliche Einführung per WhatsApp: ${WHATSAPP_SCHULUNG_URL}\n\n` +
     `Oder antworte einfach auf diese E-Mail.\n\nViele Grüße\nDein Team von Seciora Solutions – KundenRadar\n\n—\n${IMPRESSUM}`;
   const html = `<!doctype html><html lang="de"><body style="font-family:system-ui,Arial,sans-serif;color:#0f172a;line-height:1.6">
 <p>${esc(hi)}</p>
@@ -35,7 +41,14 @@ export async function sendTrialEndingEmail(to: string, name: string, endsAtIso: 
 <a href="${KUENDIGUNG_URL}" style="display:inline-block;background:#a8e83a;color:#14310a;font-weight:600;text-decoration:none;padding:10px 18px;border-radius:8px;margin:4px 8px 4px 0">Jetzt kündigen / Test beenden</a>
 <a href="${WHATSAPP_URL}" style="display:inline-block;background:#25D366;color:#ffffff;font-weight:600;text-decoration:none;padding:10px 18px;border-radius:8px;margin:4px 0">💬 Fragen? Per WhatsApp melden</a>
 </p>
-<p>Noch unsicher, ob KundenRadar zu dir passt? Schreib uns gerne direkt per <a href="${WHATSAPP_URL}" style="color:#128C7E">WhatsApp</a> – wir helfen dir persönlich weiter. Oder antworte einfach auf diese E-Mail.</p>
+<div style="margin:22px 0;padding:16px 18px;border:1px solid #e2e8f0;border-radius:12px;background:#f8fafc">
+<p style="margin:0 0 12px"><strong>Noch unsicher, ob KundenRadar zu dir passt?</strong></p>
+<p style="margin:0">
+<a href="${ERKLAERVIDEO_URL}" style="display:inline-block;background:#0f172a;color:#ffffff;font-weight:600;text-decoration:none;padding:10px 18px;border-radius:8px;margin:4px 8px 4px 0">▶ Erklärvideo ansehen (2:46 Min)</a>
+<a href="${WHATSAPP_SCHULUNG_URL}" style="display:inline-block;background:#25D366;color:#ffffff;font-weight:600;text-decoration:none;padding:10px 18px;border-radius:8px;margin:4px 0">💬 Kostenlose Einführung</a>
+</p>
+<p style="margin:12px 0 0;font-size:14px;color:#64748b">Im Video zeigen wir dir alles Schritt für Schritt. Lieber persönlich? Wir geben dir per WhatsApp eine kostenlose Einführung.</p>
+</div>
 <p>Viele Grüße<br>Dein Team von Seciora Solutions – KundenRadar</p>
 <hr style="border:none;border-top:1px solid #e2e8f0;margin:20px 0">
 <p style="font-size:12px;color:#64748b">${esc(IMPRESSUM)}</p>
