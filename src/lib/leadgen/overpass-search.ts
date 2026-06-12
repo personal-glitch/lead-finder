@@ -77,10 +77,23 @@ function labelFromName(name: string): string | null {
   return null;
 }
 
+// Abmahn-Schutz: Rechtsanwälte, Patentanwälte und Notare sind die mit Abstand
+// häufigsten Abmahner bei kalter E-Mail-Werbung. Sie werden grundsätzlich aus
+// allen Suchergebnissen herausgefiltert, damit niemand sie versehentlich anschreibt.
+const LAWYER_NAME_RX =
+  /\b(rechtsanw|anwalt|anwält|anwalts|patentanw|notar|notariat|kanzlei für recht|rechtsanwaltskanzlei|anwaltskanzlei)/i;
+function isAbmahnRisiko(name: string, tags: Record<string, string>): boolean {
+  const office = (tags.office ?? "").toLowerCase();
+  if (office === "lawyer" || office === "notary") return true;
+  if (LAWYER_NAME_RX.test(name)) return true;
+  return false;
+}
+
 function toLeadInput(el: OverpassElement, branchen: BrancheKey[]): LeadInput | null {
   const tags = el.tags ?? {};
   const name = pick(tags, ["name", "official_name", "operator", "brand"]);
   if (!name) return null; // ohne Name für Vertrieb/Tiefensuche wertlos
+  if (isAbmahnRisiko(name, tags)) return null; // Anwälte/Notare ausschließen (Abmahn-Schutz)
 
   const phoneRaw = pick(tags, ["phone", "contact:phone", "contact:mobile"]);
   const website = pick(tags, ["website", "contact:website", "url"]);

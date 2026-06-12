@@ -5,7 +5,7 @@ import { config } from "@/lib/config";
 import { geocode, type GeoPoint } from "@/lib/osm/geocode";
 import { firstGermanPhone } from "@/lib/phone/parse-de";
 import type { LeadInput } from "@/lib/types";
-import { type GeneratedLead } from "./search-leads";
+import { type GeneratedLead, isAbmahnRisiko } from "./search-leads";
 import { searchLeadsNominatim } from "@/lib/osm/nominatim-search";
 import { searchLeadsOverpass } from "./overpass-search";
 import type { BrancheKey } from "./branchen";
@@ -114,7 +114,9 @@ export async function runBrancheSearch(
   // 1) Namens-Suche über Nominatim – schnell & von Vercel zuverlässig erreichbar.
   let nominatimOk = false;
   try {
-    const leads = (await searchLeadsNominatim(center, radiusKm, branchen, keywords)).map(toLeadInput);
+    const leads = (await searchLeadsNominatim(center, radiusKm, branchen, keywords))
+      .filter((g) => !isAbmahnRisiko(g.companyName)) // Anwälte/Notare ausschließen (Abmahn-Schutz)
+      .map(toLeadInput);
     nominatimOk = true;
     diag.source = "nominatim";
     if (leads.length > 0) {
