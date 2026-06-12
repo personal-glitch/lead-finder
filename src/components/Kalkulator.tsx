@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { Icon, type IconName } from "@/components/icons";
 import { Card, cx } from "@/components/ui";
+import { api } from "@/lib/client";
 import { ReinigungWizard } from "@/components/ReinigungWizard";
 import {
   calcReinigung, calcHandwerk, calcAgentur, eur, type KalkModus,
@@ -101,7 +102,33 @@ export function Kalkulator({ teaser = false, compact = false, defaultModus }: { 
   const [brutto, setBrutto] = useState(false);
   const [showFormel, setShowFormel] = useState(false);
   const [gefuehrt, setGefuehrt] = useState(teaser);
+  const [kunde, setKunde] = useState("");
+  const [pdfBusy, setPdfBusy] = useState(false);
   const money = (n: number) => eur(brutto ? n * 1.19 : n);
+
+  const downloadAngebot = async () => {
+    setPdfBusy(true);
+    try {
+      let sender = { senderName: null as string | null, senderImpressum: null as string | null, senderEmail: null as string | null };
+      try {
+        const s = await api<{ settings: { senderName: string; senderImpressum: string; senderEmail: string } }>("/api/settings");
+        sender = { senderName: s.settings.senderName || null, senderImpressum: s.settings.senderImpressum || null, senderEmail: s.settings.senderEmail || null };
+      } catch { /* ohne Absenderdaten trotzdem PDF */ }
+      const { generateAngebotPdf } = await import("@/lib/angebot-pdf");
+      await generateAngebotPdf({
+        ...sender,
+        kunde: kunde.trim() || null,
+        modusLabel: MODI.find((m) => m.key === modus)?.label ?? "Kalkulation",
+        headlineLabel: out.headline.label,
+        headlineValue: String(out.headline.value),
+        sub: out.sub ?? null,
+        hint: out.hint ?? null,
+        breakdown: out.breakdown,
+      });
+    } finally {
+      setPdfBusy(false);
+    }
+  };
   const updatePos = (idx: number, patch: Partial<{ leistung: string; flaeche: number; anzahl: number }>) =>
     setR((s) => ({ ...s, positionen: s.positionen.map((p, i) => (i === idx ? { ...p, ...patch } : p)) }));
   const addPos = () => setR((s) => ({ ...s, positionen: [...s.positionen, { leistung: "unterhalt_buero", flaeche: 100, anzahl: 1 }] }));
@@ -364,6 +391,19 @@ export function Kalkulator({ teaser = false, compact = false, defaultModus }: { 
           <span className="rounded-full bg-[var(--color-subtle)] px-2 py-0.5 text-[10px] text-[var(--color-faint)]">Richtwerte Stand 2026</span>
         </div>
         {showFormel && <p className="px-1 text-[11px] leading-relaxed text-[var(--color-faint)]">{FORMEL[modus]}</p>}
+
+        {!teaser && (
+          <div className="space-y-2 rounded-xl border border-[var(--color-line)] bg-[var(--color-subtle)] p-3">
+            <label className="block text-xs text-[var(--color-muted)]">Angebot erstellen (PDF) – optional für wen?</label>
+            <input value={kunde} onChange={(e) => setKunde(e.target.value)} placeholder="z. B. Muster GmbH / Objekt Hauptstraße"
+              className="w-full rounded-lg border border-[var(--color-line-strong)] bg-[var(--color-surface)] px-3 py-2 text-sm outline-none focus:border-[var(--color-brand)]" />
+            <button type="button" onClick={downloadAngebot} disabled={pdfBusy}
+              className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[var(--color-brand)] px-4 py-2.5 text-sm font-semibold text-[var(--color-on-brand)] hover:bg-[var(--color-brand-ink)] disabled:opacity-60">
+              {pdfBusy ? "…" : <>📄 Angebot als PDF herunterladen</>}
+            </button>
+            <p className="text-[11px] text-[var(--color-faint)]">Mit deinem Firmen-Impressum gebrandet – direkt an Kunden weiterleitbar.</p>
+          </div>
+        )}
 
         {teaser ? (
           compact ? (
