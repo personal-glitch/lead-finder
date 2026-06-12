@@ -13,7 +13,7 @@ const fmtDE = (iso: string) =>
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
 /** E-Mail „Deine Testphase endet bald" an einen Trial-Nutzer (von kontakt@). */
-async function sendTrialEndingEmail(to: string, name: string, endsAtIso: string): Promise<void> {
+export async function sendTrialEndingEmail(to: string, name: string, endsAtIso: string): Promise<void> {
   const hi = name ? `Hallo ${name},` : "Hallo,";
   const end = fmtDE(endsAtIso);
   const text =
@@ -40,7 +40,7 @@ async function sendTrialEndingEmail(to: string, name: string, endsAtIso: string)
 <hr style="border:none;border-top:1px solid #e2e8f0;margin:20px 0">
 <p style="font-size:12px;color:#64748b">${esc(IMPRESSUM)}</p>
 </body></html>`;
-  await sendSystemEmail({ to, cc: "kontakt@seciora-solutions.de", subject: "Deine KundenRadar-Testphase endet bald", html, text });
+  await sendSystemEmail({ to, bcc: "kontakt@seciora-solutions.de", subject: "Deine KundenRadar-Testphase endet bald", html, text });
 }
 
 /**
