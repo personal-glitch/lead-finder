@@ -8,6 +8,7 @@ import type { Settings } from "@/lib/types";
 
 export interface SystemMail {
   to: string;
+  cc?: string | string[];
   subject: string;
   html: string;
   text: string;

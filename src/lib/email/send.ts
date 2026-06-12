@@ -22,7 +22,7 @@ function fromHeader(s: Settings): string {
 /** Versendet eine Mail über den SMTP-Zugang des Nutzers (wirft bei Fehler). */
 export async function smtpSendRaw(
   s: Settings,
-  msg: { to: string; subject: string; html: string; text: string; headers?: Record<string, string> },
+  msg: { to: string; cc?: string | string[]; subject: string; html: string; text: string; headers?: Record<string, string> },
 ): Promise<void> {
   const port = s.smtpPort ?? 587;
   const transport = nodemailer.createTransport({

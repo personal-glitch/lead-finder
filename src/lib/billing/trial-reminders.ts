@@ -3,6 +3,9 @@ import { config } from "@/lib/config";
 import { sendSystemEmail } from "@/lib/email/system";
 
 const KUENDIGUNG_URL = `${config.appUrl.replace(/\/$/, "")}/kuendigung`;
+const WHATSAPP_URL =
+  "https://wa.me/4915292627062?text=" +
+  encodeURIComponent("Hallo, ich habe noch eine Frage zu meinem KundenRadar-Test.");
 const IMPRESSUM = "Seciora Solutions, Inhaber Cihan Yildirim, Charlottenstraße 37, 51149 Köln · kontakt@seciora-solutions.de";
 
 const fmtDE = (iso: string) =>
@@ -18,7 +21,8 @@ async function sendTrialEndingEmail(to: string, name: string, endsAtIso: string)
     `Danach startet automatisch dein Abo zu 49 € pro Monat (monatlich kündbar).\n\n` +
     `• Du möchtest dabei bleiben? Super – du musst nichts tun.\n` +
     `• Du möchtest nicht weitermachen? Dann kündige einfach vorher mit einem Klick, es wird dann nichts berechnet:\n${KUENDIGUNG_URL}\n\n` +
-    `Fragen? Antworte einfach auf diese E-Mail.\n\nViele Grüße\nCihan – KundenRadar\n\n—\n${IMPRESSUM}`;
+    `Noch Fragen oder unsicher, ob KundenRadar zu dir passt? Schreib mir gerne direkt per WhatsApp, ich helfe dir persönlich weiter:\n${WHATSAPP_URL}\n\n` +
+    `Oder antworte einfach auf diese E-Mail.\n\nViele Grüße\nCihan – KundenRadar\n\n—\n${IMPRESSUM}`;
   const html = `<!doctype html><html lang="de"><body style="font-family:system-ui,Arial,sans-serif;color:#0f172a;line-height:1.6">
 <p>${esc(hi)}</p>
 <p>nur als kurze Info: Deine <strong>3-tägige kostenlose Testphase</strong> von KundenRadar endet am <strong>${esc(end)} Uhr</strong>.</p>
@@ -27,13 +31,16 @@ async function sendTrialEndingEmail(to: string, name: string, endsAtIso: string)
 <li><strong>Du möchtest dabei bleiben?</strong> Super – du musst nichts tun.</li>
 <li><strong>Du möchtest nicht weitermachen?</strong> Dann kündige vorher mit einem Klick, es wird nichts berechnet.</li>
 </ul>
-<p><a href="${KUENDIGUNG_URL}" style="display:inline-block;background:#a8e83a;color:#14310a;font-weight:600;text-decoration:none;padding:10px 18px;border-radius:8px">Jetzt kündigen / Test beenden</a></p>
-<p>Fragen? Antworte einfach auf diese E-Mail.</p>
+<p style="margin:18px 0">
+<a href="${KUENDIGUNG_URL}" style="display:inline-block;background:#a8e83a;color:#14310a;font-weight:600;text-decoration:none;padding:10px 18px;border-radius:8px;margin:4px 8px 4px 0">Jetzt kündigen / Test beenden</a>
+<a href="${WHATSAPP_URL}" style="display:inline-block;background:#25D366;color:#ffffff;font-weight:600;text-decoration:none;padding:10px 18px;border-radius:8px;margin:4px 0">💬 Fragen? Per WhatsApp melden</a>
+</p>
+<p>Noch unsicher, ob KundenRadar zu dir passt? Schreib mir gerne direkt per <a href="${WHATSAPP_URL}" style="color:#128C7E">WhatsApp</a> – ich helfe dir persönlich weiter. Oder antworte einfach auf diese E-Mail.</p>
 <p>Viele Grüße<br>Cihan – KundenRadar</p>
 <hr style="border:none;border-top:1px solid #e2e8f0;margin:20px 0">
 <p style="font-size:12px;color:#64748b">${esc(IMPRESSUM)}</p>
 </body></html>`;
-  await sendSystemEmail({ to, subject: "Deine KundenRadar-Testphase endet bald", html, text });
+  await sendSystemEmail({ to, cc: "kontakt@seciora-solutions.de", subject: "Deine KundenRadar-Testphase endet bald", html, text });
 }
 
 /**
@@ -48,7 +55,7 @@ export async function sendTrialEndingReminders(): Promise<number> {
   const admin = createAdminClient();
 
   const now = new Date();
-  const windowEnd = new Date(now.getTime() + 26 * 3600 * 1000).toISOString();
+  const windowEnd = new Date(now.getTime() + 50 * 3600 * 1000).toISOString();
 
   // Trial-Abos, deren Periode (= Testende) im Fenster liegt und die noch keine
   // Erinnerung erhalten haben.
