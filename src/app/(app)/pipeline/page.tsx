@@ -13,6 +13,7 @@ import {
 } from "@dnd-kit/core";
 import type { EmailTemplate, Lead, PipelineStage } from "@/lib/types";
 import { api } from "@/lib/client";
+import { downloadCsv } from "@/lib/csv";
 import { useFlags, PageHeader } from "@/components/shell/AppShell";
 import { PipelineBoard, LeadCard } from "@/components/Pipeline";
 import { LeadDetailDrawer } from "@/components/LeadDetailDrawer";
@@ -142,9 +143,17 @@ export default function PipelinePage() {
         title="Pipeline"
         subtitle={`${leads.length} Leads im Blick`}
         actions={
-          <div className="relative">
-            <span className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--color-faint)]"><Icon name="search" size={16} /></span>
-            <TextInput value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Firma, Person, Tel., Ort …" className="w-72 pl-8" />
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" onClick={() => {
+              const stageName = (id: string | null) => stages.find((s) => s.id === id)?.name ?? "";
+              const rows = filtered.map((l) => [l.name, l.objektTyp, l.ansprechpartner, l.phone, l.email, l.website, l.strasse, l.plz, l.ort, stageName(l.stageId)]);
+              downloadCsv(`KundenRadar-Leads-${new Date().toISOString().slice(0, 10)}`,
+                ["Firma", "Branche", "Ansprechpartner", "Telefon", "E-Mail", "Website", "Straße", "PLZ", "Ort", "Phase"], rows);
+            }} disabled={filtered.length === 0}><Icon name="external" size={15} /> CSV</Button>
+            <div className="relative">
+              <span className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--color-faint)]"><Icon name="search" size={16} /></span>
+              <TextInput value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Firma, Person, Tel., Ort …" className="w-72 pl-8" />
+            </div>
           </div>
         }
       />

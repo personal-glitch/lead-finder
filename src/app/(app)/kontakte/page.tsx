@@ -11,6 +11,7 @@ import { EmailComposeModal, type ComposeContact } from "@/components/EmailCompos
 import { QuickCallModal, type CallContact } from "@/components/QuickCallModal";
 import { Icon, InitialsAvatar } from "@/components/icons";
 import { Badge, Button, Card, EmptyState, Select, Spinner, TextInput, Toast } from "@/components/ui";
+import { downloadCsv } from "@/lib/csv";
 
 interface Kontakt {
   leadId: string;
@@ -68,6 +69,13 @@ export default function KontaktePage() {
   const selCount = selected.size;
   const selWithMail = useMemo(() => filtered.filter((k) => selected.has(k.leadId) && k.email).map((k) => k.leadId), [filtered, selected]);
 
+  const exportCsv = () => {
+    const rows = filtered.map((k) => [k.firma, k.name, k.role, k.branche, k.ort, k.phone, k.email]);
+    downloadCsv(`KundenRadar-Kontakte-${new Date().toISOString().slice(0, 10)}`,
+      ["Firma", "Ansprechpartner", "Rolle", "Branche", "Ort", "Telefon", "E-Mail"], rows);
+    setToast(`${rows.length} Kontakt(e) als CSV exportiert.`);
+  };
+
   const toggle = (id: string) => setSelected((p) => { const n = new Set(p); n.has(id) ? n.delete(id) : n.add(id); return n; });
   const toggleAll = () => setSelected((p) => p.size === filtered.length ? new Set() : new Set(filtered.map((k) => k.leadId)));
   const clearSel = () => { setSelected(new Set()); setBulkConsent(false); };
@@ -102,7 +110,10 @@ export default function KontaktePage() {
   return (
     <>
       <PageHeader title="Kontakte" subtitle={`${kontakte.length} Ansprechpartner`}
-        actions={<Button onClick={() => setAddOpen(true)}><Icon name="plus" size={16} /> Neuer Kontakt</Button>} />
+        actions={<>
+          <Button variant="ghost" onClick={exportCsv} disabled={filtered.length === 0}><Icon name="external" size={15} /> CSV exportieren</Button>
+          <Button onClick={() => setAddOpen(true)}><Icon name="plus" size={16} /> Neuer Kontakt</Button>
+        </>} />
       <div className="space-y-4 p-4 sm:p-7">
         <div className="flex flex-wrap items-center gap-2">
           <div className="relative">
