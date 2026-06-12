@@ -1,9 +1,11 @@
 import { NextRequest } from "next/server";
 import { jsonOk, jsonError } from "@/lib/api";
 import { processDueCampaigns } from "@/lib/newsletter";
+import { sendTrialEndingReminders } from "@/lib/billing/trial-reminders";
 
-// Verarbeitet fällige geplante Newsletter. Wird von Vercel-Cron aufgerufen
-// (täglich) und kann mit ?key=CRON_SECRET auch manuell getriggert werden.
+// Täglicher Cron-Lauf: (1) fällige geplante Newsletter verarbeiten,
+// (2) Trial-Nutzer erinnern, deren Testphase bald ins Abo übergeht.
+// Wird von Vercel-Cron aufgerufen und kann mit ?key=CRON_SECRET manuell getriggert werden.
 export const maxDuration = 60;
 
 export async function GET(req: NextRequest) {
@@ -16,7 +18,14 @@ export async function GET(req: NextRequest) {
       return new Response("Forbidden", { status: 403 });
     }
     const processed = await processDueCampaigns();
-    return jsonOk({ processed });
+    let trialReminders = 0;
+    try {
+      trialReminders = await sendTrialEndingReminders();
+    } catch (e) {
+      // Trial-Erinnerungen dürfen den Newsletter-Lauf nicht blockieren.
+      console.error("[cron] Trial-Erinnerungen fehlgeschlagen:", e);
+    }
+    return jsonOk({ processed, trialReminders });
   } catch (err) {
     return jsonError(err);
   }
