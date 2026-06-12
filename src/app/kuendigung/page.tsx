@@ -53,8 +53,9 @@ export default function KuendigungPage() {
           </P>
         )}
         <P>
-          Du erhältst zusätzlich eine Bestätigung an die angegebene E-Mail-Adresse. Bei Fragen erreichst du uns unter
-          kontakt@seciora-solutions.de.
+          Eine <strong>Kündigungsbestätigung</strong> haben wir dir soeben per E-Mail an{" "}
+          <strong>{email}</strong> geschickt (bitte ggf. auch den Spam-Ordner prüfen). Bei Fragen erreichst du uns
+          unter kontakt@seciora-solutions.de.
         </P>
       </LegalShell>
     );
