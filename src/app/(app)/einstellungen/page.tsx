@@ -337,6 +337,17 @@ export default function EinstellungenPage() {
             </div>
             <Textarea rows={7} value={signature} onChange={(e) => setSignature(e.target.value)}
               placeholder={"Mit freundlichen Grüßen\nMax Mustermann\n\nMuster GmbH\nMusterstr. 1 · 50667 Köln\nTel.: 0221 1234567\nweb: musterfirma.de"} />
+            {(() => {
+              const markers = ["Deine Firma", "Deine Rolle", "Dein Slogan", "+49 000 0000000", "deinefirma.de", "Dein Name", "name@deinefirma.de"];
+              const found = markers.filter((m) => signature.includes(m));
+              if (found.length === 0) return null;
+              return (
+                <div className="mt-2 rounded-lg border border-amber-300/60 bg-amber-50/70 px-3 py-2 text-xs leading-relaxed text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200">
+                  ⚠️ Deine Signatur enthält noch <strong>Platzhalter</strong> ({found.join(", ")}). Bitte ersetze sie durch deine
+                  echten Angaben – sonst stehen diese Beispiel-Texte in deinen E-Mails an Kunden.
+                </div>
+              );
+            })()}
           </Field>
 
           {/* Compliance-Hinweis: Kaltakquise per E-Mail (§ 7 UWG). */}
