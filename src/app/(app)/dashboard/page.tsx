@@ -118,8 +118,8 @@ export default function DashboardPage() {
             </div>
           </div>
           <div className="flex shrink-0 flex-col gap-2 sm:items-end">
-            <Link href="/erklaervideo" className="inline-flex items-center justify-center gap-2 rounded-xl border border-[var(--color-line-strong)] bg-[var(--color-surface)] px-5 py-3 text-sm font-bold text-[var(--color-ink)] hover:border-[var(--color-brand)]">
-              ▶ Erklärvideo ansehen
+            <Link href="/hilfe" className="inline-flex items-center justify-center gap-2 rounded-xl border border-[var(--color-line-strong)] bg-[var(--color-surface)] px-5 py-3 text-sm font-bold text-[var(--color-ink)] hover:border-[var(--color-brand)]">
+              ▶ Video-Tutorials ansehen
             </Link>
             <a
               href="https://wa.me/4915292627062?text=Hallo%2C%20ich%20h%C3%A4tte%20gerne%20eine%20kurze%20kostenlose%20Einf%C3%BChrung%20zu%20KundenRadar."

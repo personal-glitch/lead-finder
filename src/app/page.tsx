@@ -316,8 +316,16 @@ export default function Landing() {
           </p>
         </div>
 
+        {/* Erklärvideo – direkt im Hero, noch vor dem Rechner */}
+        <div id="erklaervideo" className="mx-auto mt-10 max-w-2xl scroll-mt-24">
+          <div className="mb-2 flex items-center justify-center gap-1.5 text-xs font-medium text-[var(--color-brand)]">
+            <Icon name="play" size={14} /> In 2:46 Min erklärt – mit Ton
+          </div>
+          <LazyExplainerVideo />
+        </div>
+
         {/* Interaktiver Köder – volle Breite, in sich ausgewogen */}
-        <div className="mx-auto mt-10 max-w-5xl">
+        <div className="mx-auto mt-12 max-w-5xl">
           <div className="mb-2 flex items-center justify-center gap-1.5 text-xs font-medium text-[var(--color-brand)]">
             <Icon name="calculator" size={14} /> Gratis-Rechner – sofort testen
           </div>
@@ -419,12 +427,15 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Erklärvideo */}
+      {/* Video-Tutorials – Teaser zum Hilfe-Center */}
       <section id="demo" className="mx-auto max-w-6xl scroll-mt-20 px-6 py-16">
-        <span id="erklaervideo" className="block -mt-20 pt-20" aria-hidden="true" />
-        <h2 className="text-center text-3xl font-semibold tracking-[-0.01em]">In 2:46 Minuten erklärt</h2>
-        <p className="mt-2 text-center text-sm text-[var(--color-muted)]">Der ganze Ablauf – vom Suchen bis zum gewonnenen Auftrag. Mit Ton.</p>
-        <div className="mt-8"><LazyExplainerVideo /></div>
+        <h2 className="text-center text-3xl font-semibold tracking-[-0.01em]">Video-Tutorials</h2>
+        <p className="mx-auto mt-2 max-w-xl text-center text-sm text-[var(--color-muted)]">Kurze Erklärvideos mit Ton: rechtssicher mailen, bessere Suche mit Keywords, den Kalkulator nutzen und die Pipeline meistern.</p>
+        <div className="mt-6 flex justify-center">
+          <Link href="/hilfe" className="inline-flex items-center gap-2 rounded-lg bg-[var(--color-brand)] px-5 py-3 text-sm font-semibold text-[var(--color-on-brand)] hover:bg-[var(--color-brand-ink)]">
+            <Icon name="play" size={15} /> Alle Tutorials ansehen
+          </Link>
+        </div>
       </section>
 
       {/* Für wen + Branchen-Breite */}
