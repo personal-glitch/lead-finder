@@ -36,10 +36,13 @@ export default function SuchePage() {
   const [autoEnrich, setAutoEnrich] = useState(true);
   const [toast, setToast] = useState<string | null>(null);
   const [detail, setDetail] = useState<LeadInput | null>(null);
+  const [knownKeys, setKnownKeys] = useState<Set<string>>(new Set());
   const stopRef = useRef(false);
 
   useEffect(() => {
     api<{ stages: PipelineStage[] }>("/api/stages").then((s) => setStageId(s.stages[0]?.id ?? null)).catch(() => {});
+    // Bereits gespeicherte Leads laden – für Dubletten-Warnung in den Treffern.
+    api<{ leads: LeadInput[] }>("/api/leads").then((r) => setKnownKeys(new Set(r.leads.map(dedupeKey)))).catch(() => {});
     try { const v = localStorage.getItem("kr-auto-enrich"); if (v !== null) setAutoEnrich(v === "1"); } catch {}
   }, []);
 
@@ -61,7 +64,7 @@ export default function SuchePage() {
     const payload = { plz: p, radiusKm, branchen: [...branchen], keywords: keywordList };
     try {
       const res = await api<SearchResult>("/api/leads/search", { json: payload });
-      setResult(res); setSelected(new Set(res.leads.map(dedupeKey))); setTaken(new Set());
+      setResult(res); setSelected(new Set(res.leads.map(dedupeKey).filter((k) => !knownKeys.has(k)))); setTaken(new Set());
       // Automatisch anreichern (Hintergrund), außer bei Beispieldaten.
       if (autoEnrich && !res.demo) void runEnrich(res.leads, true);
     } catch (e) { setToast(e instanceof Error ? e.message : "Suche fehlgeschlagen."); }
@@ -246,6 +249,7 @@ export default function SuchePage() {
               <Card className="overflow-hidden">
                 {displayLeads.map((l, i) => {
                   const key = dedupeKey(l); const isTaken = taken.has(key); const host = hostFromUrl(l.website);
+                  const isKnown = knownKeys.has(key) && !isTaken;
                   return (
                     <div key={key} className={cx("flex items-center gap-3 px-4 py-3", i > 0 && "border-t border-[var(--color-line)]", isTaken && "bg-[var(--color-success-tint)]/30")}>
                       <input type="checkbox" checked={selected.has(key)} disabled={isTaken} onChange={() => toggle(key)} className="h-4 w-4 shrink-0 accent-[var(--color-brand)]" />
@@ -255,6 +259,7 @@ export default function SuchePage() {
                           {l.objektTyp && <Badge tone="slate">{l.objektTyp}</Badge>}
                           {l.enrichmentSource && <Badge tone="blue">angereichert</Badge>}
                           {isTaken && <Badge tone="green">übernommen</Badge>}
+                          {isKnown && <span className="rounded-full bg-[var(--color-warn-tint)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--color-warn)]">schon gespeichert</span>}
                         </div>
                         <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-[var(--color-muted)]">
                           {(l.strasse || l.ort) && <span className="truncate">{[l.strasse, l.ort].filter(Boolean).join(", ")}</span>}

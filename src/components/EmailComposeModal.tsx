@@ -37,11 +37,21 @@ export function EmailComposeModal({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [consent, setConsent] = useState(false);
+  const [verify, setVerify] = useState<{ valid: boolean; mx: boolean; reason: string } | null>(null);
 
   // Beim Öffnen / Kontaktwechsel Felder zurücksetzen.
   useEffect(() => {
     if (open) { setTemplateId(""); setSubject(""); setBody(""); setError(null); setBusy(false); setConsent(false); }
   }, [open, contact?.leadId]);
+
+  // E-Mail-Adresse automatisch prüfen (Syntax + ob die Domain Mails empfängt).
+  useEffect(() => {
+    setVerify(null);
+    if (open && contact?.email) {
+      api<{ valid: boolean; mx: boolean; reason: string }>("/api/email/verify", { json: { email: contact.email } })
+        .then(setVerify).catch(() => {});
+    }
+  }, [open, contact?.email]);
 
   const loadTemplate = (id: string) => {
     setTemplateId(id);
@@ -115,6 +125,11 @@ export function EmailComposeModal({
                 className="cursor-pointer rounded bg-[var(--color-subtle)] px-1.5 py-0.5 text-xs text-[var(--color-ink-2)] hover:bg-[var(--color-line-strong)]">{`{{${p}}}`}</code>
             ))}
           </div>
+          {verify && (
+            <p className={`text-xs ${verify.valid ? "text-[var(--color-success)]" : "text-[var(--color-warn)]"}`}>
+              {verify.valid ? "✓ Adresse gültig – Domain empfängt E-Mails." : `⚠ ${verify.reason}`}
+            </p>
+          )}
           <p className="text-xs text-[var(--color-muted)]">
             Deine <b>Signatur</b>, dein <b>Impressum</b> und ein <b>Abmeldelink</b> werden automatisch unter die Mail gesetzt.
             Versand erfolgt über dein in den Einstellungen hinterlegtes Postfach.
