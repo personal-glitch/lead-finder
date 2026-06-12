@@ -13,16 +13,16 @@ export function smtpConfigured(s: Settings): boolean {
   return Boolean(s.smtpHost && s.smtpUser && s.smtpPass && s.senderEmail);
 }
 
-function fromHeader(s: Settings): string {
+function fromHeader(s: Settings, overrideName?: string): string {
   const email = s.senderEmail!.trim();
-  const name = s.senderName?.trim();
+  const name = (overrideName ?? s.senderName)?.trim();
   return name ? `"${name.replace(/"/g, "")}" <${email}>` : email;
 }
 
 /** Versendet eine Mail über den SMTP-Zugang des Nutzers (wirft bei Fehler). */
 export async function smtpSendRaw(
   s: Settings,
-  msg: { to: string; cc?: string | string[]; bcc?: string | string[]; subject: string; html: string; text: string; headers?: Record<string, string> },
+  msg: { to: string; cc?: string | string[]; bcc?: string | string[]; subject: string; html: string; text: string; headers?: Record<string, string>; fromName?: string },
 ): Promise<void> {
   const port = s.smtpPort ?? 587;
   const transport = nodemailer.createTransport({
@@ -31,7 +31,8 @@ export async function smtpSendRaw(
     secure: port === 465, // 465 = implizites TLS, sonst STARTTLS
     auth: { user: s.smtpUser!, pass: decryptSecret(s.smtpPass) },
   });
-  await transport.sendMail({ from: fromHeader(s), replyTo: s.senderEmail!.trim(), ...msg });
+  const { fromName, ...mail } = msg;
+  await transport.sendMail({ from: fromHeader(s, fromName), replyTo: s.senderEmail!.trim(), ...mail });
 }
 
 /** Test-Mail an die eigene Absenderadresse, um den SMTP-Zugang zu prüfen. */

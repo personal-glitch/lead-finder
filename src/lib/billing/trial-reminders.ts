@@ -21,8 +21,8 @@ export async function sendTrialEndingEmail(to: string, name: string, endsAtIso: 
     `Danach startet automatisch dein Abo zu 49 € pro Monat (monatlich kündbar).\n\n` +
     `• Du möchtest dabei bleiben? Super – du musst nichts tun.\n` +
     `• Du möchtest nicht weitermachen? Dann kündige einfach vorher mit einem Klick, es wird dann nichts berechnet:\n${KUENDIGUNG_URL}\n\n` +
-    `Noch Fragen oder unsicher, ob KundenRadar zu dir passt? Schreib mir gerne direkt per WhatsApp, ich helfe dir persönlich weiter:\n${WHATSAPP_URL}\n\n` +
-    `Oder antworte einfach auf diese E-Mail.\n\nViele Grüße\nCihan – KundenRadar\n\n—\n${IMPRESSUM}`;
+    `Noch Fragen oder unsicher, ob KundenRadar zu dir passt? Schreib uns gerne direkt per WhatsApp, wir helfen dir persönlich weiter:\n${WHATSAPP_URL}\n\n` +
+    `Oder antworte einfach auf diese E-Mail.\n\nViele Grüße\nDein Team von Seciora Solutions – KundenRadar\n\n—\n${IMPRESSUM}`;
   const html = `<!doctype html><html lang="de"><body style="font-family:system-ui,Arial,sans-serif;color:#0f172a;line-height:1.6">
 <p>${esc(hi)}</p>
 <p>nur als kurze Info: Deine <strong>3-tägige kostenlose Testphase</strong> von KundenRadar endet am <strong>${esc(end)} Uhr</strong>.</p>
@@ -35,12 +35,12 @@ export async function sendTrialEndingEmail(to: string, name: string, endsAtIso: 
 <a href="${KUENDIGUNG_URL}" style="display:inline-block;background:#a8e83a;color:#14310a;font-weight:600;text-decoration:none;padding:10px 18px;border-radius:8px;margin:4px 8px 4px 0">Jetzt kündigen / Test beenden</a>
 <a href="${WHATSAPP_URL}" style="display:inline-block;background:#25D366;color:#ffffff;font-weight:600;text-decoration:none;padding:10px 18px;border-radius:8px;margin:4px 0">💬 Fragen? Per WhatsApp melden</a>
 </p>
-<p>Noch unsicher, ob KundenRadar zu dir passt? Schreib mir gerne direkt per <a href="${WHATSAPP_URL}" style="color:#128C7E">WhatsApp</a> – ich helfe dir persönlich weiter. Oder antworte einfach auf diese E-Mail.</p>
-<p>Viele Grüße<br>Cihan – KundenRadar</p>
+<p>Noch unsicher, ob KundenRadar zu dir passt? Schreib uns gerne direkt per <a href="${WHATSAPP_URL}" style="color:#128C7E">WhatsApp</a> – wir helfen dir persönlich weiter. Oder antworte einfach auf diese E-Mail.</p>
+<p>Viele Grüße<br>Dein Team von Seciora Solutions – KundenRadar</p>
 <hr style="border:none;border-top:1px solid #e2e8f0;margin:20px 0">
 <p style="font-size:12px;color:#64748b">${esc(IMPRESSUM)}</p>
 </body></html>`;
-  await sendSystemEmail({ to, bcc: "kontakt@seciora-solutions.de", subject: "Deine KundenRadar-Testphase endet bald", html, text });
+  await sendSystemEmail({ to, bcc: "kontakt@seciora-solutions.de", fromName: "Team Seciora Solutions · KundenRadar", subject: "Deine KundenRadar-Testphase endet bald", html, text });
 }
 
 /**

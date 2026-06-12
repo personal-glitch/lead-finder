@@ -14,6 +14,8 @@ export interface SystemMail {
   html: string;
   text: string;
   headers?: Record<string, string>;
+  /** Optionaler Anzeigename des Absenders (z. B. „Team Seciora Solutions"). */
+  fromName?: string;
 }
 
 /** Lädt die Einstellungen (inkl. SMTP) des Superadmin-Kontos, falls vorhanden. */
@@ -42,9 +44,17 @@ export async function systemMailAvailable(): Promise<boolean> {
 
 /** Versendet eine System-Mail (wirft bei Fehler / fehlender Konfiguration). */
 export async function sendSystemEmail(msg: SystemMail): Promise<void> {
+  const { fromName, ...rest } = msg;
   if (config.resend.enabled) {
     const resend = new Resend(config.resend.apiKey!);
-    const { error } = await resend.emails.send({ from: config.resend.from!, ...msg });
+    // Anzeigename optional voranstellen (gleiche Absenderadresse wie in RESEND_FROM).
+    let from = config.resend.from!;
+    if (fromName) {
+      const m = from.match(/<([^>]+)>/);
+      const addr = m ? m[1] : from;
+      from = `${fromName} <${addr}>`;
+    }
+    const { error } = await resend.emails.send({ from, ...rest });
     if (error) throw new Error(error.message);
     return;
   }

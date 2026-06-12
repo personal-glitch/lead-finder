@@ -13,10 +13,11 @@ export async function GET() {
     if (!email || !config.admin.email || email !== config.admin.email) {
       throw new AppError("auth", "Kein Zugriff.");
     }
-    // Beispiel-Testende: in 2 Tagen.
+    // Beispiel-Testende: in 2 Tagen. Test-Mail geht fest an das Betreiber-Postfach.
     const sampleEnd = new Date(Date.now() + 2 * 24 * 3600 * 1000).toISOString();
-    await sendTrialEndingEmail(user!.email!, "Max", sampleEnd);
-    return jsonOk({ ok: true, sentTo: user!.email });
+    const target = "kontakt@seciora-solutions.de";
+    await sendTrialEndingEmail(target, "Max", sampleEnd);
+    return jsonOk({ ok: true, sentTo: target });
   } catch (err) {
     return jsonError(err);
   }

@@ -108,6 +108,25 @@ export default function DashboardPage() {
           <Kpi label="Gewonnen" value={gewonnen} icon="check" tone={T.green} />
         </div>
 
+        {/* Persönliche Einführung / Schulung per WhatsApp – starker Conversion-Hebel */}
+        <a
+          href="https://wa.me/4915292627062?text=Hallo%2C%20ich%20h%C3%A4tte%20gerne%20eine%20kurze%20Einf%C3%BChrung%2FSchulung%20zu%20KundenRadar."
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex flex-col items-start gap-3 rounded-2xl border border-[#25D366]/40 bg-gradient-to-r from-[#25D366]/15 to-[#25D366]/5 p-5 transition hover:from-[#25D366]/25 hover:to-[#25D366]/10 sm:flex-row sm:items-center sm:justify-between"
+        >
+          <div className="flex items-center gap-4">
+            <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-[#25D366] text-white text-2xl">💬</span>
+            <div>
+              <div className="text-base font-bold text-[var(--color-ink)]">Kostenlose Einführung gewünscht? Wir zeigen dir KundenRadar persönlich.</div>
+              <div className="mt-0.5 text-sm text-[var(--color-muted)]">In ~15 Minuten per WhatsApp oder Video – damit du sofort die ersten Neukunden findest. Einfach klicken und schreiben.</div>
+            </div>
+          </div>
+          <span className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-[#25D366] px-5 py-3 text-sm font-bold text-white shadow-sm hover:bg-[#1ebe5d]">
+            💬 Schulung per WhatsApp anfragen
+          </span>
+        </a>
+
         {!loading && leads.length === 0 && (
           <div className="rounded-2xl border border-[var(--color-brand)]/30 bg-[var(--color-brand-tint)]/15 p-6">
             <h2 className="text-lg font-semibold">👋 Willkommen! In 60 Sekunden zum ersten Ergebnis</h2>
