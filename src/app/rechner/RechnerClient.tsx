@@ -48,6 +48,9 @@ export default function RechnerClient() {
               { href: "/rechner/gebaeudereinigung", label: "Reinigungskosten" },
               { href: "/rechner/handwerk-stundensatz", label: "Handwerk-Stundensatz" },
               { href: "/rechner/agentur-stundensatz", label: "Agentur-Stundensatz" },
+              { href: "/rechner/maler-stundensatz", label: "Maler-Stundensatz" },
+              { href: "/rechner/elektriker-stundensatz", label: "Elektriker-Stundensatz" },
+              { href: "/rechner/garten-landschaftsbau-stundensatz", label: "GaLaBau-Stundensatz" },
               { href: "/rechner/neukunde-kosten", label: "Was kostet ein Neukunde?" },
             ].map((r) => (
               <Link key={r.href} href={r.href} className="rounded-lg border border-[var(--color-line-strong)] px-3 py-2 text-sm font-medium text-[var(--color-ink-2)] hover:bg-[var(--color-subtle)]">
