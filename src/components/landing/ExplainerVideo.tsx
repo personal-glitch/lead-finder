@@ -19,7 +19,6 @@ export function ExplainerVideo() {
           controls
           preload="metadata"
           playsInline
-          // @ts-expect-error – nicht-standardisiertes iOS-Attribut, hilft bei Inline-Wiedergabe
           webkit-playsinline="true"
         >
           <source src="/erklaervideo.mp4" type="video/mp4" />
