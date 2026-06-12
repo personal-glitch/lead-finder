@@ -51,6 +51,10 @@ export default function RechnerClient() {
               { href: "/rechner/maler-stundensatz", label: "Maler-Stundensatz" },
               { href: "/rechner/elektriker-stundensatz", label: "Elektriker-Stundensatz" },
               { href: "/rechner/garten-landschaftsbau-stundensatz", label: "GaLaBau-Stundensatz" },
+              { href: "/rechner/dachdecker-stundensatz", label: "Dachdecker-Stundensatz" },
+              { href: "/rechner/fliesenleger-stundensatz", label: "Fliesenleger-Stundensatz" },
+              { href: "/rechner/tischler-schreiner-stundensatz", label: "Tischler-Stundensatz" },
+              { href: "/rechner/reinigungskosten-pro-quadratmeter", label: "Reinigungskosten pro m²" },
               { href: "/rechner/neukunde-kosten", label: "Was kostet ein Neukunde?" },
             ].map((r) => (
               <Link key={r.href} href={r.href} className="rounded-lg border border-[var(--color-line-strong)] px-3 py-2 text-sm font-medium text-[var(--color-ink-2)] hover:bg-[var(--color-subtle)]">
