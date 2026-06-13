@@ -63,7 +63,7 @@ const STATS: { node: ReactNode; label: string }[] = [
   { node: <CountUp to={50} suffix="+" />, label: "Branchen im Katalog" },
   { node: "Direktkontakt", label: "Telefon + Ansprechpartner" },
   { node: "1 Tool", label: "statt Excel, Google & Zettel" },
-  { node: <CountUp to={100} suffix=" %" />, label: "DSGVO-konform" },
+  { node: "DSGVO-konform", label: "EU-Hosting & Opt-out" },
 ];
 
 export function StatStrip() {

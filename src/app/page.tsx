@@ -9,7 +9,7 @@ import { LazyKalkulator } from "@/components/landing/LazyKalkulator";
 import { NewsletterSignup } from "@/components/NewsletterSignup";
 import { WhatsAppWidget } from "@/components/WhatsAppWidget";
 import { LazyExplainerVideo } from "@/components/landing/LazyExplainerVideo";
-import { StatStrip, Reveal } from "@/components/landing/anim";
+import { Reveal } from "@/components/landing/anim";
 import { PlanButton } from "@/components/landing/PlanButton";
 import {
   ResultsMock,
@@ -160,14 +160,6 @@ const STEPS: { icon: IconName; t: string; d: string }[] = [
   { icon: "pipeline", t: "Pipeline", d: "Per Drag & Drop durch die Stages" },
   { icon: "phone", t: "Anrufen", d: "Klick-to-Call, Ergebnis loggt sich" },
   { icon: "check", t: "Abschluss", d: "Wiedervorlage & Nachfass automatisch" },
-];
-
-// Vertriebstag
-const TAG: { time: string; t: string; d: string }[] = [
-  { time: "09:00", t: "Agent läuft – Liste steht", d: "Dein gespeicherter Agent liefert frische, anrufbare Firmen aus deinen Zielbranchen." },
-  { time: "09:15", t: "Anrufen & loggen", d: "Klick-to-Call, Ergebnis festhalten – Stage & Wiedervorlage entstehen automatisch." },
-  { time: "11:00", t: "Mailen & nachfassen", d: "Interessenten per Mail anschreiben (einzeln oder Sammel) – das Follow-up landet automatisch als Wiedervorlage." },
-  { time: "17:00", t: "Tag im Blick", d: "Dashboard zeigt Anrufe, Termine und den Funnel – fertig, ohne Reporting-Stress." },
 ];
 
 const FAQ: { q: string; a: string }[] = [
@@ -344,19 +336,19 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Bewertung */}
+      {/* Vertrauens-Leiste (ehrliche Fakten, keine erfundene Bewertung) */}
       <section className="border-y border-[var(--color-line)] bg-[var(--color-surface)]/30">
-        <div className="mx-auto flex max-w-6xl items-center justify-center gap-2 px-6 py-6 text-sm">
-          <span className="text-[var(--color-brand)]">★★★★★</span>
-          <span className="font-semibold tnum">5/5</span>
-          <span className="text-[var(--color-muted)]">von Dienstleistern bewertet</span>
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-x-6 gap-y-2 px-6 py-5 text-sm text-[var(--color-muted)]">
+          {["Aus der Vertriebspraxis entwickelt", "DSGVO-konform · EU-Hosting", "Offizielle & öffentliche Datenquellen", "3 Tage gratis testen"].map((t) => (
+            <span key={t} className="inline-flex items-center gap-1.5">
+              <span className="text-[var(--color-brand)]"><Icon name="check" size={15} /></span>{t}
+            </span>
+          ))}
         </div>
       </section>
 
-      <StatStrip />
-
       {/* Ablauf-Diagramm – 5 Schritte */}
-      <section className="mx-auto max-w-6xl px-6 py-16">
+      <section id="ablauf" className="mx-auto max-w-6xl scroll-mt-20 px-6 py-16">
         <h2 className="text-center text-3xl font-semibold tracking-[-0.01em]">In 5 Schritten zum Termin</h2>
         <p className="mx-auto mt-2 max-w-xl text-center text-sm text-[var(--color-muted)]">Ein durchgängiger Ablauf – jeder Schritt greift automatisch in den nächsten.</p>
         <div className="mt-10 flex flex-col items-stretch gap-3 md:flex-row md:items-stretch">
@@ -441,25 +433,6 @@ export default function Landing() {
               </div>
             </Reveal>
           ))}
-        </div>
-      </section>
-
-      {/* Vertriebstag */}
-      <section id="ablauf" className="border-y border-[var(--color-line)] bg-[var(--color-surface)]/40">
-        <div className="mx-auto max-w-6xl scroll-mt-20 px-6 py-16">
-          <h2 className="text-center text-3xl font-semibold tracking-[-0.01em]">So sieht dein Vertriebstag aus</h2>
-          <p className="mt-2 text-center text-sm text-[var(--color-muted)]">Ein Ablauf, ein Tool – von der Liste bis zum Termin.</p>
-          <div className="mt-10 grid gap-5 md:grid-cols-4">
-            {TAG.map((s, i) => (
-              <Reveal key={s.time} delay={i * 80}>
-                <div className="h-full rounded-xl border border-[var(--color-line)] bg-[var(--color-surface)] p-5 transition-all hover:-translate-y-1 hover:border-[var(--color-brand)]/40">
-                  <span className="text-xs font-semibold text-[var(--color-brand)] tnum">{s.time}</span>
-                  <h3 className="mt-2 font-semibold">{s.t}</h3>
-                  <p className="mt-1 text-sm text-[var(--color-muted)]">{s.d}</p>
-                </div>
-              </Reveal>
-            ))}
-          </div>
         </div>
       </section>
 
