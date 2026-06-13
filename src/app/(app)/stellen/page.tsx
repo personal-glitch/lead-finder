@@ -4,6 +4,7 @@ import { PageHeader, refreshStats } from "@/components/shell/AppShell";
 import { Button, Card, EmptyState, Spinner, TextInput, Toast } from "@/components/ui";
 import { Icon } from "@/components/icons";
 import { api } from "@/lib/client";
+import { isStaffingAgency } from "@/lib/leadgen/staffing";
 
 interface Job {
   refnr: string | null;
@@ -62,12 +63,17 @@ export default function StellenPage() {
   const [firms, setFirms] = useState<Firm[]>([]);
   const [busy, setBusy] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  // Wettbewerber (Zeitarbeit/Personaldienstleister) standardmäßig ausblenden – das
+  // sind für Personalvermittler keine Endkunden, sondern Konkurrenz.
+  const [onlyDirect, setOnlyDirect] = useState(true);
+  const [arbeitszeit, setArbeitszeit] = useState<"all" | "vz" | "tz">("all");
 
   const search = async () => {
     setBusy(true);
     try {
       const r = await api<{ jobs: Job[] }>("/api/jobs/search", {
-        json: { was: was.trim() || undefined, wo: wo.trim() || undefined, umkreis, size: 50 },
+        json: { was: was.trim() || undefined, wo: wo.trim() || undefined, umkreis, size: 50,
+          arbeitszeit: arbeitszeit === "all" ? undefined : arbeitszeit },
       });
       setJobs(r.jobs);
       const grouped = groupByFirm(r.jobs);
@@ -86,12 +92,18 @@ export default function StellenPage() {
   // Automatische Kontakt-Anreicherung der obersten Firmen (schonende Nebenläufigkeit).
   const AUTO_ENRICH_N = 10;
   const autoEnrichFirms = async (list: Firm[]) => {
-    const count = Math.min(AUTO_ENRICH_N, list.length);
-    setFirms((p) => p.map((f, k) => (k < count ? { ...f, enriching: true } : f)));
-    let idx = 0;
+    // Nur die obersten Direktarbeitgeber automatisch anreichern (Wettbewerber überspringen).
+    const targets: number[] = [];
+    for (let i = 0; i < list.length && targets.length < AUTO_ENRICH_N; i++) {
+      if (onlyDirect && isStaffingAgency(list[i].company)) continue;
+      targets.push(i);
+    }
+    const targetSet = new Set(targets);
+    setFirms((p) => p.map((f, k) => (targetSet.has(k) ? { ...f, enriching: true } : f)));
+    let t = 0;
     const worker = async () => {
-      while (idx < count) {
-        const i = idx++;
+      while (t < targets.length) {
+        const i = targets[t++];
         const f = list[i];
         try {
           const { enrichment } = await api<{ enrichment: EnrichResp }>("/api/leads/enrich", {
@@ -101,10 +113,17 @@ export default function StellenPage() {
         } catch { update(i, { enriching: false }); }
       }
     };
-    await Promise.all(Array.from({ length: Math.min(3, count) }, worker));
+    await Promise.all(Array.from({ length: Math.min(3, targets.length) }, worker));
   };
 
   const totalOpen = useMemo(() => jobs?.length ?? 0, [jobs]);
+
+  // Sichtbare Firmen (mit Original-Index, damit Anreichern/Speichern korrekt bleibt).
+  const displayFirms = useMemo(
+    () => firms.map((f, idx) => ({ f, idx })).filter(({ f }) => !onlyDirect || !isStaffingAgency(f.company)),
+    [firms, onlyDirect],
+  );
+  const hiddenCompetitors = firms.length - displayFirms.length;
 
   const update = (i: number, patch: Partial<Firm>) => setFirms((p) => p.map((f, k) => (k === i ? { ...f, ...patch } : f)));
 
@@ -176,6 +195,21 @@ export default function StellenPage() {
               {busy ? <Spinner size={14} /> : <><Icon name="search" size={15} /> Suchen</>}
             </Button>
           </div>
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <button
+              onClick={() => setOnlyDirect((v) => !v)}
+              className={`inline-flex items-center gap-1 rounded-md border px-2.5 py-1 text-xs ${onlyDirect ? "border-[var(--color-brand)] text-[var(--color-brand)]" : "border-[var(--color-line)] text-[var(--color-muted)] hover:text-[var(--color-ink)]"}`}
+              title="Zeitarbeitsfirmen & Personaldienstleister ausblenden">
+              <Icon name="filter" size={13} /> Nur Direktarbeitgeber
+            </button>
+            {(["all", "vz", "tz"] as const).map((k) => (
+              <button key={k} onClick={() => setArbeitszeit(k)}
+                className={`rounded-md border px-2.5 py-1 text-xs ${arbeitszeit === k ? "border-[var(--color-brand)] text-[var(--color-brand)]" : "border-[var(--color-line)] text-[var(--color-muted)] hover:text-[var(--color-ink)]"}`}>
+                {k === "all" ? "Alle Zeiten" : k === "vz" ? "Vollzeit" : "Teilzeit"}
+              </button>
+            ))}
+            <span className="text-[11px] text-[var(--color-faint)]">Anstellungsart filtert direkt über die API – nach Änderung neu suchen.</span>
+          </div>
           <p className="mt-2 text-[11px] text-[var(--color-faint)]">
             Firmen mit den am längsten offenen Stellen stehen oben – dort ist der Personalbedarf am dringendsten.
           </p>
@@ -187,15 +221,18 @@ export default function StellenPage() {
           <EmptyState icon="search" title="Bereit zur Suche">
             Beruf und Ort eingeben – KundenRadar zeigt dir Firmen mit offenen Stellen und seit wann sie suchen.
           </EmptyState>
-        ) : firms.length === 0 ? (
-          <EmptyState icon="search" title="Keine Treffer">Andere Suchbegriffe oder größeren Umkreis versuchen.</EmptyState>
+        ) : displayFirms.length === 0 ? (
+          <EmptyState icon="search" title="Keine Direktarbeitgeber">
+            {hiddenCompetitors > 0 ? `Alle ${hiddenCompetitors} Treffer sind Personaldienstleister/Zeitarbeit. Filter „Nur Direktarbeitgeber" deaktivieren, um sie zu sehen.` : "Andere Suchbegriffe oder größeren Umkreis versuchen."}
+          </EmptyState>
         ) : (
           <>
             <div className="text-sm text-[var(--color-muted)]">
-              <span className="font-medium text-[var(--color-ink)] tnum">{firms.length}</span> Firmen · {totalOpen} offene Stellen
+              <span className="font-medium text-[var(--color-ink)] tnum">{displayFirms.length}</span> Firmen · {totalOpen} offene Stellen
+              {onlyDirect && hiddenCompetitors > 0 && <span className="text-[var(--color-faint)]"> · {hiddenCompetitors} Wettbewerber ausgeblendet</span>}
             </div>
             <Card className="overflow-hidden p-0">
-              {firms.map((f, i) => (
+              {displayFirms.map(({ f, idx: i }) => (
                 <div key={f.company + i} className={`px-4 py-3 ${i > 0 ? "border-t border-[var(--color-line)]" : ""}`}>
                   <div className="flex items-start gap-3">
                     <div className="min-w-0 flex-1">

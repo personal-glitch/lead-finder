@@ -17,6 +17,11 @@ interface AuditResult {
   https?: boolean; mobileFriendly?: boolean; loadMs?: number; grade?: string; estimated?: boolean; opportunity?: boolean;
 }
 const gradeBg = (g?: string) => (g === "A" || g === "B" ? "var(--color-success)" : g === "C" ? "var(--color-warn)" : "var(--color-danger)");
+const GRADE_RANK: Record<string, number> = { A: 5, B: 4, C: 3, D: 2, F: 1 };
+// Kleiner Rang = größere Verkaufschance. Nicht erreichbar = 0, ohne Audit = ans Ende.
+const auditRank = (a?: AuditResult) => (!a ? 99 : !a.reachable ? 0 : GRADE_RANK[a.grade ?? ""] ?? 3);
+const isWeakAudit = (a?: AuditResult) =>
+  !!a && (!a.reachable || a.opportunity === true || a.https === false || (a.grade ? ["D", "F"].includes(a.grade) : false));
 
 // Antwort-Form der Anreicherung (inkl. v2-Listen).
 interface EnrichResp {
@@ -42,6 +47,8 @@ export default function SuchePage() {
   const [enrichProgress, setEnrichProgress] = useState<{ done: number; total: number } | null>(null);
   const [onlyWithContact, setOnlyWithContact] = useState(false);
   const [onlyNoWebsite, setOnlyNoWebsite] = useState(false);
+  const [onlyWeak, setOnlyWeak] = useState(false);
+  const [worstFirst, setWorstFirst] = useState(false);
   const [autoEnrich, setAutoEnrich] = useState(true);
   const [toast, setToast] = useState<string | null>(null);
   const [detail, setDetail] = useState<LeadInput | null>(null);
@@ -59,6 +66,28 @@ export default function SuchePage() {
     api<{ leads: LeadInput[] }>("/api/leads").then((r) => setKnownKeys(new Set(r.leads.map(dedupeKey)))).catch(() => {});
     try { const v = localStorage.getItem("kr-auto-enrich"); if (v !== null) setAutoEnrich(v === "1"); } catch {}
   }, []);
+
+  // Webdesign-Persona: Websites der Treffer nach jeder Suche automatisch bewerten,
+  // damit Note & Ladezeit ohne Klick erscheinen (oberste ~14, schonend parallel).
+  useEffect(() => {
+    if (!webdesign || !result) return;
+    void (async () => {
+      const targets = result.leads.filter((l) => l.website && !audits[dedupeKey(l)]).slice(0, 14);
+      if (targets.length === 0) return;
+      setAuditingAll(true);
+      let idx = 0;
+      const worker = async () => {
+        while (idx < targets.length) {
+          const l = targets[idx++]; const key = dedupeKey(l);
+          try { const r = await api<AuditResult>("/api/website-audit", { json: { url: l.website } }); setAudits((p) => ({ ...p, [key]: r })); }
+          catch { /* einzelne überspringen */ }
+        }
+      };
+      await Promise.all(Array.from({ length: Math.min(3, targets.length) }, worker));
+      setAuditingAll(false);
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [result, webdesign]);
 
   const toggleAuto = () => setAutoEnrich((v) => {
     const nv = !v;
@@ -210,8 +239,18 @@ export default function SuchePage() {
     let r = result.leads;
     if (onlyWithContact) r = r.filter(hasContact);
     if (onlyNoWebsite) r = r.filter((l) => !l.website);
+    // Webdesign: nur schwache Seiten (keine Website ODER schlechte Bewertung).
+    if (webdesign && onlyWeak) r = r.filter((l) => !l.website || isWeakAudit(audits[dedupeKey(l)]));
+    // Webdesign: schlechteste/fehlende Seiten zuerst = größte Verkaufschancen oben.
+    if (webdesign && worstFirst) {
+      r = [...r].sort((a, b) => {
+        const ra = a.website ? auditRank(audits[dedupeKey(a)]) : -1;
+        const rb = b.website ? auditRank(audits[dedupeKey(b)]) : -1;
+        return ra - rb;
+      });
+    }
     return r;
-  }, [result, onlyWithContact, onlyNoWebsite]);
+  }, [result, onlyWithContact, onlyNoWebsite, webdesign, onlyWeak, worstFirst, audits]);
   const hiddenCount = result ? result.leads.length - displayLeads.length : 0;
   const selectableCount = useMemo(() => displayLeads.filter((l) => !taken.has(dedupeKey(l))).length, [displayLeads, taken]);
   const canSearch = plz.trim().length > 0 && (branchen.size > 0 || keywordList.length > 0) && !searching;
@@ -270,8 +309,24 @@ export default function SuchePage() {
                   </button>
                 )}
                 {webdesign && (
+                  <button
+                    className={cx("inline-flex items-center gap-1 rounded-md border px-2.5 py-1 text-xs",
+                      onlyWeak ? "border-[var(--color-brand)] text-[var(--color-brand)]" : "border-[var(--color-line)] text-[var(--color-muted)] hover:text-[var(--color-ink)]")}
+                    onClick={() => setOnlyWeak((v) => !v)} title="Nur Firmen mit fehlender oder schwacher Website">
+                    💡 Nur schwache Seiten
+                  </button>
+                )}
+                {webdesign && (
+                  <button
+                    className={cx("inline-flex items-center gap-1 rounded-md border px-2.5 py-1 text-xs",
+                      worstFirst ? "border-[var(--color-brand)] text-[var(--color-brand)]" : "border-[var(--color-line)] text-[var(--color-muted)] hover:text-[var(--color-ink)]")}
+                    onClick={() => setWorstFirst((v) => !v)} title="Schlechteste/fehlende Websites zuerst">
+                    ↓ Schlechteste zuerst
+                  </button>
+                )}
+                {webdesign && (
                   <Button variant="ghost" size="sm" onClick={auditAll} disabled={auditingAll}>
-                    {auditingAll ? <Spinner size={13} /> : <Icon name="globe" size={14} />} Websites bewerten
+                    {auditingAll ? <Spinner size={13} /> : <Icon name="globe" size={14} />} Alle bewerten
                   </Button>
                 )}
                 <button

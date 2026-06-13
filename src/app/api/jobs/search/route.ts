@@ -14,6 +14,8 @@ const Body = z.object({
   arbeitgeber: z.string().max(160).optional(),
   umkreis: z.number().int().min(0).max(200).optional(),
   size: z.number().int().min(1).max(50).optional(),
+  // Arbeitszeit-Filter der offiziellen API: vz=Vollzeit, tz=Teilzeit.
+  arbeitszeit: z.enum(["vz", "tz"]).optional(),
 });
 
 const BASE = "https://rest.arbeitsagentur.de/jobboerse/jobsuche-service/pc/v4/jobs";
@@ -29,6 +31,7 @@ export async function POST(req: Request) {
     if (b.was) url.searchParams.set("was", b.was);
     if (b.wo) url.searchParams.set("wo", b.wo);
     if (b.arbeitgeber) url.searchParams.set("arbeitgeber", b.arbeitgeber);
+    if (b.arbeitszeit) url.searchParams.set("arbeitszeit", b.arbeitszeit);
     if (b.umkreis != null) url.searchParams.set("umkreis", String(b.umkreis));
     url.searchParams.set("size", String(b.size ?? 25));
     url.searchParams.set("page", "1");
