@@ -53,12 +53,15 @@ export async function POST(req: Request) {
       const posted = j.aktuelleVeroeffentlichungsdatum ?? j.eintrittsdatum ?? null;
       const daysOpen = posted ? Math.max(0, Math.round((today - Date.parse(posted)) / 86_400_000)) : null;
       const ort = j.arbeitsort ?? {};
+      const strasse = [ort.strasse, ort.strasseHausnummer].filter(Boolean)[0] ?? null;
       return {
         refnr: j.refnr ?? null,
         title: j.titel ?? j.beruf ?? "Stelle",
         company: j.arbeitgeber ?? null,
+        strasse,
         plz: ort.plz ?? null,
         ort: ort.ort ?? null,
+        region: ort.region ?? null,
         postedDate: posted,
         daysOpen,
       };

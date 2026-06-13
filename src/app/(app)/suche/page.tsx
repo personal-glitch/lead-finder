@@ -1,6 +1,5 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 import type { EnrichmentExtra, LeadInput, PipelineStage } from "@/lib/types";
 import { api } from "@/lib/client";
 import { dedupeKey, hostFromUrl } from "@/lib/dedupe";
@@ -11,6 +10,13 @@ import { TargetPicker } from "@/components/agents/TargetPicker";
 import { Icon } from "@/components/icons";
 import { Badge, Button, Card, Drawer, EmptyState, Field, Spinner, TextInput, Toast, cx } from "@/components/ui";
 import { LeadContactWays } from "@/components/LeadContactWays";
+import { WebsiteAudit } from "@/components/WebsiteAudit";
+
+interface AuditResult {
+  reachable: boolean; reason?: string; performance?: number | null; seo?: number | null;
+  https?: boolean; mobileFriendly?: boolean; loadMs?: number; grade?: string; estimated?: boolean; opportunity?: boolean;
+}
+const gradeBg = (g?: string) => (g === "A" || g === "B" ? "var(--color-success)" : g === "C" ? "var(--color-warn)" : "var(--color-danger)");
 
 // Antwort-Form der Anreicherung (inkl. v2-Listen).
 interface EnrichResp {
@@ -42,11 +48,9 @@ export default function SuchePage() {
   const [knownKeys, setKnownKeys] = useState<Set<string>>(new Set());
   const { persona } = usePersona();
   const webdesign = persona?.features.websiteAudit === true;
-  const router = useRouter();
-  // Personalvermittler suchen primär offene Stellen → direkt dorthin leiten.
-  useEffect(() => {
-    if (persona?.features.jobs) router.replace("/stellen");
-  }, [persona, router]);
+  const [audits, setAudits] = useState<Record<string, AuditResult>>({});
+  const [auditingKey, setAuditingKey] = useState<string | null>(null);
+  const [auditingAll, setAuditingAll] = useState(false);
   const stopRef = useRef(false);
 
   useEffect(() => {
@@ -121,6 +125,34 @@ export default function SuchePage() {
     finally { setEnrichingKey(null); }
   };
 
+  // Website eines Treffers bewerten (für Webdesign-Persona). Note erscheint inline.
+  const auditOne = async (l: LeadInput) => {
+    if (!l.website) return;
+    const key = dedupeKey(l); setAuditingKey(key);
+    try {
+      const r = await api<AuditResult>("/api/website-audit", { json: { url: l.website } });
+      setAudits((p) => ({ ...p, [key]: r }));
+    } catch (e) { setToast(e instanceof Error ? e.message : "Website-Check fehlgeschlagen."); }
+    finally { setAuditingKey(null); }
+  };
+
+  // Alle sichtbaren Treffer mit Website bewerten (schonende Nebenläufigkeit).
+  const auditAll = async () => {
+    const targets = displayLeads.filter((l) => l.website && !audits[dedupeKey(l)]);
+    if (targets.length === 0) { setToast("Nichts zu bewerten – Treffer haben keine Website oder sind schon geprüft."); return; }
+    setAuditingAll(true);
+    let idx = 0;
+    const worker = async () => {
+      while (idx < targets.length) {
+        const l = targets[idx++]; const key = dedupeKey(l);
+        try { const r = await api<AuditResult>("/api/website-audit", { json: { url: l.website } }); setAudits((p) => ({ ...p, [key]: r })); }
+        catch { /* einzelne überspringen */ }
+      }
+    };
+    await Promise.all(Array.from({ length: Math.min(3, targets.length) }, worker));
+    setAuditingAll(false);
+  };
+
   // Treffer anreichern (Impressum-/Kontakt-Scrape, serverseitig & kostenlos).
   // Parallelisiert (schonende Nebenläufigkeit), abbrechbar. Schon angereicherte
   // werden übersprungen.
@@ -186,7 +218,11 @@ export default function SuchePage() {
 
   return (
     <>
-      <PageHeader title={persona?.searchTitle ?? "Suche"} subtitle={persona?.searchHint ?? "Direkt passende Firmen finden – ohne gespeicherten Agenten"} />
+      <PageHeader
+        title={persona?.features.jobs ? "Firmen finden" : (persona?.searchTitle ?? "Suche")}
+        subtitle={persona?.features.jobs
+          ? "Firmen per Branche & Umkreis. Tipp: Firmen mit offenen Stellen findest du unter „Stellen"."
+          : (persona?.searchHint ?? "Direkt passende Firmen finden – ohne gespeicherten Agenten")} />
       <div className="space-y-5 p-4 sm:p-7">
         <Card className="space-y-4 p-5">
           <div className="grid grid-cols-[1fr_auto] gap-4">
@@ -232,6 +268,11 @@ export default function SuchePage() {
                     onClick={() => setOnlyNoWebsite((v) => !v)}>
                     ★ Nur ohne Website
                   </button>
+                )}
+                {webdesign && (
+                  <Button variant="ghost" size="sm" onClick={auditAll} disabled={auditingAll}>
+                    {auditingAll ? <Spinner size={13} /> : <Icon name="globe" size={14} />} Websites bewerten
+                  </Button>
                 )}
                 <button
                   className={cx("inline-flex items-center gap-1 rounded-md border px-2.5 py-1 text-xs",
@@ -282,6 +323,16 @@ export default function SuchePage() {
                           {isTaken && <Badge tone="green">übernommen</Badge>}
                           {isKnown && <span className="rounded-full bg-[var(--color-warn-tint)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--color-warn)]">schon gespeichert</span>}
                           {webdesign && !l.website && <span className="rounded-full bg-[var(--color-brand-tint)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--color-brand-ink)]">★ keine Website</span>}
+                          {webdesign && l.website && audits[key] && audits[key].reachable && (
+                            <span className="inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-semibold text-white" style={{ background: gradeBg(audits[key].grade) }}>
+                              Note {audits[key].grade}
+                              {audits[key].performance != null ? ` · ${audits[key].performance}` : audits[key].loadMs != null ? ` · ${(audits[key].loadMs! / 1000).toFixed(1)}s` : ""}
+                              {!audits[key].https && " · kein HTTPS"}
+                            </span>
+                          )}
+                          {webdesign && l.website && audits[key] && !audits[key].reachable && (
+                            <span className="rounded-full bg-[var(--color-danger-tint)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--color-danger)]">Seite nicht erreichbar</span>
+                          )}
                         </div>
                         <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-[var(--color-muted)]">
                           {(l.strasse || l.ort) && <span className="truncate">{[l.strasse, l.ort].filter(Boolean).join(", ")}</span>}
@@ -295,6 +346,11 @@ export default function SuchePage() {
                           )}
                         </div>
                       </div>
+                      {webdesign && l.website && !audits[key] && (
+                        <Button variant="ghost" size="sm" disabled={auditingKey === key} onClick={() => auditOne(l)} title="Website-Note & Ladezeit prüfen">
+                          {auditingKey === key ? <Spinner size={13} /> : <><Icon name="globe" size={14} /> Speedtest</>}
+                        </Button>
+                      )}
                       {!l.enrichmentSource && l.name && (
                         <Button variant="ghost" size="sm" disabled={enrichingKey === key} onClick={() => enrich(l)}
                           title={l.website ? "Impressum auslesen" : "Website per Web-Suche finden und auslesen"}>
@@ -334,6 +390,8 @@ export default function SuchePage() {
               {detail.ansprechpartner && <span className="inline-flex items-center gap-2"><Icon name="user" size={14} /> {detail.ansprechpartner}</span>}
               {detail.website && <a href={detail.website} target="_blank" rel="noreferrer noopener" className="inline-flex items-center gap-2 text-[var(--color-brand)] hover:underline"><Icon name="globe" size={14} /> {hostFromUrl(detail.website) ?? detail.website}</a>}
             </div>
+
+            {webdesign && <WebsiteAudit url={detail.website} />}
 
             <LeadContactWays extra={detail.enrichmentExtra} />
 
