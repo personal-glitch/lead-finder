@@ -35,6 +35,12 @@ export function RechnerLandingShell({ modus, eyebrow, h1, intro, content, faqs, 
             </span>
             <span className="text-sm font-semibold">KundenRadar</span>
           </Link>
+          <nav className="hidden items-center gap-6 text-sm text-[var(--color-ink-2)] md:flex">
+            <Link href="/" className="hover:text-[var(--color-ink)]">Startseite</Link>
+            <Link href="/rechner" className="hover:text-[var(--color-ink)]">Alle Rechner</Link>
+            <Link href="/#preise" className="hover:text-[var(--color-ink)]">Preise</Link>
+            <Link href="/blog" className="hover:text-[var(--color-ink)]">Blog</Link>
+          </nav>
           <div className="flex items-center gap-2">
             <Link href="/login" className="rounded-lg border border-[var(--color-line-strong)] px-3 py-2 text-sm font-medium text-[var(--color-ink-2)] hover:bg-[var(--color-subtle)] hover:text-[var(--color-ink)]">Anmelden</Link>
             <Link href="/registrieren" className="rounded-lg bg-[var(--color-brand)] px-3.5 py-2 text-sm font-semibold text-[var(--color-on-brand)] hover:bg-[var(--color-brand-ink)]">Starten</Link>

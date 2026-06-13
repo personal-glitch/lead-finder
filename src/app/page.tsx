@@ -157,7 +157,10 @@ const FAQ: { q: string; a: string }[] = [
   { q: "Ist das DSGVO-konform?", a: "Ja. Es werden ausschließlich öffentliche, geschäftliche Quellen genutzt, die Herkunft jedes Kontakts wird gespeichert, ein Opt-out/Abmeldelink ist in jeder E-Mail Pflicht, und Auskunfts- bzw. Löschanfragen lassen sich jederzeit beantworten." },
   { q: "Brauche ich technisches Wissen?", a: "Nein. Zielbranche und Umkreis wählen, auf Suchen klicken – fertig. Anbieter-Vorlagen erleichtern den Start zusätzlich." },
   { q: "Bekomme ich echte Telefonnummern?", a: "Ja – aus geprüften, öffentlich zugänglichen Quellen. Wir priorisieren Datenqualität (echte, anrufbare Nummern + Ansprechpartner) statt möglichst vieler Treffer." },
-  { q: "Wie laufen Testphase und Kündigung?", a: "Du testest KundenRadar 3 Tage kostenlos (dabei wird eine Zahlungsmethode hinterlegt). Kündigst du nicht vor Ablauf der 3 Tage, geht es automatisch in das Monatsabo zu 49 € über – jederzeit monatlich mit einem Klick kündbar. Eine dauerhaft kostenlose Version gibt es nicht." },
+  { q: "Wie laufen Testphase und Kündigung?", a: "Du testest KundenRadar 3 Tage mit vollem Zugriff. Für den Start ist eine Zahlungsmethode nötig, belastet wird aber erst nach den 3 Tagen. Kündigst du nicht vor Ablauf der 3 Tage, geht der Test automatisch in das Monatsabo zu 49 € über – jederzeit monatlich mit einem Klick kündbar. Eine dauerhaft kostenlose Version gibt es nicht." },
+  { q: "Muss ich für den Gratis-Test eine Zahlungsmethode hinterlegen?", a: "Ja. Beim Start des 3-tägigen Tests hinterlegst du eine Zahlungsmethode, es wird in den 3 Tagen aber nichts abgebucht. Erst danach – und nur, wenn du nicht vorher kündigst – beginnt das Abo zu 49 €/Monat. Vor der Anmeldung siehst du diesen Hinweis klar, und kündigen kannst du jederzeit mit einem Klick." },
+  { q: "Funktioniert KundenRadar auch für Webdesign/SEO oder Personalvermittlung?", a: "Ja. Beim ersten Login wählst du deinen Anwendungsfall, und das Tool passt sich an: Webdesign/SEO bewertet automatisch die Website jeder gefundenen Firma (schwache oder fehlende Seite = Verkaufschance); Personalvermittlung/Zeitarbeit findet Firmen mit offenen Stellen über die offizielle Jobsuche-API der Bundesagentur für Arbeit. Den Anwendungsfall kannst du in den Einstellungen jederzeit wechseln." },
+  { q: "Woher kommen die offenen Stellen?", a: "Ausschließlich aus der offiziellen Jobsuche-API der Bundesagentur für Arbeit. Es wird nichts von Google oder fremden Webseiten ausgelesen (kein Scraping). Du siehst, welche Firma sucht und seit wann – je länger offen, desto dringender der Bedarf." },
 ];
 
 function Check() {
@@ -556,10 +559,13 @@ export default function Landing() {
           <span className="eyebrow text-[var(--color-brand)]">Jetzt starten</span>
           <div className="mt-1 text-6xl font-bold tracking-[-0.03em] text-[var(--color-brand)] tnum">0,00 €</div>
           <div className="mt-1 text-2xl font-bold tracking-[-0.01em]">3 Tage Test</div>
-          <p className="mt-3 text-sm text-[var(--color-muted)]">Voller Zugriff, keine Vorab-Zahlung. Danach 49 €/Monat – jederzeit monatlich kündbar.</p>
+          <p className="mt-3 text-sm text-[var(--color-muted)]">Voller Zugriff für 3 Tage. Eine Zahlungsmethode ist nötig – belastet wird erst danach.</p>
           <Link href={signupHref} className="mt-5 inline-flex items-center gap-2 rounded-lg bg-[var(--color-brand)] px-6 py-3 text-sm font-semibold text-[var(--color-on-brand)] transition-transform hover:-translate-y-0.5 hover:bg-[var(--color-brand-ink)]">
             Kostenlos starten <Icon name="chevronRight" size={16} />
           </Link>
+          <p className="mx-auto mt-3 max-w-sm text-[11px] leading-relaxed text-[var(--color-faint)]">
+            Hinweis: Nach den 3 Tagen geht der Test automatisch in das Abo zu 49 €/Monat über, wenn du nicht vorher kündigst. Jederzeit mit einem Klick monatlich kündbar.
+          </p>
         </Reveal>
 
         <div className={`mt-10 grid gap-5 ${PLANS.length === 1 ? "max-w-md mx-auto" : "lg:grid-cols-3"}`}>
