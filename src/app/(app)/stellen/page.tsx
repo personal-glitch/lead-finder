@@ -1,5 +1,5 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { PageHeader, refreshStats } from "@/components/shell/AppShell";
 import { Button, Card, EmptyState, Spinner, TextInput, Toast } from "@/components/ui";
 import { Icon } from "@/components/icons";
@@ -22,6 +22,8 @@ interface EnrichResp {
   phone?: string | null; phoneE164?: string | null; email?: string | null;
   ansprechpartner?: string | null; website?: string | null;
 }
+
+interface JobAlert { id: string; was: string | null; wo: string | null; umkreis: number; onlyDirect: boolean; }
 
 // Eine Firma mit allen ihren offenen Stellen (gruppiert).
 interface Firm {
@@ -67,6 +69,28 @@ export default function StellenPage() {
   // sind für Personalvermittler keine Endkunden, sondern Konkurrenz.
   const [onlyDirect, setOnlyDirect] = useState(true);
   const [arbeitszeit, setArbeitszeit] = useState<"all" | "vz" | "tz">("all");
+  const [alerts, setAlerts] = useState<JobAlert[]>([]);
+  const [savingAlert, setSavingAlert] = useState(false);
+
+  useEffect(() => { api<{ alerts: JobAlert[] }>("/api/jobs/alerts").then((r) => setAlerts(r.alerts)).catch(() => {}); }, []);
+
+  const saveAlert = async () => {
+    if (!was.trim() && !wo.trim()) { setToast("Erst Beruf/Stichwort oder Ort eingeben."); return; }
+    setSavingAlert(true);
+    try {
+      const { alert } = await api<{ alert: JobAlert }>("/api/jobs/alerts", {
+        json: { was: was.trim() || null, wo: wo.trim() || null, umkreis, onlyDirect },
+      });
+      setAlerts((p) => [alert, ...p]);
+      setToast("Täglicher Alarm gespeichert – du bekommst neue Firmen per E-Mail.");
+    } catch (e) { setToast(e instanceof Error ? e.message : "Alarm speichern fehlgeschlagen."); }
+    finally { setSavingAlert(false); }
+  };
+
+  const removeAlert = async (id: string) => {
+    setAlerts((p) => p.filter((a) => a.id !== id));
+    try { await api(`/api/jobs/alerts?id=${id}`, { method: "DELETE" }); } catch {}
+  };
 
   const search = async () => {
     setBusy(true);
@@ -209,6 +233,21 @@ export default function StellenPage() {
               </button>
             ))}
             <span className="text-[11px] text-[var(--color-faint)]">Anstellungsart filtert direkt über die API – nach Änderung neu suchen.</span>
+          </div>
+          <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-[var(--color-line)] pt-3">
+            <Button variant="ghost" size="sm" onClick={saveAlert} disabled={savingAlert} title="Täglich per E-Mail über neue Firmen mit offenen Stellen für diese Suche informiert werden">
+              {savingAlert ? <Spinner size={13} /> : <><Icon name="mail" size={14} /> Täglich benachrichtigen</>}
+            </Button>
+            {alerts.length > 0 && (
+              <div className="flex flex-wrap items-center gap-1.5">
+                {alerts.map((a) => (
+                  <span key={a.id} className="inline-flex items-center gap-1 rounded-full bg-[var(--color-subtle)] px-2.5 py-1 text-[11px] text-[var(--color-muted)]">
+                    🔔 {[a.was, a.wo].filter(Boolean).join(" · ") || "Alle Stellen"}
+                    <button onClick={() => removeAlert(a.id)} className="ml-0.5 text-[var(--color-faint)] hover:text-[var(--color-danger)]" title="Alarm löschen"><Icon name="x" size={11} /></button>
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
           <p className="mt-2 text-[11px] text-[var(--color-faint)]">
             Firmen mit den am längsten offenen Stellen stehen oben – dort ist der Personalbedarf am dringendsten.
