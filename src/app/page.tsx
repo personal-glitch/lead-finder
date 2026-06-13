@@ -29,6 +29,8 @@ export const metadata: Metadata = {
   keywords: [
     "kostenloser Rechner", "kostenloser Kalkulator", "Kalkulator Gebäudereinigung", "Reinigungskosten-Rechner",
     "Stundensatz Handwerk berechnen", "Stundenverrechnungssatz Handwerk", "Stundensatz Agentur",
+    "Webdesign Preis berechnen", "Was kostet eine Website", "SEO Kosten", "Website-Check",
+    "Personalvermittlung Provision", "Zeitarbeit Verrechnungssatz", "Firmen mit offenen Stellen finden",
     "Angebotspreis berechnen", "Neukunden für Dienstleister", "B2B-Leads finden", "KundenRadar",
   ],
   alternates: { canonical: "/" },
@@ -46,11 +48,11 @@ const ANBIETER: { label: string; icon: IconName }[] = [
   { label: "Handwerk & Bau", icon: "hardhat" },
   { label: "Garten & Hausmeister", icon: "wrench" },
   { label: "Agenturen & Marketing", icon: "bolt" },
+  { label: "Webdesign & SEO", icon: "globe" },
   { label: "IT & Software", icon: "bolt" },
   { label: "Unternehmensberatung", icon: "building" },
-  { label: "Personaldienstleister", icon: "user" },
+  { label: "Personalvermittlung & Zeitarbeit", icon: "user" },
   { label: "Sicherheitsdienste", icon: "key" },
-  { label: "Foto, Video & Web", icon: "agents" },
 ];
 
 // Funktions-Showcase entlang des Vertriebs-Ablaufs (mit echten Mini-Mockups)
@@ -476,6 +478,32 @@ export default function Landing() {
                 </Reveal>
               ))}
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Drei Wege, ein Tool – Persona-Modi */}
+      <section className="border-b border-[var(--color-line)] bg-[var(--color-surface)]/40">
+        <div className="mx-auto max-w-6xl px-6 py-16">
+          <h2 className="text-center text-3xl font-semibold tracking-[-0.01em]">Ein Tool, das sich dir anpasst</h2>
+          <p className="mx-auto mt-2 max-w-xl text-center text-sm text-[var(--color-muted)]">
+            Beim ersten Login sagst du, was du machst – und KundenRadar passt Suche, Signale und Module an dein Geschäft an.
+          </p>
+          <div className="mt-8 grid gap-4 md:grid-cols-3">
+            {[
+              { icon: "wrench" as IconName, tag: "Dienstleister & Handwerk", title: "Anrufbare Firmen finden", text: "Branche & Umkreis wählen – echte Firmen mit Telefon, Adresse und Ansprechpartner, direkt in die Pipeline." },
+              { icon: "globe" as IconName, tag: "Webdesign & SEO", title: "Schwache Websites aufspüren", text: "Jede gefundene Firma wird automatisch bewertet: langsame, unsichere oder fehlende Seiten sind dein Verkaufsaufhänger." },
+              { icon: "user" as IconName, tag: "Personalvermittlung & Zeitarbeit", title: "Firmen mit offenen Stellen", text: "Über die offizielle Jobsuche-API der Bundesagentur: wer sucht, seit wann – inkl. Kontakt. Legal, ohne Scraping." },
+            ].map((m, i) => (
+              <Reveal key={m.tag} delay={i * 70}>
+                <div className="flex h-full flex-col rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] p-6">
+                  <span className="grid h-11 w-11 place-items-center rounded-xl bg-[var(--color-brand-tint)] text-[var(--color-brand)]"><Icon name={m.icon} size={20} /></span>
+                  <span className="mt-4 eyebrow">{m.tag}</span>
+                  <h3 className="mt-1 text-lg font-semibold tracking-[-0.01em]">{m.title}</h3>
+                  <p className="mt-1.5 text-sm text-[var(--color-muted)]">{m.text}</p>
+                </div>
+              </Reveal>
+            ))}
           </div>
         </div>
       </section>

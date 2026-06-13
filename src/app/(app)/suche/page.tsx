@@ -221,7 +221,7 @@ export default function SuchePage() {
       <PageHeader
         title={persona?.features.jobs ? "Firmen finden" : (persona?.searchTitle ?? "Suche")}
         subtitle={persona?.features.jobs
-          ? "Firmen per Branche & Umkreis. Tipp: Firmen mit offenen Stellen findest du unter „Stellen"."
+          ? "Firmen per Branche & Umkreis. Tipp: Firmen mit offenen Stellen findest du unter 'Stellen'."
           : (persona?.searchHint ?? "Direkt passende Firmen finden – ohne gespeicherten Agenten")} />
       <div className="space-y-5 p-4 sm:p-7">
         <Card className="space-y-4 p-5">

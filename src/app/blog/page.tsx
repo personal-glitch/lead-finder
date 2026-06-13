@@ -5,7 +5,7 @@ import { MarketingShell } from "@/components/landing/MarketingShell";
 export const metadata: Metadata = {
   title: "Blog: Neukunden, Akquise & Vertrieb für Dienstleister – KundenRadar",
   description:
-    "Praxisnahe Ratgeber zu Neukundengewinnung, Kaltakquise (§7 UWG), Angeboten und Vertrieb für Reinigungsfirmen, Handwerk und andere Dienstleister.",
+    "Praxisnahe Ratgeber zu Neukundengewinnung, Kaltakquise (§7 UWG), Angeboten und Vertrieb – für Reinigungsfirmen, Handwerk, Webdesign/SEO, Personalvermittlung, Zeitarbeit und andere Dienstleister.",
   alternates: { canonical: "/blog" },
 };
 
@@ -23,6 +23,27 @@ const POSTS = [
     excerpt:
       "Von Hausverwaltungen über Empfehlungen bis zur gezielten Umkreis-Suche: konkrete Wege, wie Gebäudereiniger planbar an neue Aufträge kommen.",
     date: "2026-06-11",
+  },
+  {
+    href: "/blog/webdesign-kunden-gewinnen",
+    title: "Webdesign-Kunden gewinnen: 6 Wege zu Firmen mit schlechter Website",
+    excerpt:
+      "Veraltete oder fehlende Websites als Verkaufschance erkennen, objektiv bewerten und gezielt ansprechen – für Webdesigner und SEO-Dienstleister.",
+    date: "2026-06-13",
+  },
+  {
+    href: "/blog/offene-stellen-vertriebssignal",
+    title: "Offene Stellen als Vertriebssignal – legal Firmen mit Personalbedarf finden",
+    excerpt:
+      "Wie Personalvermittler und Zeitarbeitsfirmen über die offizielle Jobsuche-API der Bundesagentur Firmen mit Bedarf finden – ohne Scraping, datenschutzkonform.",
+    date: "2026-06-13",
+  },
+  {
+    href: "/blog/personalvermittlung-kunden-gewinnen",
+    title: "Kunden gewinnen als Personalvermittler & Zeitarbeitsfirma – 6 praxiserprobte Wege",
+    excerpt:
+      "Offene Stellen als Signal nutzen, die richtigen Ansprechpartner finden und mit klarer Kalkulation überzeugen – planbare Akquise im Personalgeschäft.",
+    date: "2026-06-13",
   },
 ];
 
