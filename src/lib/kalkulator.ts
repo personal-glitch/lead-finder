@@ -18,9 +18,9 @@ const clampNum = (n: unknown, fallback = 0) => {
 // Leistungs-Katalog: jede Position hat eine Flächenleistung (m²/h bei mittlerer
 // Verschmutzung) und eine marktübliche €/m²-Spanne je Reinigung.
 export const LEISTUNGEN = [
-  { key: "unterhalt_buero", label: "Unterhaltsreinigung · Büro", leistung: 200, marktMin: 0.2, marktMax: 0.45 },
-  { key: "unterhalt_praxis", label: "Unterhaltsreinigung · Praxis/Kanzlei", leistung: 170, marktMin: 0.25, marktMax: 0.55 },
-  { key: "unterhalt_schule", label: "Unterhaltsreinigung · Schule/Kita", leistung: 180, marktMin: 0.2, marktMax: 0.5 },
+  { key: "unterhalt_buero", label: "Unterhaltsreinigung · Büro", leistung: 170, marktMin: 0.2, marktMax: 0.45 },
+  { key: "unterhalt_praxis", label: "Unterhaltsreinigung · Praxis/Kanzlei", leistung: 150, marktMin: 0.25, marktMax: 0.55 },
+  { key: "unterhalt_schule", label: "Unterhaltsreinigung · Schule/Kita", leistung: 165, marktMin: 0.2, marktMax: 0.5 },
   { key: "treppenhaus", label: "Treppenhausreinigung", leistung: 220, marktMin: 0.15, marktMax: 0.4 },
   { key: "sanitaer", label: "Sanitärreinigung", leistung: 90, marktMin: 0.4, marktMax: 1.0 },
   { key: "fenster", label: "Fenster- & Rahmenreinigung", leistung: 70, marktMin: 0.8, marktMax: 2.5 },
@@ -43,8 +43,8 @@ export const VERSCHMUTZUNG = [
 ] as const;
 
 export const LOHNBASIS = [
-  { key: "tarif1", label: "Tariflohn 2026 · 15,00 €", lohn: 15.0 },
-  { key: "tarif6", label: "Glas/Fassade · 18,40 €", lohn: 18.4 },
+  { key: "tarif1", label: "Mindestlohn 2026 · Innen · 15,00 €", lohn: 15.0 },
+  { key: "tarif6", label: "Mindestlohn 2026 · Glas/Fassade · 18,40 €", lohn: 18.4 },
   { key: "eigen", label: "Eigener Satz", lohn: null },
 ] as const;
 
