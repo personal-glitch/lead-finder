@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import type { ReactNode } from "react";
+import { Fragment, type ReactNode } from "react";
 import Link from "next/link";
 import { Icon, type IconName } from "@/components/icons";
 import { PLANS } from "@/lib/plans";
@@ -151,6 +151,15 @@ const NEU = [
   "Pipeline, Aufgaben & Historie an einem Ort",
   "Automatische Wiedervorlagen & Follow-ups – nichts geht verloren",
   "Finden, anrufen & mailen in einem Tool",
+];
+
+// Ablauf in 5 Schritten (Diagramm)
+const STEPS: { icon: IconName; t: string; d: string }[] = [
+  { icon: "search", t: "Finden", d: "Branche & Umkreis – echte Firmen" },
+  { icon: "bolt", t: "Kontaktdaten", d: "Telefon & Ansprechpartner automatisch" },
+  { icon: "pipeline", t: "Pipeline", d: "Per Drag & Drop durch die Stages" },
+  { icon: "phone", t: "Anrufen", d: "Klick-to-Call, Ergebnis loggt sich" },
+  { icon: "check", t: "Abschluss", d: "Wiedervorlage & Nachfass automatisch" },
 ];
 
 // Vertriebstag
@@ -346,6 +355,31 @@ export default function Landing() {
 
       <StatStrip />
 
+      {/* Ablauf-Diagramm – 5 Schritte */}
+      <section className="mx-auto max-w-6xl px-6 py-16">
+        <h2 className="text-center text-3xl font-semibold tracking-[-0.01em]">In 5 Schritten zum Termin</h2>
+        <p className="mx-auto mt-2 max-w-xl text-center text-sm text-[var(--color-muted)]">Ein durchgängiger Ablauf – jeder Schritt greift automatisch in den nächsten.</p>
+        <div className="mt-10 flex flex-col items-stretch gap-3 md:flex-row md:items-stretch">
+          {STEPS.map((s, i) => (
+            <Fragment key={s.t}>
+              <Reveal delay={i * 70} className="flex-1">
+                <div className="flex h-full flex-col items-center rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] p-5 text-center transition-all hover:-translate-y-1 hover:border-[var(--color-brand)]/40">
+                  <span className="relative grid h-12 w-12 place-items-center rounded-2xl bg-[var(--color-brand-tint)] text-[var(--color-brand)]">
+                    <Icon name={s.icon} size={22} />
+                    <span className="absolute -right-1.5 -top-1.5 grid h-5 w-5 place-items-center rounded-full bg-[var(--color-brand)] text-[10px] font-bold text-[var(--color-on-brand)] tnum">{i + 1}</span>
+                  </span>
+                  <div className="mt-3 text-[15px] font-semibold">{s.t}</div>
+                  <div className="mt-1 text-xs text-[var(--color-muted)]">{s.d}</div>
+                </div>
+              </Reveal>
+              {i < STEPS.length - 1 && (
+                <div className="hidden shrink-0 items-center self-center text-[var(--color-line-strong)] md:flex"><Icon name="chevronRight" size={22} /></div>
+              )}
+            </Fragment>
+          ))}
+        </div>
+      </section>
+
       {/* Vorher / Nachher */}
       <section className="mx-auto max-w-6xl px-6 py-16">
         <h2 className="text-center text-3xl font-semibold tracking-[-0.01em]">Schluss mit Excel, Google & Zettel</h2>
@@ -460,24 +494,27 @@ export default function Landing() {
           <div className="mt-14">
             <h3 className="text-center text-xl font-semibold">…und findet deine Zielkunden in {BRANCHEN_N}+ Branchen</h3>
             <p className="mx-auto mt-2 max-w-xl text-center text-sm text-[var(--color-muted)]">{BRANCHEN_KATEGORIEN.length} Kategorien – plus freie Stichwortsuche für jede Nische, die nicht dabei ist.</p>
-            <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {BRANCHEN_KATEGORIEN.map((c, i) => (
-                <Reveal key={c.label} delay={(i % 3) * 60}>
-                  <div className="h-full rounded-xl border border-[var(--color-line)] bg-[var(--color-surface)] p-4">
-                    <div className="mb-2 flex items-center gap-2">
-                      <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-[var(--color-brand-tint)] text-[var(--color-brand)]"><Icon name={c.icon} size={15} /></span>
-                      <span className="min-w-0 break-words text-sm font-semibold leading-snug">{c.label}</span>
-                    </div>
-                    <div className="flex flex-wrap gap-1.5">
-                      {c.branchen.slice(0, 5).map((b) => (
-                        <span key={b} className="rounded-full bg-[var(--color-subtle)] px-2 py-0.5 text-[11px] text-[var(--color-muted)]">{b}</span>
-                      ))}
-                      {c.branchen.length > 5 && <span className="rounded-full px-1 py-0.5 text-[11px] text-[var(--color-faint)]">+{c.branchen.length - 5}</span>}
-                    </div>
-                  </div>
-                </Reveal>
+            {/* Kompakte Kategorie-Chips statt großer Kachelwand */}
+            <div className="mt-7 flex flex-wrap justify-center gap-2">
+              {BRANCHEN_KATEGORIEN.map((c) => (
+                <span key={c.label} className="inline-flex items-center gap-1.5 rounded-full border border-[var(--color-line)] bg-[var(--color-surface)] px-3 py-1.5 text-xs font-medium transition-colors hover:border-[var(--color-brand)]/40">
+                  <span className="text-[var(--color-brand)]"><Icon name={c.icon} size={14} /></span>
+                  {c.label}
+                </span>
               ))}
             </div>
+            {/* Volle Liste nur auf Wunsch – hält die Seite kurz */}
+            <details className="group mx-auto mt-5 max-w-3xl">
+              <summary className="mx-auto flex w-fit cursor-pointer list-none items-center gap-1.5 rounded-lg border border-[var(--color-line-strong)] px-4 py-2 text-sm font-medium text-[var(--color-ink-2)] hover:bg-[var(--color-subtle)]">
+                Alle {BRANCHEN_N}+ Branchen anzeigen
+                <span className="transition-transform group-open:rotate-45"><Icon name="plus" size={14} /></span>
+              </summary>
+              <div className="mt-5 flex flex-wrap justify-center gap-1.5">
+                {BRANCHEN_KATEGORIEN.flatMap((c) => c.branchen).map((b) => (
+                  <span key={b} className="rounded-full bg-[var(--color-subtle)] px-2.5 py-1 text-[11px] text-[var(--color-muted)]">{b}</span>
+                ))}
+              </div>
+            </details>
           </div>
         </div>
       </section>
@@ -508,21 +545,42 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ROI / Zeit */}
-      <section className="mx-auto max-w-5xl px-6 py-16">
-        <div className="grid gap-4 sm:grid-cols-3">
-          {[
-            { big: "Stunden → Minuten", small: "von der Recherche zur fertigen Anrufliste" },
-            { big: "1 statt 4 Tools", small: "Suche, CRM, Aufgaben & E-Mail vereint" },
-            { big: `${BRANCHEN_N}+ Branchen`, small: "jede Nische per Katalog oder Stichwort" },
-          ].map((s, i) => (
-            <Reveal key={s.big} delay={i * 80}>
-              <div className="h-full rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] p-6 text-center">
-                <div className="text-xl font-semibold text-[var(--color-brand)]">{s.big}</div>
-                <div className="mt-1 text-sm text-[var(--color-muted)]">{s.small}</div>
+      {/* Fakten & Zahlen */}
+      <section className="mx-auto max-w-6xl px-6 py-16">
+        <h2 className="text-center text-3xl font-semibold tracking-[-0.01em]">Warum sich das rechnet</h2>
+        <p className="mx-auto mt-2 max-w-xl text-center text-sm text-[var(--color-muted)]">Echte Zahlen zum Tool – plus ein typisches Zeitbeispiel.</p>
+        <div className="mt-10 grid gap-6 lg:grid-cols-2">
+          {/* Zeit-Vergleich (Balken, Beispiel) */}
+          <Reveal className="rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] p-7">
+            <div className="text-sm font-semibold">Zeit für eine fertige Anrufliste</div>
+            <div className="mt-5 space-y-4">
+              <div>
+                <div className="mb-1 flex items-baseline justify-between text-xs text-[var(--color-muted)]"><span>Manuell googeln &amp; Nummern sammeln</span><span className="tnum">~3 Std</span></div>
+                <div className="h-3 overflow-hidden rounded-full bg-[var(--color-subtle)]"><div className="h-full rounded-full bg-[var(--color-danger)]" style={{ width: "100%" }} /></div>
               </div>
-            </Reveal>
-          ))}
+              <div>
+                <div className="mb-1 flex items-baseline justify-between text-xs"><span className="text-[var(--color-muted)]">Mit KundenRadar</span><span className="tnum font-semibold text-[var(--color-brand)]">~5 Min</span></div>
+                <div className="h-3 overflow-hidden rounded-full bg-[var(--color-subtle)]"><div className="h-full rounded-full bg-[var(--color-brand)]" style={{ width: "4%" }} /></div>
+              </div>
+            </div>
+            <p className="mt-4 text-[11px] text-[var(--color-faint)]">Beispielhafte Schätzung – die tatsächliche Zeit hängt von Branche, Umkreis und Datenlage ab.</p>
+          </Reveal>
+          {/* Fakten-Kacheln (echte Zahlen) */}
+          <div className="grid grid-cols-2 gap-4">
+            {[
+              { big: `${BRANCHEN_N}+`, label: "Branchen im Katalog" },
+              { big: "3", label: "Arbeitsweisen: Dienstleister · Webdesign · Personal" },
+              { big: "1", label: "Tool statt vier (Suche, CRM, Aufgaben, E-Mail)" },
+              { big: "3 Tage", label: "gratis testen, danach monatlich kündbar" },
+            ].map((f, i) => (
+              <Reveal key={f.label} delay={i * 70}>
+                <div className="flex h-full flex-col rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] p-5">
+                  <div className="text-3xl font-semibold text-[var(--color-brand)] tnum">{f.big}</div>
+                  <div className="mt-1 text-xs text-[var(--color-muted)]">{f.label}</div>
+                </div>
+              </Reveal>
+            ))}
+          </div>
         </div>
       </section>
 
