@@ -70,13 +70,38 @@ export default function StellenPage() {
         json: { was: was.trim() || undefined, wo: wo.trim() || undefined, umkreis, size: 50 },
       });
       setJobs(r.jobs);
-      setFirms(groupByFirm(r.jobs));
+      const grouped = groupByFirm(r.jobs);
+      setFirms(grouped);
+      // Kontaktdaten der dringendsten Firmen sofort automatisch laden,
+      // damit Ansprechpartner, Telefon & Website ohne Extra-Klick erscheinen.
+      void autoEnrichFirms(grouped);
     } catch (e) {
       setToast(e instanceof Error ? e.message : "Stellensuche fehlgeschlagen.");
       setJobs([]); setFirms([]);
     } finally {
       setBusy(false);
     }
+  };
+
+  // Automatische Kontakt-Anreicherung der obersten Firmen (schonende Nebenläufigkeit).
+  const AUTO_ENRICH_N = 10;
+  const autoEnrichFirms = async (list: Firm[]) => {
+    const count = Math.min(AUTO_ENRICH_N, list.length);
+    setFirms((p) => p.map((f, k) => (k < count ? { ...f, enriching: true } : f)));
+    let idx = 0;
+    const worker = async () => {
+      while (idx < count) {
+        const i = idx++;
+        const f = list[i];
+        try {
+          const { enrichment } = await api<{ enrichment: EnrichResp }>("/api/leads/enrich", {
+            json: { name: f.company, ort: f.ort ?? (wo.trim() || undefined) },
+          });
+          update(i, { enrich: enrichment, enriching: false });
+        } catch { update(i, { enriching: false }); }
+      }
+    };
+    await Promise.all(Array.from({ length: Math.min(3, count) }, worker));
   };
 
   const totalOpen = useMemo(() => jobs?.length ?? 0, [jobs]);

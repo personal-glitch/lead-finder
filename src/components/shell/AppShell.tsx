@@ -97,8 +97,12 @@ function Sidebar({ flags }: { flags: FeatureFlags }) {
   const pathname = usePathname();
   const [isAdmin, setIsAdmin] = useState(false);
   const { persona } = usePersona();
-  // Persona-adaptive Navigation: Personalvermittler bekommen den Stellen-Bereich.
-  const navItems = persona?.features.jobs ? [...NAV.slice(0, 6), STELLEN_ITEM, ...NAV.slice(6)] : NAV;
+  // Persona-adaptive Navigation: Personalvermittler bekommen statt der allgemeinen
+  // „Suche" (Branchen-Firmensuche) direkt den Stellen-Bereich – das verhindert
+  // Verwirrung, weil ihre Suche immer die offenen Stellen meint.
+  const navItems = persona?.features.jobs
+    ? [...NAV.slice(0, 5), STELLEN_ITEM, ...NAV.slice(6)]
+    : NAV;
   useEffect(() => {
     api<{ isAdmin: boolean }>("/api/admin/me").then((r) => setIsAdmin(r.isAdmin)).catch(() => {});
   }, []);
