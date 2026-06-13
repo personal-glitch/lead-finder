@@ -41,10 +41,10 @@ export const PERSONAS: Record<PersonaKey, Persona> = {
   personalvermittlung: {
     key: "personalvermittlung",
     label: "Personalvermittlung / Zeitarbeit",
-    short: "Du vermittelst Personal und suchst Firmen mit offenen Stellen (bald: Stellenanzeigen über die offizielle Jobsuche-API).",
+    short: "Du vermittelst Personal und suchst Firmen mit offenen Stellen – über die offizielle Jobsuche-API der Bundesagentur für Arbeit.",
     icon: "user",
     searchTitle: "Firmen mit offenen Stellen finden",
-    searchHint: "Firmen suchen, die Personal suchen. Stellenanzeigen-Modul folgt in Kürze.",
+    searchHint: "Offene Stellenanzeigen finden – wer lange sucht, braucht dich am dringendsten.",
     features: { jobs: true },
   },
 };

@@ -9,6 +9,8 @@ import { Badge, Button, Drawer, Field, Select, Spinner, TextInput, Textarea, cx 
 import { ConfirmDialog } from "./ConfirmDialog";
 import { LeadContactWays } from "./LeadContactWays";
 import { WebsiteAudit } from "./WebsiteAudit";
+import { LeadJobs } from "./LeadJobs";
+import { usePersona } from "./use-persona";
 
 const ACT_ICON: Record<ActivityType, IconName> = {
   created: "plus",
@@ -69,6 +71,7 @@ export function LeadDetailDrawer({
   const [callNote, setCallNote] = useState("");
   const [taskTitle, setTaskTitle] = useState("");
   const [confirmDel, setConfirmDel] = useState(false);
+  const { persona } = usePersona();
 
   const loadActivities = async (leadId: string) => {
     try {
@@ -161,7 +164,8 @@ export function LeadDetailDrawer({
           </Button>
         </div>
 
-        <WebsiteAudit url={lead.website} />
+        {persona?.features.websiteAudit && <WebsiteAudit url={lead.website} />}
+        {persona?.features.jobs && <LeadJobs company={lead.name} ort={lead.ort} plz={lead.plz} />}
 
         {/* Anruf-Panel */}
         {panel === "call" && (

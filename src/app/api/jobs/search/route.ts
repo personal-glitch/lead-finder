@@ -11,6 +11,7 @@ export const maxDuration = 30;
 const Body = z.object({
   was: z.string().max(120).optional(),
   wo: z.string().max(120).optional(),
+  arbeitgeber: z.string().max(160).optional(),
   umkreis: z.number().int().min(0).max(200).optional(),
   size: z.number().int().min(1).max(50).optional(),
 });
@@ -27,6 +28,7 @@ export async function POST(req: Request) {
     const url = new URL(BASE);
     if (b.was) url.searchParams.set("was", b.was);
     if (b.wo) url.searchParams.set("wo", b.wo);
+    if (b.arbeitgeber) url.searchParams.set("arbeitgeber", b.arbeitgeber);
     if (b.umkreis != null) url.searchParams.set("umkreis", String(b.umkreis));
     url.searchParams.set("size", String(b.size ?? 25));
     url.searchParams.set("page", "1");

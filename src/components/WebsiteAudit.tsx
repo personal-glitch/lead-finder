@@ -6,12 +6,15 @@ interface AuditResult {
   reachable: boolean;
   reason?: string;
   url?: string;
-  performance?: number;
+  performance?: number | null;
   seo?: number | null;
   bestPractices?: number | null;
   https?: boolean;
   mobileFriendly?: boolean;
+  loadMs?: number;
+  title?: string | null;
   grade?: string;
+  estimated?: boolean;
   opportunity?: boolean;
 }
 
@@ -60,12 +63,19 @@ export function WebsiteAudit({ url }: { url: string | null | undefined }) {
               {res.grade}
             </span>
             <div className="text-xs">
-              <div><b>Performance:</b> {res.performance}/100{res.seo != null && <> · <b>SEO:</b> {res.seo}/100</>}</div>
+              {res.performance != null ? (
+                <div><b>Performance:</b> {res.performance}/100{res.seo != null && <> · <b>SEO:</b> {res.seo}/100</>}</div>
+              ) : (
+                <div><b>Note:</b> {res.grade}{res.loadMs != null && <> · Ladezeit {(res.loadMs / 1000).toFixed(1)} s</>}</div>
+              )}
               <div className="text-[var(--color-muted)]">
                 {res.https ? "🔒 HTTPS" : "❌ kein HTTPS"} · {res.mobileFriendly ? "📱 mobil-tauglich" : "❌ nicht mobil"}
               </div>
             </div>
           </div>
+          {res.estimated && (
+            <p className="text-[11px] text-[var(--color-faint)]">Schnell-Einschätzung (HTTPS, Mobil, Ladezeit). Für vollen PageSpeed-Score API-Schlüssel hinterlegen.</p>
+          )}
           {res.opportunity && (
             <p className="rounded-lg bg-[var(--color-brand-tint)]/30 px-2.5 py-1.5 text-xs font-medium text-[var(--color-brand-ink)]">
               💡 Schwache Website – starker Aufhänger fürs Verkaufsgespräch.

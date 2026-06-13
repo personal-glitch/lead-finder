@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import type { EnrichmentExtra, LeadInput, PipelineStage } from "@/lib/types";
 import { api } from "@/lib/client";
 import { dedupeKey, hostFromUrl } from "@/lib/dedupe";
@@ -34,12 +35,18 @@ export default function SuchePage() {
   const [enrichingAll, setEnrichingAll] = useState(false);
   const [enrichProgress, setEnrichProgress] = useState<{ done: number; total: number } | null>(null);
   const [onlyWithContact, setOnlyWithContact] = useState(false);
+  const [onlyNoWebsite, setOnlyNoWebsite] = useState(false);
   const [autoEnrich, setAutoEnrich] = useState(true);
   const [toast, setToast] = useState<string | null>(null);
   const [detail, setDetail] = useState<LeadInput | null>(null);
   const [knownKeys, setKnownKeys] = useState<Set<string>>(new Set());
   const { persona } = usePersona();
   const webdesign = persona?.features.websiteAudit === true;
+  const router = useRouter();
+  // Personalvermittler suchen primär offene Stellen → direkt dorthin leiten.
+  useEffect(() => {
+    if (persona?.features.jobs) router.replace("/stellen");
+  }, [persona, router]);
   const stopRef = useRef(false);
 
   useEffect(() => {
@@ -168,8 +175,11 @@ export default function SuchePage() {
   // Sichtbare Treffer: optional ohne Kontaktlose (kein Web/Tel/E-Mail/Ansprechpartner).
   const displayLeads = useMemo(() => {
     if (!result) return [] as LeadInput[];
-    return onlyWithContact ? result.leads.filter(hasContact) : result.leads;
-  }, [result, onlyWithContact]);
+    let r = result.leads;
+    if (onlyWithContact) r = r.filter(hasContact);
+    if (onlyNoWebsite) r = r.filter((l) => !l.website);
+    return r;
+  }, [result, onlyWithContact, onlyNoWebsite]);
   const hiddenCount = result ? result.leads.length - displayLeads.length : 0;
   const selectableCount = useMemo(() => displayLeads.filter((l) => !taken.has(dedupeKey(l))).length, [displayLeads, taken]);
   const canSearch = plz.trim().length > 0 && (branchen.size > 0 || keywordList.length > 0) && !searching;
@@ -215,6 +225,14 @@ export default function SuchePage() {
                   onClick={() => setOnlyWithContact((v) => !v)}>
                   <Icon name="filter" size={13} /> Nur mit Kontakt
                 </button>
+                {webdesign && (
+                  <button
+                    className={cx("inline-flex items-center gap-1 rounded-md border px-2.5 py-1 text-xs",
+                      onlyNoWebsite ? "border-[var(--color-brand)] text-[var(--color-brand)]" : "border-[var(--color-line)] text-[var(--color-muted)] hover:text-[var(--color-ink)]")}
+                    onClick={() => setOnlyNoWebsite((v) => !v)}>
+                    ★ Nur ohne Website
+                  </button>
+                )}
                 <button
                   className={cx("inline-flex items-center gap-1 rounded-md border px-2.5 py-1 text-xs",
                     autoEnrich ? "border-[var(--color-brand)] text-[var(--color-brand)]" : "border-[var(--color-line)] text-[var(--color-muted)] hover:text-[var(--color-ink)]")}
@@ -269,7 +287,12 @@ export default function SuchePage() {
                           {(l.strasse || l.ort) && <span className="truncate">{[l.strasse, l.ort].filter(Boolean).join(", ")}</span>}
                           {l.phone ? <a href={l.phoneE164 ? `tel:${l.phoneE164}` : undefined} className="inline-flex items-center gap-1 text-[var(--color-success)] tnum"><Icon name="phone" size={12} /> {l.phone}</a> : <span className="text-[var(--color-faint)]">keine Nummer</span>}
                           {l.ansprechpartner && <span>{l.ansprechpartner}</span>}
-                          {host && <span className="truncate text-[var(--color-faint)]">{host}</span>}
+                          {host && l.website && (
+                            <a href={l.website} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}
+                              className="inline-flex max-w-[180px] items-center gap-0.5 truncate text-[var(--color-brand)] hover:underline" title={l.website}>
+                              {host} <Icon name="external" size={11} />
+                            </a>
+                          )}
                         </div>
                       </div>
                       {!l.enrichmentSource && l.name && (
