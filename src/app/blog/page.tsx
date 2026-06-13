@@ -45,6 +45,27 @@ const POSTS = [
       "Offene Stellen als Signal nutzen, die richtigen Ansprechpartner finden und mit klarer Kalkulation überzeugen – planbare Akquise im Personalgeschäft.",
     date: "2026-06-13",
   },
+  {
+    href: "/blog/neukunden-handwerksbetrieb",
+    title: "Neukunden gewinnen als Handwerksbetrieb – 7 Wege zu mehr Aufträgen",
+    excerpt:
+      "Hausverwaltungen, Bauträger und Betriebe gezielt ansprechen, sauber kalkulieren und systematisch akquirieren – planbar mehr gewerbliche Aufträge.",
+    date: "2026-06-13",
+  },
+  {
+    href: "/blog/telefonakquise-b2b-leitfaden",
+    title: "Telefonakquise im B2B: Leitfaden, Gesprächseinstieg & Rechtslage",
+    excerpt:
+      "Rechtlicher Rahmen (§ 7 UWG), ein erprobter Gesprächseinstieg, Einwand-Behandlung und wie du die richtigen Firmen für den Anruf findest.",
+    date: "2026-06-13",
+  },
+  {
+    href: "/blog/angebot-schreiben-dienstleister",
+    title: "Angebot schreiben als Dienstleister: Aufbau, Preis & häufige Fehler",
+    excerpt:
+      "Klarer Aufbau, marktgerechter Preis, typische Fehler – und wie du in Minuten ein sauberes Angebots-PDF erstellst.",
+    date: "2026-06-13",
+  },
 ];
 
 export default function BlogIndex() {
