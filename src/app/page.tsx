@@ -9,7 +9,7 @@ import { LazyKalkulator } from "@/components/landing/LazyKalkulator";
 import { NewsletterSignup } from "@/components/NewsletterSignup";
 import { WhatsAppWidget } from "@/components/WhatsAppWidget";
 import { CheckWidget } from "@/components/landing/CheckWidget";
-import { Reveal } from "@/components/landing/anim";
+import { Reveal, GrowBar, CountUp } from "@/components/landing/anim";
 import { PlanButton } from "@/components/landing/PlanButton";
 import {
   ResultsMock,
@@ -41,19 +41,6 @@ export const metadata: Metadata = {
     url: "/",
   },
 };
-
-// Anbieter ("Für wen?")
-const ANBIETER: { label: string; icon: IconName }[] = [
-  { label: "Reinigungsfirmen", icon: "broom" },
-  { label: "Handwerk & Bau", icon: "hardhat" },
-  { label: "Garten & Hausmeister", icon: "wrench" },
-  { label: "Agenturen & Marketing", icon: "bolt" },
-  { label: "Webdesign & SEO", icon: "globe" },
-  { label: "IT & Software", icon: "bolt" },
-  { label: "Unternehmensberatung", icon: "building" },
-  { label: "Personalvermittlung & Zeitarbeit", icon: "user" },
-  { label: "Sicherheitsdienste", icon: "key" },
-];
 
 // Funktions-Showcase entlang des Vertriebs-Ablaufs (mit echten Mini-Mockups)
 const SHOWCASE: { tag: string; title: string; text: string; bullets: string[]; mock: ReactNode }[] = [
@@ -341,9 +328,6 @@ export default function Landing() {
             <Icon name="search" size={14} /> Live-Check · echte Daten, keine Anmeldung
           </div>
           <CheckWidget />
-          <p className="mt-4 text-center text-xs text-[var(--color-faint)]">
-            Lieber zuschauen? <Link href="/erklaervideo" className="font-medium text-[var(--color-brand)] hover:underline">2-Min-Video ansehen →</Link>
-          </p>
         </div>
         </div>
       </section>
@@ -413,7 +397,7 @@ export default function Landing() {
         <h2 className="text-center text-3xl font-semibold tracking-[-0.01em]">Alles, was dein Vertrieb braucht</h2>
         <p className="mx-auto mt-2 max-w-xl text-center text-sm text-[var(--color-muted)]">Vom ersten Treffer bis zum gewonnenen Auftrag – jeder Schritt ist eingebaut und miteinander verbunden.</p>
         <div className="mt-12 space-y-14">
-          {SHOWCASE.map((s, i) => (
+          {SHOWCASE.slice(0, 4).map((s, i) => (
             <Reveal key={s.title}>
               <div className="grid items-center gap-8 lg:grid-cols-2">
                 <div className={i % 2 === 1 ? "lg:order-2" : ""}>
@@ -435,8 +419,8 @@ export default function Landing() {
         </div>
 
         {/* Kompaktes Feature-Raster */}
-        <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {FEATURES.map((f, i) => (
+        <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {FEATURES.slice(0, 6).map((f, i) => (
             <Reveal key={f.title} delay={i * 60}>
               <div className="group h-full rounded-xl border border-[var(--color-line)] bg-[var(--color-surface)] p-5 transition-all hover:-translate-y-1 hover:border-[var(--color-brand)]/40 hover:shadow-[0_14px_34px_-14px_rgba(168,232,58,0.28)]">
                 <span className="grid h-10 w-10 place-items-center rounded-xl bg-[var(--color-brand-tint)] text-[var(--color-brand)] transition-transform group-hover:scale-110"><Icon name={f.icon} size={19} /></span>
@@ -448,68 +432,13 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Video-Tutorials – Teaser zum Hilfe-Center */}
-      <section id="demo" className="mx-auto max-w-6xl scroll-mt-20 px-6 py-16">
-        <h2 className="text-center text-3xl font-semibold tracking-[-0.01em]">Video-Tutorials</h2>
-        <p className="mx-auto mt-2 max-w-xl text-center text-sm text-[var(--color-muted)]">Kurze Erklärvideos mit Ton: rechtssicher mailen, bessere Suche mit Keywords, den Kalkulator nutzen und die Pipeline meistern.</p>
-        <div className="mt-6 flex justify-center">
-          <Link href="/hilfe" className="inline-flex items-center gap-2 rounded-lg bg-[var(--color-brand)] px-5 py-3 text-sm font-semibold text-[var(--color-on-brand)] hover:bg-[var(--color-brand-ink)]">
-            <Icon name="play" size={15} /> Alle Tutorials ansehen
-          </Link>
-        </div>
-      </section>
-
       {/* Für wen + Branchen-Breite */}
+      {/* Für wen – Persona-Modi (Relevanz: das Tool passt sich an) */}
       <section id="zielgruppe" className="border-y border-[var(--color-line)] bg-[var(--color-surface)]/40">
         <div className="mx-auto max-w-6xl scroll-mt-20 px-6 py-16">
           <h2 className="text-center text-3xl font-semibold tracking-[-0.01em]">Für wen ist KundenRadar gemacht?</h2>
-          <p className="mx-auto mt-2 max-w-xl text-center text-sm text-[var(--color-muted)]">Für jeden Dienstleister, der regelmäßig neue Aufträge braucht.</p>
-          <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3">
-            {ANBIETER.map((b, i) => (
-              <Reveal key={b.label} delay={i * 40}>
-                <div className="flex items-center gap-3 rounded-xl border border-[var(--color-line)] bg-[var(--color-surface)] p-4 transition-all hover:-translate-y-0.5 hover:border-[var(--color-brand)]/40">
-                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[var(--color-brand-tint)] text-[var(--color-brand)]"><Icon name={b.icon} size={18} /></span>
-                  <span className="min-w-0 break-words hyphens-auto text-sm font-medium leading-snug">{b.label}</span>
-                </div>
-              </Reveal>
-            ))}
-          </div>
-
-          {/* Branchen-Wolke */}
-          <div className="mt-14">
-            <h3 className="text-center text-xl font-semibold">…und findet deine Zielkunden in {BRANCHEN_N}+ Branchen</h3>
-            <p className="mx-auto mt-2 max-w-xl text-center text-sm text-[var(--color-muted)]">{BRANCHEN_KATEGORIEN.length} Kategorien – plus freie Stichwortsuche für jede Nische, die nicht dabei ist.</p>
-            {/* Kompakte Kategorie-Chips statt großer Kachelwand */}
-            <div className="mt-7 flex flex-wrap justify-center gap-2">
-              {BRANCHEN_KATEGORIEN.map((c) => (
-                <span key={c.label} className="inline-flex items-center gap-1.5 rounded-full border border-[var(--color-line)] bg-[var(--color-surface)] px-3 py-1.5 text-xs font-medium transition-colors hover:border-[var(--color-brand)]/40">
-                  <span className="text-[var(--color-brand)]"><Icon name={c.icon} size={14} /></span>
-                  {c.label}
-                </span>
-              ))}
-            </div>
-            {/* Volle Liste nur auf Wunsch – hält die Seite kurz */}
-            <details className="group mx-auto mt-5 max-w-3xl">
-              <summary className="mx-auto flex w-fit cursor-pointer list-none items-center gap-1.5 rounded-lg border border-[var(--color-line-strong)] px-4 py-2 text-sm font-medium text-[var(--color-ink-2)] hover:bg-[var(--color-subtle)]">
-                Alle {BRANCHEN_N}+ Branchen anzeigen
-                <span className="transition-transform group-open:rotate-45"><Icon name="plus" size={14} /></span>
-              </summary>
-              <div className="mt-5 flex flex-wrap justify-center gap-1.5">
-                {BRANCHEN_KATEGORIEN.flatMap((c) => c.branchen).map((b) => (
-                  <span key={b} className="rounded-full bg-[var(--color-subtle)] px-2.5 py-1 text-[11px] text-[var(--color-muted)]">{b}</span>
-                ))}
-              </div>
-            </details>
-          </div>
-        </div>
-      </section>
-
-      {/* Drei Wege, ein Tool – Persona-Modi */}
-      <section className="border-b border-[var(--color-line)] bg-[var(--color-surface)]/40">
-        <div className="mx-auto max-w-6xl px-6 py-16">
-          <h2 className="text-center text-3xl font-semibold tracking-[-0.01em]">Ein Tool, das sich dir anpasst</h2>
-          <p className="mx-auto mt-2 max-w-xl text-center text-sm text-[var(--color-muted)]">
-            Beim ersten Login sagst du, was du machst – und KundenRadar passt Suche, Signale und Module an dein Geschäft an.
+          <p className="mx-auto mt-2 max-w-2xl text-center text-sm text-[var(--color-muted)]">
+            Beim ersten Login sagst du, was du machst – und das Tool passt Suche, Signale &amp; Module an dein Geschäft an.
           </p>
           <div className="mt-8 grid gap-4 md:grid-cols-3">
             {[
@@ -518,7 +447,7 @@ export default function Landing() {
               { icon: "user" as IconName, tag: "Personalvermittlung & Zeitarbeit", title: "Firmen mit offenen Stellen", text: "Über die offizielle Jobsuche-API der Bundesagentur: wer sucht, seit wann – inkl. Kontakt. Legal, ohne Scraping." },
             ].map((m, i) => (
               <Reveal key={m.tag} delay={i * 70}>
-                <div className="flex h-full flex-col rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] p-6">
+                <div className="flex h-full flex-col rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] p-6 transition-all hover:-translate-y-1 hover:border-[var(--color-brand)]/40">
                   <span className="grid h-11 w-11 place-items-center rounded-xl bg-[var(--color-brand-tint)] text-[var(--color-brand)]"><Icon name={m.icon} size={20} /></span>
                   <span className="mt-4 eyebrow">{m.tag}</span>
                   <h3 className="mt-1 text-lg font-semibold tracking-[-0.01em]">{m.title}</h3>
@@ -528,6 +457,31 @@ export default function Landing() {
             ))}
           </div>
         </div>
+      </section>
+
+      {/* Branchen-Breite (Coverage: ja, auch deine Nische) */}
+      <section className="mx-auto max-w-6xl px-6 py-16">
+        <h2 className="text-center text-3xl font-semibold tracking-[-0.01em]">…und findet deine Zielkunden in {BRANCHEN_N}+ Branchen</h2>
+        <p className="mx-auto mt-2 max-w-xl text-center text-sm text-[var(--color-muted)]">{BRANCHEN_KATEGORIEN.length} Kategorien – plus freie Stichwortsuche für jede Nische, die nicht dabei ist.</p>
+        <div className="mt-7 flex flex-wrap justify-center gap-2">
+          {BRANCHEN_KATEGORIEN.map((c) => (
+            <span key={c.label} className="inline-flex items-center gap-1.5 rounded-full border border-[var(--color-line)] bg-[var(--color-surface)] px-3 py-1.5 text-xs font-medium transition-colors hover:border-[var(--color-brand)]/40">
+              <span className="text-[var(--color-brand)]"><Icon name={c.icon} size={14} /></span>
+              {c.label}
+            </span>
+          ))}
+        </div>
+        <details className="group mx-auto mt-5 max-w-3xl">
+          <summary className="mx-auto flex w-fit cursor-pointer list-none items-center gap-1.5 rounded-lg border border-[var(--color-line-strong)] px-4 py-2 text-sm font-medium text-[var(--color-ink-2)] hover:bg-[var(--color-subtle)]">
+            Alle {BRANCHEN_N}+ Branchen anzeigen
+            <span className="transition-transform group-open:rotate-45"><Icon name="plus" size={14} /></span>
+          </summary>
+          <div className="mt-5 flex flex-wrap justify-center gap-1.5">
+            {BRANCHEN_KATEGORIEN.flatMap((c) => c.branchen).map((b) => (
+              <span key={b} className="rounded-full bg-[var(--color-subtle)] px-2.5 py-1 text-[11px] text-[var(--color-muted)]">{b}</span>
+            ))}
+          </div>
+        </details>
       </section>
 
       {/* Gratis-Rechner (aus dem Hero nach unten verlagert) */}
@@ -553,11 +507,11 @@ export default function Landing() {
             <div className="mt-5 space-y-4">
               <div>
                 <div className="mb-1 flex items-baseline justify-between text-xs text-[var(--color-muted)]"><span>Manuell googeln &amp; Nummern sammeln</span><span className="tnum">~3 Std</span></div>
-                <div className="h-3 overflow-hidden rounded-full bg-[var(--color-subtle)]"><div className="h-full rounded-full bg-[var(--color-danger)]" style={{ width: "100%" }} /></div>
+                <GrowBar widthPct={100} color="var(--color-danger)" />
               </div>
               <div>
                 <div className="mb-1 flex items-baseline justify-between text-xs"><span className="text-[var(--color-muted)]">Mit KundenRadar</span><span className="tnum font-semibold text-[var(--color-brand)]">~5 Min</span></div>
-                <div className="h-3 overflow-hidden rounded-full bg-[var(--color-subtle)]"><div className="h-full rounded-full bg-[var(--color-brand)]" style={{ width: "4%" }} /></div>
+                <GrowBar widthPct={4} color="var(--color-brand)" />
               </div>
             </div>
             <p className="mt-4 text-[11px] text-[var(--color-faint)]">Beispielhafte Schätzung – die tatsächliche Zeit hängt von Branche, Umkreis und Datenlage ab.</p>
@@ -565,14 +519,14 @@ export default function Landing() {
           {/* Fakten-Kacheln (echte Zahlen) */}
           <div className="grid grid-cols-2 gap-4">
             {[
-              { big: `${BRANCHEN_N}+`, label: "Branchen im Katalog" },
-              { big: "3", label: "Arbeitsweisen: Dienstleister · Webdesign · Personal" },
-              { big: "1", label: "Tool statt vier (Suche, CRM, Aufgaben, E-Mail)" },
-              { big: "3 Tage", label: "gratis testen, danach monatlich kündbar" },
+              { node: <CountUp to={BRANCHEN_N} suffix="+" />, label: "Branchen im Katalog" },
+              { node: <CountUp to={3} />, label: "Arbeitsweisen: Dienstleister · Webdesign · Personal" },
+              { node: <CountUp to={1} />, label: "Tool statt vier (Suche, CRM, Aufgaben, E-Mail)" },
+              { node: "3 Tage", label: "gratis testen, danach monatlich kündbar" },
             ].map((f, i) => (
               <Reveal key={f.label} delay={i * 70}>
                 <div className="flex h-full flex-col rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] p-5">
-                  <div className="text-3xl font-semibold text-[var(--color-brand)] tnum">{f.big}</div>
+                  <div className="text-3xl font-semibold text-[var(--color-brand)] tnum">{f.node}</div>
                   <div className="mt-1 text-xs text-[var(--color-muted)]">{f.label}</div>
                 </div>
               </Reveal>
@@ -596,6 +550,18 @@ export default function Landing() {
       <section id="preise" className="mx-auto max-w-6xl scroll-mt-20 px-6 py-16">
         <h2 className="text-center text-3xl font-semibold tracking-[-0.01em]">Einfache Preise</h2>
         <p className="mt-2 text-center text-sm text-[var(--color-muted)]">Ein Paket, alles drin – unbegrenzte Agenten & Kontakte. Monatlich kündbar.</p>
+
+        {/* Gratis-Test als Blickfang */}
+        <Reveal className="mx-auto mt-8 max-w-md rounded-2xl border-2 border-[var(--color-brand)] bg-[var(--color-brand-tint)]/20 p-7 text-center">
+          <span className="eyebrow text-[var(--color-brand)]">Jetzt starten</span>
+          <div className="mt-1 text-6xl font-bold tracking-[-0.03em] text-[var(--color-brand)] tnum">0,00 €</div>
+          <div className="mt-1 text-2xl font-bold tracking-[-0.01em]">3 Tage Test</div>
+          <p className="mt-3 text-sm text-[var(--color-muted)]">Voller Zugriff, keine Vorab-Zahlung. Danach 49 €/Monat – jederzeit monatlich kündbar.</p>
+          <Link href={signupHref} className="mt-5 inline-flex items-center gap-2 rounded-lg bg-[var(--color-brand)] px-6 py-3 text-sm font-semibold text-[var(--color-on-brand)] transition-transform hover:-translate-y-0.5 hover:bg-[var(--color-brand-ink)]">
+            Kostenlos starten <Icon name="chevronRight" size={16} />
+          </Link>
+        </Reveal>
+
         <div className={`mt-10 grid gap-5 ${PLANS.length === 1 ? "max-w-md mx-auto" : "lg:grid-cols-3"}`}>
           {PLANS.map((t, i) => (
             <Reveal key={t.key} delay={i * 80}>

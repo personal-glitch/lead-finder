@@ -59,6 +59,24 @@ export function CountUp({ to, suffix = "", duration = 1200 }: { to: number; suff
   return <span ref={ref} className="tnum">{val}{suffix}</span>;
 }
 
+/** Balken, der beim Sichtbarwerden von 0 auf die Zielbreite wächst. */
+export function GrowBar({ widthPct, color }: { widthPct: number; color: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [grown, setGrown] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || typeof IntersectionObserver === "undefined") { setGrown(true); return; }
+    const io = new IntersectionObserver(([e]) => { if (e.isIntersecting) { setGrown(true); io.disconnect(); } }, { threshold: 0.4 });
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+  return (
+    <div ref={ref} className="h-3 overflow-hidden rounded-full bg-[var(--color-subtle)]">
+      <div className="h-full rounded-full transition-[width] duration-1000 ease-out" style={{ width: grown ? `${widthPct}%` : "0%", background: color }} />
+    </div>
+  );
+}
+
 const STATS: { node: ReactNode; label: string }[] = [
   { node: <CountUp to={50} suffix="+" />, label: "Branchen im Katalog" },
   { node: "Direktkontakt", label: "Telefon + Ansprechpartner" },
