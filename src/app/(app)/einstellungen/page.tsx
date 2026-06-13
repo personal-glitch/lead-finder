@@ -6,6 +6,7 @@ import { PageHeader, useFlags, refreshStats } from "@/components/shell/AppShell"
 import { Icon } from "@/components/icons";
 import { Badge, Button, Card, cx, Field, IconButton, Spinner, TextInput, Textarea, Toast } from "@/components/ui";
 import { PLANS, planOf, TRIAL_DAYS } from "@/lib/plans";
+import { PERSONAS } from "@/lib/personas";
 
 // Häufige Anbieter – Auswahl füllt Server & Port automatisch.
 const SMTP_PRESETS: Record<string, { host: string; port: number }> = {
@@ -38,7 +39,15 @@ export default function EinstellungenPage() {
   const [toast, setToast] = useState<string | null>(null);
 
   const [callGoal, setCallGoal] = useState(60);
+  const [persona, setPersona] = useState<string | null>(null);
+  const [personaBusy, setPersonaBusy] = useState(false);
   const [impressum, setImpressum] = useState("");
+
+  const savePersona = async (key: string) => {
+    setPersona(key); setPersonaBusy(true);
+    try { await api("/api/settings", { method: "PATCH", json: { workspaceType: key } }); setToast("Anwendungsfall gespeichert – Suche & Navigation angepasst."); }
+    finally { setPersonaBusy(false); }
+  };
   const [savingSettings, setSavingSettings] = useState(false);
 
   const [stages, setStages] = useState<PipelineStage[]>([]);
@@ -69,11 +78,12 @@ export default function EinstellungenPage() {
     (async () => {
       try {
         const [s, st] = await Promise.all([
-          api<{ settings: { callGoal: number; senderImpressum: string; senderSignature: string; plan: string; senderName: string; senderEmail: string; smtpHost: string; smtpPort: number | null; smtpUser: string; smtpPassSet: boolean; emailReady: boolean; subscriptionStatus: string | null; subscriptionRenewsAt: string | null; cancelAtPeriodEnd: boolean }; usage: { agents: number; leads: number } }>("/api/settings"),
+          api<{ settings: { callGoal: number; senderImpressum: string; senderSignature: string; workspaceType: string | null; plan: string; senderName: string; senderEmail: string; smtpHost: string; smtpPort: number | null; smtpUser: string; smtpPassSet: boolean; emailReady: boolean; subscriptionStatus: string | null; subscriptionRenewsAt: string | null; cancelAtPeriodEnd: boolean }; usage: { agents: number; leads: number } }>("/api/settings"),
           api<{ stages: PipelineStage[] }>("/api/stages"),
         ]);
         setCallGoal(s.settings.callGoal);
         setImpressum(s.settings.senderImpressum);
+        setPersona(s.settings.workspaceType);
         setPlan(s.settings.plan);
         setUsage(s.usage);
         setSenderName(s.settings.senderName);
@@ -196,6 +206,24 @@ export default function EinstellungenPage() {
     <>
       <PageHeader title="Einstellungen" subtitle="Ziele, Pipeline & Versand" />
       <div className="grid max-w-3xl gap-6 p-4 sm:p-7">
+        {/* Anwendungsfall / Persona */}
+        <Card className="space-y-3 p-5">
+          <div>
+            <h2 className="text-sm font-semibold">Dein Anwendungsfall</h2>
+            <p className="mt-0.5 text-xs text-[var(--color-muted)]">Passt Suche, Navigation und Funktionen an. Jederzeit änderbar.</p>
+          </div>
+          <div className="grid gap-2 sm:grid-cols-3">
+            {Object.values(PERSONAS).map((p) => (
+              <button key={p.key} type="button" disabled={personaBusy} onClick={() => savePersona(p.key)}
+                className={cx("flex flex-col gap-1.5 rounded-xl border p-3 text-left transition disabled:opacity-60",
+                  persona === p.key ? "border-[var(--color-brand)] bg-[var(--color-brand-tint)]/25 ring-1 ring-[var(--color-brand)]" : "border-[var(--color-line-strong)] hover:bg-[var(--color-subtle)]")}>
+                <span className="grid h-8 w-8 place-items-center rounded-lg bg-[var(--color-brand-tint)] text-[var(--color-brand)]"><Icon name={p.icon} size={16} /></span>
+                <span className="text-xs font-semibold">{p.label}</span>
+              </button>
+            ))}
+          </div>
+        </Card>
+
         {/* Paket */}
         <Card className="space-y-4 p-5">
           <div className="flex items-center justify-between">

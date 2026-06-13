@@ -5,6 +5,7 @@ import { api } from "@/lib/client";
 import { dedupeKey, hostFromUrl } from "@/lib/dedupe";
 import { type BrancheKey } from "@/lib/leadgen/branchen-catalog";
 import { PageHeader, refreshStats } from "@/components/shell/AppShell";
+import { usePersona } from "@/components/use-persona";
 import { TargetPicker } from "@/components/agents/TargetPicker";
 import { Icon } from "@/components/icons";
 import { Badge, Button, Card, Drawer, EmptyState, Field, Spinner, TextInput, Toast, cx } from "@/components/ui";
@@ -37,6 +38,8 @@ export default function SuchePage() {
   const [toast, setToast] = useState<string | null>(null);
   const [detail, setDetail] = useState<LeadInput | null>(null);
   const [knownKeys, setKnownKeys] = useState<Set<string>>(new Set());
+  const { persona } = usePersona();
+  const webdesign = persona?.features.websiteAudit === true;
   const stopRef = useRef(false);
 
   useEffect(() => {
@@ -173,7 +176,7 @@ export default function SuchePage() {
 
   return (
     <>
-      <PageHeader title="Suche" subtitle="Direkt passende Firmen finden – ohne gespeicherten Agenten" />
+      <PageHeader title={persona?.searchTitle ?? "Suche"} subtitle={persona?.searchHint ?? "Direkt passende Firmen finden – ohne gespeicherten Agenten"} />
       <div className="space-y-5 p-4 sm:p-7">
         <Card className="space-y-4 p-5">
           <div className="grid grid-cols-[1fr_auto] gap-4">
@@ -260,6 +263,7 @@ export default function SuchePage() {
                           {l.enrichmentSource && <Badge tone="blue">angereichert</Badge>}
                           {isTaken && <Badge tone="green">übernommen</Badge>}
                           {isKnown && <span className="rounded-full bg-[var(--color-warn-tint)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--color-warn)]">schon gespeichert</span>}
+                          {webdesign && !l.website && <span className="rounded-full bg-[var(--color-brand-tint)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--color-brand-ink)]">★ keine Website</span>}
                         </div>
                         <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-[var(--color-muted)]">
                           {(l.strasse || l.ort) && <span className="truncate">{[l.strasse, l.ort].filter(Boolean).join(", ")}</span>}

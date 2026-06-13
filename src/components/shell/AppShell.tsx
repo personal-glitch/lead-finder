@@ -9,6 +9,7 @@ import { cx } from "../ui";
 import { TrialBanner } from "./TrialBanner";
 import { HelpWidget } from "./HelpWidget";
 import { OnboardingWizard } from "@/components/OnboardingWizard";
+import { usePersona } from "@/components/use-persona";
 
 const FlagsContext = createContext<FeatureFlags>({ supabase: false, resend: false, stripe: false });
 export const useFlags = () => useContext(FlagsContext);
@@ -90,9 +91,14 @@ function CallTracker() {
   );
 }
 
+const STELLEN_ITEM = { href: "/stellen", label: "Stellen", icon: "user" as IconName, match: (p: string) => p.startsWith("/stellen") };
+
 function Sidebar({ flags }: { flags: FeatureFlags }) {
   const pathname = usePathname();
   const [isAdmin, setIsAdmin] = useState(false);
+  const { persona } = usePersona();
+  // Persona-adaptive Navigation: Personalvermittler bekommen den Stellen-Bereich.
+  const navItems = persona?.features.jobs ? [...NAV.slice(0, 6), STELLEN_ITEM, ...NAV.slice(6)] : NAV;
   useEffect(() => {
     api<{ isAdmin: boolean }>("/api/admin/me").then((r) => setIsAdmin(r.isAdmin)).catch(() => {});
   }, []);
@@ -110,7 +116,7 @@ function Sidebar({ flags }: { flags: FeatureFlags }) {
 
       <nav className="scroll-slim min-h-0 flex-1 space-y-0.5 overflow-y-auto px-3 pt-2">
         <div className="eyebrow px-3 pb-1.5">Arbeitsbereich</div>
-        {NAV.map((n) => (
+        {navItems.map((n) => (
           <NavItem key={n.href} {...n} active={n.match(pathname)} />
         ))}
       </nav>
