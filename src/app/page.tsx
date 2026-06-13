@@ -8,7 +8,7 @@ import { ALLE_BRANCHEN, BRANCHEN_KATEGORIEN } from "@/lib/leadgen/branchen-catal
 import { LazyKalkulator } from "@/components/landing/LazyKalkulator";
 import { NewsletterSignup } from "@/components/NewsletterSignup";
 import { WhatsAppWidget } from "@/components/WhatsAppWidget";
-import { LazyExplainerVideo } from "@/components/landing/LazyExplainerVideo";
+import { CheckWidget } from "@/components/landing/CheckWidget";
 import { Reveal } from "@/components/landing/anim";
 import { PlanButton } from "@/components/landing/PlanButton";
 import {
@@ -271,7 +271,23 @@ export default function Landing() {
       </header>
 
       {/* Hero */}
-      <section id="kalkulator" className="mx-auto max-w-6xl px-6 py-14 lg:py-20">
+      <section id="kalkulator" className="relative mx-auto max-w-6xl overflow-hidden px-6 py-14 lg:py-20">
+        {/* Radar-Hintergrund (dekorativ, on-brand) */}
+        <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 z-0 flex justify-center">
+          <div className="relative mt-2 h-[560px] w-[560px] max-w-[92vw]">
+            <div className="kr-aurora left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" />
+            <div className="kr-ring" />
+            <div className="kr-ring" style={{ animationDelay: "1.3s" }} />
+            <div className="kr-ring" style={{ animationDelay: "2.6s" }} />
+            <div className="kr-radar-sweep opacity-70" />
+            <span className="kr-blip absolute left-[30%] top-[35%] h-1.5 w-1.5 rounded-full bg-[var(--color-brand)]" style={{ animationDelay: "0.5s" }} />
+            <span className="kr-blip absolute left-[65%] top-[28%] h-1.5 w-1.5 rounded-full bg-[var(--color-brand)]" style={{ animationDelay: "1.8s" }} />
+            <span className="kr-blip absolute left-[58%] top-[62%] h-1.5 w-1.5 rounded-full bg-[var(--color-brand)]" style={{ animationDelay: "2.7s" }} />
+            <span className="kr-blip absolute left-[38%] top-[60%] h-1.5 w-1.5 rounded-full bg-[var(--color-brand)]" style={{ animationDelay: "3.4s" }} />
+          </div>
+        </div>
+
+        <div className="relative z-10">
         {/* Painpoint → Lösung → Benefit (zentriert) */}
         <div className="mx-auto max-w-3xl text-center">
           <div className="flex flex-wrap items-center justify-center gap-2">
@@ -319,20 +335,16 @@ export default function Landing() {
           </p>
         </div>
 
-        {/* Erklärvideo – direkt im Hero, noch vor dem Rechner */}
-        <div id="erklaervideo" className="mx-auto mt-10 max-w-2xl scroll-mt-24">
+        {/* Live-Check als Hero-Bühne (echter, interaktiver Beweis) */}
+        <div className="mx-auto mt-10 max-w-3xl">
           <div className="mb-2 flex items-center justify-center gap-1.5 text-xs font-medium text-[var(--color-brand)]">
-            <Icon name="play" size={14} /> In 2:46 Min erklärt – mit Ton
+            <Icon name="search" size={14} /> Live-Check · echte Daten, keine Anmeldung
           </div>
-          <LazyExplainerVideo />
+          <CheckWidget />
+          <p className="mt-4 text-center text-xs text-[var(--color-faint)]">
+            Lieber zuschauen? <Link href="/erklaervideo" className="font-medium text-[var(--color-brand)] hover:underline">2-Min-Video ansehen →</Link>
+          </p>
         </div>
-
-        {/* Interaktiver Köder – volle Breite, in sich ausgewogen */}
-        <div className="mx-auto mt-12 max-w-5xl">
-          <div className="mb-2 flex items-center justify-center gap-1.5 text-xs font-medium text-[var(--color-brand)]">
-            <Icon name="calculator" size={14} /> Gratis-Rechner – sofort testen
-          </div>
-          <LazyKalkulator teaser />
         </div>
       </section>
 
@@ -515,6 +527,18 @@ export default function Landing() {
               </Reveal>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* Gratis-Rechner (aus dem Hero nach unten verlagert) */}
+      <section className="border-y border-[var(--color-line)] bg-[var(--color-surface)]/40">
+        <div className="mx-auto max-w-5xl px-6 py-16">
+          <div className="mb-2 flex items-center justify-center gap-1.5 text-xs font-medium text-[var(--color-brand)]">
+            <Icon name="calculator" size={14} /> Gratis-Rechner – sofort testen
+          </div>
+          <h2 className="text-center text-3xl font-semibold tracking-[-0.01em]">Was solltest du verlangen?</h2>
+          <p className="mx-auto mt-2 max-w-xl text-center text-sm text-[var(--color-muted)]">Stundensatz &amp; Angebotspreis in Sekunden – ohne Anmeldung.</p>
+          <div className="mt-8"><LazyKalkulator teaser /></div>
         </div>
       </section>
 
