@@ -9,6 +9,8 @@ import { LazyKalkulator } from "@/components/landing/LazyKalkulator";
 import { NewsletterSignup } from "@/components/NewsletterSignup";
 import { WhatsAppWidget } from "@/components/WhatsAppWidget";
 import { CheckWidget } from "@/components/landing/CheckWidget";
+import { PromoBar } from "@/components/landing/PromoBar";
+import { PromoPricing } from "@/components/landing/PromoPricing";
 import { Reveal, GrowBar, CountUp } from "@/components/landing/anim";
 import { PlanButton } from "@/components/landing/PlanButton";
 import {
@@ -237,6 +239,7 @@ export default function Landing() {
     <div className="min-h-screen pb-20 md:pb-0">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD) }} />
       <WhatsAppWidget />
+      <PromoBar />
       {/* Header */}
       <header className="sticky top-0 z-30 border-b border-[var(--color-line)] bg-[var(--color-canvas)]/80 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3.5">
@@ -553,6 +556,9 @@ export default function Landing() {
       <section id="preise" className="mx-auto max-w-6xl scroll-mt-20 px-6 py-16">
         <h2 className="text-center text-3xl font-semibold tracking-[-0.01em]">Einfache Preise</h2>
         <p className="mt-2 text-center text-sm text-[var(--color-muted)]">Ein Paket, alles drin – unbegrenzte Agenten & Kontakte. Monatlich kündbar.</p>
+
+        {/* Frühbucher-Aktion mit Countdown */}
+        <PromoPricing />
 
         {/* Gratis-Test als Blickfang */}
         <Reveal className="mx-auto mt-8 max-w-md rounded-2xl border-2 border-[var(--color-brand)] bg-[var(--color-brand-tint)]/20 p-7 text-center">
