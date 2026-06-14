@@ -11,6 +11,7 @@ import { WhatsAppWidget } from "@/components/WhatsAppWidget";
 import { CheckWidget } from "@/components/landing/CheckWidget";
 import { PromoBar } from "@/components/landing/PromoBar";
 import { PromoPricing } from "@/components/landing/PromoPricing";
+import { CITIES } from "@/lib/cities";
 import { Reveal, GrowBar, CountUp } from "@/components/landing/anim";
 import { PlanButton } from "@/components/landing/PlanButton";
 import {
@@ -615,6 +616,20 @@ export default function Landing() {
       <section className="border-t border-[var(--color-line)]">
         <div className="mx-auto max-w-2xl px-6 py-12">
           <NewsletterSignup source="homepage-footer" />
+        </div>
+      </section>
+
+      {/* Städte – Aufträge & Neukunden lokal finden (interne Verlinkung + SEO) */}
+      <section className="border-t border-[var(--color-line)]">
+        <div className="mx-auto max-w-6xl px-6 py-10 text-center">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-[var(--color-muted)]">Aufträge &amp; Neukunden finden in deiner Stadt</h2>
+          <div className="mt-3 flex flex-wrap justify-center gap-2">
+            {CITIES.map((c) => (
+              <Link key={c.slug} href={`/neukunden-finden/${c.slug}`} className="rounded-lg border border-[var(--color-line-strong)] px-3 py-1.5 text-sm font-medium text-[var(--color-ink-2)] hover:bg-[var(--color-subtle)]">
+                {c.name}
+              </Link>
+            ))}
+          </div>
         </div>
       </section>
 

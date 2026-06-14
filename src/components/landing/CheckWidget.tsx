@@ -14,9 +14,9 @@ interface CheckResult {
 
 // Wiederverwendbarer Live-Check (Formular + Ergebnis). Wird auf /check und im
 // Landing-Hero genutzt. onResult meldet einen Treffer (z. B. für Hintergrund-Effekt).
-export function CheckWidget({ onResult }: { onResult?: () => void }) {
-  const [plz, setPlz] = useState("");
-  const [branche, setBranche] = useState("Arztpraxis");
+export function CheckWidget({ onResult, defaultPlz = "", defaultBranche = "Arztpraxis" }: { onResult?: () => void; defaultPlz?: string; defaultBranche?: string }) {
+  const [plz, setPlz] = useState(defaultPlz);
+  const [branche, setBranche] = useState(defaultBranche);
   const [radiusKm, setRadiusKm] = useState(15);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);

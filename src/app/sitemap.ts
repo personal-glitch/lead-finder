@@ -1,11 +1,13 @@
 import type { MetadataRoute } from "next";
 import { config } from "@/lib/config";
+import { CITIES } from "@/lib/cities";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const base = config.appUrl;
   const entries: { path: string; priority: number }[] = [
     { path: "/", priority: 1 },
     { path: "/check", priority: 0.8 },
+    ...CITIES.map((c) => ({ path: `/neukunden-finden/${c.slug}`, priority: 0.75 })),
     { path: "/rechner", priority: 0.7 },
     { path: "/rechner/gebaeudereinigung", priority: 0.8 },
     { path: "/rechner/handwerk-stundensatz", priority: 0.8 },
