@@ -64,6 +64,18 @@ export function LeadCard({ lead, onOpen, overlay }: { lead: Lead; onOpen?: (l: L
         </a>
       )}
 
+      {(typeof lead.value === "number" || lead.status !== "offen") && (
+        <div className="mt-2 flex items-center gap-1.5">
+          {typeof lead.value === "number" && (
+            <span className="inline-flex items-center rounded-md bg-[var(--color-subtle)] px-1.5 py-0.5 text-[11px] font-semibold tnum">
+              {lead.value.toLocaleString("de-DE")} €
+            </span>
+          )}
+          {lead.status === "gewonnen" && <Badge tone="green">Gewonnen</Badge>}
+          {lead.status === "verloren" && <Badge tone="slate">Verloren</Badge>}
+        </div>
+      )}
+
       <div className="mt-2 flex items-center justify-between">
         <div className="flex min-w-0 items-center gap-1.5 text-[11px] text-[var(--color-muted)]">
           {lead.ort && (

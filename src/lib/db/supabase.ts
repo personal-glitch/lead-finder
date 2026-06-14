@@ -83,6 +83,8 @@ function toLead(r: any): Lead {
     enrichmentExtra: r.enrichment_extra ?? null,
     osmId: r.osm_id ?? null,
     notes: r.notes ?? null,
+    value: r.value ?? null,
+    status: (r.status ?? "offen") as Lead["status"],
     stageId: r.stage_id ?? null,
     ownerId: r.owner_id,
     createdAt: r.created_at,
@@ -134,6 +136,8 @@ const LEAD_PATCH_COLS: Record<string, string> = {
   enrichedAt: "enriched_at",
   enrichmentExtra: "enrichment_extra",
   notes: "notes",
+  value: "value",
+  status: "status",
   stageId: "stage_id",
 };
 

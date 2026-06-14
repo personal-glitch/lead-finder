@@ -82,10 +82,25 @@ export default function DashboardPage() {
     return { counts, max };
   }, [stages, leads]);
 
-  const gewonnen = useMemo(() => {
-    const stage = stages.find((s) => /kunde|gewonnen/i.test(s.name));
-    return stage ? leads.filter((l) => l.stageId === stage.id).length : 0;
-  }, [stages, leads]);
+  const eur = (n: number) =>
+    n.toLocaleString("de-DE", { style: "currency", currency: "EUR", maximumFractionDigits: 0 });
+
+  const deal = useMemo(() => {
+    const sum = (arr: Lead[]) => arr.reduce((s, l) => s + (typeof l.value === "number" ? l.value : 0), 0);
+    const offen = leads.filter((l) => l.status === "offen");
+    const won = leads.filter((l) => l.status === "gewonnen");
+    const lost = leads.filter((l) => l.status === "verloren");
+    const closed = won.length + lost.length;
+    const withVal = leads.filter((l) => typeof l.value === "number" && l.value > 0);
+    return {
+      pipeline: sum(offen),
+      offenCount: offen.length,
+      wonValue: sum(won),
+      wonCount: won.length,
+      quote: closed > 0 ? Math.round((won.length / closed) * 100) : null,
+      avg: withVal.length > 0 ? Math.round(sum(withVal) / withVal.length) : null,
+    };
+  }, [leads]);
 
   const heute = useMemo(() => {
     const end = new Date(); end.setHours(23, 59, 59, 999);
@@ -102,10 +117,15 @@ export default function DashboardPage() {
       <PageHeader title="Dashboard" subtitle="Dein Tagesüberblick" />
       <div className="space-y-6 p-4 sm:p-7">
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-          <Kpi label="Leads gesamt" value={leads.length} icon="pipeline" tone={T.blue} />
+          <Kpi label="Pipeline-Wert (offen)" value={eur(deal.pipeline)} sub={`${deal.offenCount} offene Leads`} icon="pipeline" tone={T.blue} />
+          <Kpi label="Gewonnen" value={eur(deal.wonValue)} sub={`${deal.wonCount} Abschlüsse`} icon="check" tone={T.green} />
+          <Kpi label="Abschlussquote" value={deal.quote != null ? `${deal.quote}%` : "—"} sub="gewonnen / abgeschlossen" icon="health" tone={T.brand} />
+          <Kpi label="Ø Auftragswert" value={deal.avg != null ? eur(deal.avg) : "—"} sub="erfasste Werte" icon="calculator" tone={T.amber} />
+        </div>
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
+          <Kpi label="Leads gesamt" value={leads.length} icon="agents" tone={T.blue} />
           <Kpi label="Anrufe heute" value={stats ? `${stats.anrufeHeute}` : "0"} sub={stats ? `Ziel ${stats.ziel}` : undefined} icon="phone" tone={T.brand} />
           <Kpi label="Offene Aufgaben" value={stats?.offeneAufgaben ?? 0} sub={stats ? `${stats.faelligHeute} heute fällig` : undefined} icon="tasks" tone={T.amber} />
-          <Kpi label="Gewonnen" value={gewonnen} icon="check" tone={T.green} />
         </div>
 
         {/* Erklärvideo + persönliche Einführung per WhatsApp – starker Conversion-Hebel */}

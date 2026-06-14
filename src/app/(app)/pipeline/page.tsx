@@ -146,9 +146,10 @@ export default function PipelinePage() {
           <div className="flex items-center gap-2">
             <Button variant="ghost" onClick={() => {
               const stageName = (id: string | null) => stages.find((s) => s.id === id)?.name ?? "";
-              const rows = filtered.map((l) => [l.name, l.objektTyp, l.ansprechpartner, l.phone, l.email, l.website, l.strasse, l.plz, l.ort, stageName(l.stageId)]);
+              const statusLabel: Record<string, string> = { offen: "Offen", gewonnen: "Gewonnen", verloren: "Verloren" };
+              const rows = filtered.map((l) => [l.name, l.objektTyp, l.ansprechpartner, l.phone, l.email, l.website, l.strasse, l.plz, l.ort, stageName(l.stageId), statusLabel[l.status] ?? "", l.value != null ? String(l.value) : ""]);
               downloadCsv(`KundenRadar-Leads-${new Date().toISOString().slice(0, 10)}`,
-                ["Firma", "Branche", "Ansprechpartner", "Telefon", "E-Mail", "Website", "Straße", "PLZ", "Ort", "Phase"], rows);
+                ["Firma", "Branche", "Ansprechpartner", "Telefon", "E-Mail", "Website", "Straße", "PLZ", "Ort", "Phase", "Status", "Auftragswert (€)"], rows);
             }} disabled={filtered.length === 0}><Icon name="external" size={15} /> CSV</Button>
             <div className="relative">
               <span className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--color-faint)]"><Icon name="search" size={16} /></span>

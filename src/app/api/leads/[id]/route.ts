@@ -15,6 +15,8 @@ const Patch = z.object({
   ansprechpartner: z.string().nullish(),
   website: z.string().nullish(),
   notes: z.string().nullish(),
+  value: z.number().nonnegative().nullable().optional(),
+  status: z.enum(["offen", "gewonnen", "verloren"]).optional(),
   stageId: z.string().nullable().optional(),
 });
 

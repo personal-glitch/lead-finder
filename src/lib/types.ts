@@ -47,16 +47,23 @@ export interface Lead {
   /** OSM-Identität (type/id), z. B. "node/123" – nur für Dedupe. */
   osmId: string | null;
   notes: string | null;
+  /** Geschätzter/erwarteter Auftragswert in € (netto, pro Jahr oder einmalig – frei). */
+  value: number | null;
+  /** Abschluss-Status für Pipeline-Auswertung. */
+  status: LeadStatus;
   stageId: string | null;
   ownerId: string;
   createdAt: string;
   updatedAt: string;
 }
 
+/** Abschluss-Status eines Leads für die Dashboard-Auswertung. */
+export type LeadStatus = "offen" | "gewonnen" | "verloren";
+
 /** Ein noch nicht gespeicherter Treffer aus Suche/Anreicherung. */
 export type LeadInput = Omit<
   Lead,
-  "id" | "stageId" | "ownerId" | "createdAt" | "updatedAt" | "notes"
+  "id" | "stageId" | "ownerId" | "createdAt" | "updatedAt" | "notes" | "value" | "status"
 >;
 
 /** Ein benanntes, wiederverwendbares Lead-Gen-Profil mit eigenem Avatar. */

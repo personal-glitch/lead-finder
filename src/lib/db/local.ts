@@ -99,7 +99,7 @@ function leadFromInput(
   stageId: string | null,
 ): Lead {
   const ts = now();
-  return { ...input, id: uuid(), notes: null, stageId, ownerId, createdAt: ts, updatedAt: ts };
+  return { ...input, id: uuid(), notes: null, value: null, status: "offen", stageId, ownerId, createdAt: ts, updatedAt: ts };
 }
 
 function fillMissing(target: Lead, input: LeadInput): void {

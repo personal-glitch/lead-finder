@@ -35,6 +35,12 @@ function fmt(iso: string | null): string {
   return new Date(iso).toLocaleString("de-DE", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
 }
 
+const STATUS_OPTS: { key: Lead["status"]; label: string; tone: string }[] = [
+  { key: "offen", label: "Offen", tone: "var(--color-muted)" },
+  { key: "gewonnen", label: "Gewonnen", tone: "var(--color-success)" },
+  { key: "verloren", label: "Verloren", tone: "var(--color-danger)" },
+];
+
 function EditableField({ label, value, onSave, placeholder }: {
   label: string; value: string | null; onSave: (v: string | null) => void; placeholder?: string;
 }) {
@@ -70,6 +76,7 @@ export function LeadDetailDrawer({
   const [msg, setMsg] = useState<string | null>(null);
   const [callNote, setCallNote] = useState("");
   const [taskTitle, setTaskTitle] = useState("");
+  const [valInput, setValInput] = useState("");
   const [confirmDel, setConfirmDel] = useState(false);
   const { persona } = usePersona();
 
@@ -83,6 +90,7 @@ export function LeadDetailDrawer({
   useEffect(() => {
     if (open && lead) {
       setPanel(null); setMsg(null); setCallNote("");
+      setValInput(lead.value != null ? String(lead.value) : "");
       setTaskTitle(`Wiedervorlage: ${lead.name ?? "Lead"}`);
       setTemplateId(templates[0]?.id ?? "");
       loadActivities(lead.id);
@@ -151,6 +159,39 @@ export function LeadDetailDrawer({
           </p>
         )}
 
+        {/* Deal: Status + Auftragswert */}
+        <div className="space-y-2.5 rounded-xl border border-[var(--color-line)] bg-[var(--color-subtle)] p-3">
+          <div className="flex gap-1.5">
+            {STATUS_OPTS.map((s) => {
+              const active = lead.status === s.key;
+              return (
+                <button key={s.key} onClick={() => onUpdate(lead.id, { status: s.key })}
+                  className={cx(
+                    "flex-1 rounded-lg border px-2 py-1.5 text-xs font-semibold transition",
+                    active ? "text-[var(--color-on-brand)]" : "border-[var(--color-line-strong)] bg-[var(--color-surface)] text-[var(--color-ink-2)] hover:bg-[var(--color-elevated)]",
+                  )}
+                  style={active ? { background: s.tone, borderColor: s.tone } : undefined}>
+                  {s.label}
+                </button>
+              );
+            })}
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-medium text-[var(--color-muted)] whitespace-nowrap">Auftragswert</span>
+            <div className="relative flex-1">
+              <TextInput value={valInput} inputMode="numeric" placeholder="z. B. 2400"
+                onChange={(e) => setValInput(e.target.value.replace(/[^\d.,]/g, ""))}
+                onBlur={() => {
+                  const raw = valInput.replace(/\./g, "").replace(",", ".").trim();
+                  const num = raw === "" ? null : Number(raw);
+                  const next = num != null && Number.isFinite(num) && num >= 0 ? num : null;
+                  if (next !== (lead.value ?? null)) onUpdate(lead.id, { value: next });
+                }} />
+            </div>
+            <span className="text-xs text-[var(--color-muted)]">€</span>
+          </div>
+        </div>
+
         {/* Aktionsleiste */}
         <div className="grid grid-cols-3 gap-2">
           <Button onClick={() => setPanel(panel === "call" ? null : "call")}>
@@ -177,6 +218,12 @@ export function LeadDetailDrawer({
               </a>
             ) : (
               <p className="text-xs text-[var(--color-muted)]">Keine Nummer – zuerst anreichern oder ergänzen.</p>
+            )}
+            {lead.phoneE164 && (
+              <a href={`https://wa.me/${lead.phoneE164.replace(/[^\d]/g, "")}`} target="_blank" rel="noreferrer noopener"
+                className="flex items-center justify-center gap-2 rounded-lg border border-[var(--color-line-strong)] bg-[var(--color-surface)] py-2 text-sm font-semibold text-[var(--color-ink-2)] hover:bg-[var(--color-elevated)]">
+                <Icon name="phone" size={15} /> Per WhatsApp schreiben
+              </a>
             )}
             <div>
               <div className="eyebrow mb-1.5">Ergebnis festhalten</div>
