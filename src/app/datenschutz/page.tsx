@@ -104,6 +104,24 @@ export default function DatenschutzPage() {
         nach Abschluss gelöscht, sofern keine Aufbewahrungspflichten bestehen.
       </P>
 
+      <H2>7a. Kontakt über WhatsApp</H2>
+      <P>
+        Auf unserer Website bieten wir eine Kontaktmöglichkeit über einen WhatsApp-Button (Verlinkung auf
+        „wa.me") an. Nutzt du diesen, um uns zu schreiben, werden deine Telefonnummer und die
+        Kommunikationsinhalte durch den Dienst WhatsApp verarbeitet (WhatsApp Ireland Limited, 4 Grand Canal
+        Square, Dublin 2, Irland; Mutterkonzern Meta Platforms, Inc., USA). Bereits beim Aufruf des
+        WhatsApp-Links können Daten (u. a. IP-Adresse) an WhatsApp/Meta übertragen werden – auch in die USA,
+        gestützt auf das EU-US Data Privacy Framework bzw. die EU-Standardvertragsklauseln (Art. 46 DSGVO).
+        Auf Art und Umfang der durch WhatsApp/Meta verarbeiteten Daten haben wir keinen Einfluss.
+      </P>
+      <P>
+        Rechtsgrundlage für das Bereitstellen dieses Kontaktwegs und die Bearbeitung deiner Anfrage ist unser
+        berechtigtes Interesse an einer unkomplizierten Kontaktaufnahme (Art. 6 Abs. 1 lit. f DSGVO) bzw. die
+        Vertragsanbahnung (Art. 6 Abs. 1 lit. b DSGVO). Wenn du WhatsApp nicht nutzen möchtest, erreichst du uns
+        jederzeit per E-Mail oder Telefon. Einzelheiten zur Datenverarbeitung durch WhatsApp findest du in der{" "}
+        <a href="https://www.whatsapp.com/legal/privacy-policy-eea" className="text-[var(--color-brand)] hover:underline" target="_blank" rel="noreferrer noopener">WhatsApp-Datenschutzrichtlinie</a>.
+      </P>
+
       <H2>8. E-Mail-Versand aus dem Tool</H2>
       <P>
         Für den Versand von E-Mails aus dem Tool nutzen Nutzerinnen und Nutzer einen eigenen Mailanbieter oder einen
