@@ -68,10 +68,25 @@ export function CheckWidget({ onResult, defaultPlz = "", defaultBranche = "Arztp
       </Card>
 
       {!res && (
-        <div className="mt-3 text-center">
-          <Link href="/gratis" className="inline-flex items-center gap-1.5 text-xs font-medium text-[var(--color-muted)] hover:text-[var(--color-brand)]">
-            <Icon name="template" size={13} /> Kein Plan, wie du gefundene Firmen ansprichst? Hol dir gratis 3 Akquise-Tools →
+        <div className="mt-5 text-center">
+          <style>{`
+            @keyframes krBounceDown {0%,100%{transform:translateY(0)}50%{transform:translateY(7px)}}
+            @keyframes krNudge {0%,100%{transform:translateX(0)}50%{transform:translateX(5px)}}
+            .kr-bounce-down{animation:krBounceDown 1.1s ease-in-out infinite}
+            .kr-nudge{animation:krNudge 1s ease-in-out infinite}
+          `}</style>
+          <p className="text-sm font-medium text-[var(--color-ink-2)]">Kein Plan, wie du die gefundenen Firmen ansprichst?</p>
+          <div className="kr-bounce-down mx-auto mt-1 w-fit text-[var(--color-brand)]">
+            <Icon name="chevronRight" size={22} className="rotate-90" strokeWidth={2.4} />
+          </div>
+          <Link
+            href="/gratis"
+            className="mt-1 inline-flex items-center gap-2 rounded-xl bg-[var(--color-brand)] px-6 py-3.5 text-base font-bold text-[var(--color-on-brand)] shadow-lg shadow-[var(--color-brand)]/30 ring-1 ring-[var(--color-brand)]/20 transition hover:scale-[1.04] hover:bg-[var(--color-brand-ink)]"
+          >
+            <Icon name="template" size={18} /> Gratis: 3 Akquise-Tools holen
+            <span className="kr-nudge"><Icon name="chevronRight" size={18} strokeWidth={2.6} /></span>
           </Link>
+          <p className="mt-2 text-xs text-[var(--color-muted)]">Telefon-Leitfaden · 10 E-Mail-Vorlagen · Tracker – sofort per Mail.</p>
         </div>
       )}
 
