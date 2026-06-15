@@ -11,6 +11,6 @@ export const config = {
      * Auf alle Pfade anwenden – außer statische Assets & Bilder.
      * (Die eigentliche Schutz-/Public-Logik steckt in updateSession.)
      */
-    "/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|map|txt|xml)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|map|txt|xml|pdf|xlsx|docx|mp4)$).*)",
   ],
 };

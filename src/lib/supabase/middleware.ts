@@ -11,6 +11,8 @@ const PUBLIC_PREFIXES = [
   "/check",
   "/rechner",
   "/blog",
+  "/gratis",
+  "/downloads",
   "/neukunden-finden",
   "/hilfe",
   "/erklaervideo",

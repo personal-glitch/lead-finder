@@ -615,7 +615,11 @@ export default function Landing() {
       {/* Newsletter */}
       <section className="border-t border-[var(--color-line)]">
         <div className="mx-auto max-w-2xl px-6 py-12">
-          <NewsletterSignup source="homepage-footer" />
+          <NewsletterSignup
+            source="freebie-homepage"
+            title="Gratis: 3 Tools für mehr Neukunden"
+            subtitle="Akquise-Vorlagen, Kaltakquise-Leitfaden & Akquise-Tracker – sofort per Mail. Plus wöchentlicher Praxis-Tipp, jederzeit abbestellbar."
+          />
         </div>
       </section>
 

@@ -138,33 +138,48 @@ export async function subscribeConfirmed(
   return { ok: true, state: "pending" };
 }
 
-// Automatische Willkommens-Mail nach Bestätigung / Opt-in.
-const WELCOME_CONTENT: NewsletterContent = {
-  template: "tipp",
-  headline: "Schön, dass du dabei bist 👋",
-  body:
-    "Hallo {{Vorname}},\n\n" +
-    "willkommen beim KundenRadar-Newsletter! Ab jetzt bekommst du jede Woche einen umsetzbaren Tipp für mehr Neukunden, mehr Anfragen und mehr Umsatz.\n\n" +
-    "Kleiner Starter zum Loslegen: Die meisten gewinnen nicht durch mehr Aufwand mehr Kunden, sondern durch einen festen Akquise-Slot. Trag dir diese Woche 30 Minuten fest ein – wie einen Termin – und telefonier in der Zeit fünf neue Kontakte an.\n\n" +
-    "Bis nächste Woche!\nCihan",
-  ctaLabel: "KundenRadar 3 Tage gratis testen",
-  ctaUrl: "https://seciora-solutions.de/registrieren",
-};
+// Die 3 Gratis-Tools (Lead-Magnete), die jeder neue Abonnent per Mail bekommt.
+export const FREEBIES = [
+  { label: "Akquise-Vorlagen-Paket (PDF)", file: "Akquise-Vorlagen-Paket.pdf" },
+  { label: "Kaltakquise-Leitfaden 2026 (PDF)", file: "Kaltakquise-Leitfaden-2026.pdf" },
+  { label: "Akquise-Tracker (Excel)", file: "Akquise-Tracker.xlsx" },
+] as const;
 
+export function downloadUrl(file: string): string {
+  return new URL(`/downloads/${file}`, config.appUrl).toString();
+}
+
+// Automatische Willkommens-Mail nach Bestätigung / Opt-in – mit den 3 Gratis-Tools.
 async function sendWelcomeEmail(email: string, name: string | null, token: string): Promise<void> {
-  const content = {
-    ...WELCOME_CONTENT,
-    headline: personalize(WELCOME_CONTENT.headline, name),
-    body: personalize(WELCOME_CONTENT.body, name),
-    unsubscribeUrl: unsubscribeUrl(token),
-    impressum: config.resend.impressum ?? DEFAULT_IMPRESSUM,
-  };
-  await sendSystemEmail({
-    to: email,
-    subject: "Willkommen beim KundenRadar-Newsletter 🎉",
-    html: renderNewsletterHtml(content),
-    text: renderNewsletterText(content),
-  });
+  const hallo = name && name.trim() ? name.trim() : "zusammen";
+  const impressum = config.resend.impressum ?? DEFAULT_IMPRESSUM;
+  const unsub = unsubscribeUrl(token);
+
+  const buttons = FREEBIES.map(
+    (d) =>
+      `<p style="margin:8px 0"><a href="${downloadUrl(d.file)}" style="display:inline-block;background:#16181d;color:#a8e83a;padding:11px 18px;border-radius:8px;text-decoration:none;font-weight:600">⬇ ${d.label}</a></p>`,
+  ).join("");
+
+  const html = `<!doctype html><html lang="de"><body style="font-family:system-ui,Arial,sans-serif;color:#16181d;line-height:1.6;max-width:560px;margin:0 auto;padding:8px">
+<p>Hallo ${hallo},</p>
+<p>schön, dass du dabei bist! Hier sind deine <b>3 Gratis-Tools</b> zum sofort Loslegen:</p>
+${buttons}
+<p style="font-size:13px;color:#5b6470">Tipp: Fang mit dem Vorlagen-Paket an – Telefon-Leitfaden + 5 E-Mail-Vorlagen, sofort einsetzbar.</p>
+<p>Ab jetzt bekommst du außerdem regelmäßig einen umsetzbaren Tipp für mehr Neukunden, Anfragen und Umsatz.</p>
+<p style="margin:22px 0"><a href="${config.appUrl}/registrieren" style="display:inline-block;background:#a8e83a;color:#16181d;padding:12px 20px;border-radius:8px;text-decoration:none;font-weight:700">KundenRadar 3 Tage gratis testen</a></p>
+<p>Beste Grüße<br>Cihan · Seciora Solutions</p>
+<hr style="border:none;border-top:1px solid #e3e7ec;margin:24px 0">
+<p style="font-size:12px;color:#5b6470">${impressum}<br><a href="${unsub}" style="color:#5b6470">Newsletter abbestellen</a></p>
+</body></html>`;
+
+  const text =
+    `Hallo ${hallo},\n\nschön, dass du dabei bist! Hier sind deine 3 Gratis-Tools:\n\n` +
+    FREEBIES.map((d) => `- ${d.label}: ${downloadUrl(d.file)}`).join("\n") +
+    `\n\nAb jetzt bekommst du regelmäßig einen Tipp für mehr Neukunden.\n\n` +
+    `KundenRadar 3 Tage gratis testen: ${config.appUrl}/registrieren\n\n` +
+    `Beste Grüße\nCihan · Seciora Solutions\n\n—\n${impressum}\nAbbestellen: ${unsub}`;
+
+  await sendSystemEmail({ to: email, subject: "Deine 3 Gratis-Tools für mehr Neukunden 🎁", html, text });
 }
 
 /** Bestätigt die Anmeldung anhand des Tokens. Liefert die E-Mail oder null. */

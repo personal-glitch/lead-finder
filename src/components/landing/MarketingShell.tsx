@@ -60,6 +60,8 @@ export function MarketingShell({
         {" · "}
         <Link href="/rechner" className="hover:text-[var(--color-ink)]">Rechner</Link>
         {" · "}
+        <Link href="/gratis" className="font-semibold text-[var(--color-brand)] hover:underline">Gratis-Tools</Link>
+        {" · "}
         <Link href="/newsletter" className="hover:text-[var(--color-ink)]">Newsletter</Link>
         {" · "}
         <a href="https://wa.me/4915292627062?text=Hallo%2C%20ich%20habe%20eine%20Frage%20zu%20KundenRadar." target="_blank" rel="noopener noreferrer" className="hover:text-[var(--color-ink)]">WhatsApp</a>
