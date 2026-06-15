@@ -123,6 +123,11 @@ export function CheckWidget({ onResult, defaultPlz = "", defaultBranche = "Arztp
               Kostenlos starten <Icon name="chevronRight" size={16} />
             </Link>
             <p className="mt-2 text-xs text-[var(--color-muted)]">3 Tage gratis testen · danach 49 €/Monat · jederzeit kündbar</p>
+            <div className="mt-4 border-t border-[var(--color-line)] pt-3">
+              <Link href="/gratis" className="inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--color-brand)] hover:underline">
+                <Icon name="template" size={15} /> Noch nicht so weit? Hol dir 3 Gratis-Tools für die Akquise per Mail →
+              </Link>
+            </div>
           </Card>
         </div>
       )}
