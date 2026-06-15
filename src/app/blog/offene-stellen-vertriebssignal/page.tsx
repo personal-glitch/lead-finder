@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { MarketingShell, JsonLd } from "@/components/landing/MarketingShell";
+import { FreebieCta } from "@/components/landing/FreebieCta";
 import { H2, P, UL } from "@/components/landing/LegalShell";
 import { config } from "@/lib/config";
 
@@ -91,6 +92,7 @@ export default function Page() {
             eine fachkundige Beratung für deinen konkreten Fall.</em>
           </P>
         </div>
+        <FreebieCta source="blog" />
       </article>
     </MarketingShell>
   );
