@@ -67,6 +67,14 @@ export function CheckWidget({ onResult, defaultPlz = "", defaultBranche = "Arztp
         {error && <p className="mt-3 rounded-lg bg-[var(--color-danger-tint)] px-3 py-2 text-xs text-[var(--color-danger)]">{error}</p>}
       </Card>
 
+      {!res && (
+        <div className="mt-3 text-center">
+          <Link href="/gratis" className="inline-flex items-center gap-1.5 text-xs font-medium text-[var(--color-muted)] hover:text-[var(--color-brand)]">
+            <Icon name="template" size={13} /> Kein Plan, wie du gefundene Firmen ansprichst? Hol dir gratis 3 Akquise-Tools →
+          </Link>
+        </div>
+      )}
+
       {res && (
         <div key={runId} className="mt-7 space-y-5">
           <div className="text-center">
