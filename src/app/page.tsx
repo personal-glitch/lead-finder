@@ -254,6 +254,7 @@ export default function Landing() {
             <a href="#zielgruppe" className="hover:text-[var(--color-ink)]">Für wen?</a>
             <a href="#preise" className="hover:text-[var(--color-ink)]">Preise</a>
             <a href="/rechner" className="hover:text-[var(--color-ink)]">Rechner</a>
+            <a href="/gratis" className="font-semibold text-[var(--color-brand)] hover:underline">Gratis-Tools</a>
             <a href="/blog" className="hover:text-[var(--color-ink)]">Blog</a>
             <a href="#faq" className="hover:text-[var(--color-ink)]">FAQ</a>
           </nav>
