@@ -38,3 +38,17 @@ export function subPeriodEnd(sub: Stripe.Subscription): string | null {
     null;
   return ts ? new Date(ts * 1000).toISOString() : null;
 }
+
+/** Effektiver monatlicher Betrag in Cent (Listenpreis minus aktiver Rabatt/Promo). */
+export function subAmount(sub: Stripe.Subscription): number | null {
+  const item = sub.items?.data?.[0];
+  let amt = item?.price?.unit_amount ?? null;
+  if (amt == null) return null;
+  const disc = (sub as unknown as { discount?: { coupon?: { amount_off?: number | null; percent_off?: number | null } } }).discount;
+  const coupon = disc?.coupon;
+  if (coupon) {
+    if (coupon.amount_off) amt = Math.max(0, amt - coupon.amount_off);
+    else if (coupon.percent_off) amt = Math.round(amt * (1 - coupon.percent_off / 100));
+  }
+  return amt;
+}

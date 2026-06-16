@@ -25,15 +25,16 @@ interface Customer {
   createdAt: string | null;
   confirmed: boolean;
   banned: boolean;
+  amount: number | null;
+  stripeCustomerId: string | null;
 }
 
-/** mailto-Link mit vorbefülltem Betreff & Anrede. */
-function mailtoFor(email: string, firstName?: string | null): string {
-  const hi = firstName ? `Hallo ${firstName},` : "Hallo,";
-  const subject = encodeURIComponent("KundenRadar");
-  const body = encodeURIComponent(`${hi}\n\nhier Cihan von KundenRadar 👋\n\n`);
-  return `mailto:${email}?subject=${subject}&body=${body}`;
-}
+const MAIL_TEMPLATES: { label: string; subject: string; body: string }[] = [
+  { label: "Begrüßung", subject: "Kurze Frage zu deinem KundenRadar-Test", body: "Hallo {{Vorname}},\n\nhier Cihan von KundenRadar 👋 Ich wollte kurz hören, wie es mit dem Tool läuft – kommst du gut klar oder kann ich irgendwo helfen?\n\nViele Grüße\nCihan" },
+  { label: "Test-Nachfass", subject: "Dein Test läuft bald aus", body: "Hallo {{Vorname}},\n\ndein kostenloser Test bei KundenRadar läuft bald aus. Wenn du Fragen hast oder ein paar Tage mehr brauchst, sag einfach Bescheid – ich helfe gern.\n\nViele Grüße\nCihan" },
+  { label: "Zahlung offen", subject: "Kurze Sache zu deiner Zahlung", body: "Hallo {{Vorname}},\n\nbei deiner letzten Zahlung gab es eine kleine Unstimmigkeit. Magst du kurz deine Zahlungsmethode prüfen? Bei Fragen bin ich da.\n\nViele Grüße\nCihan" },
+  { label: "Freitext", subject: "", body: "Hallo {{Vorname}},\n\n" },
+];
 
 /** Telefonnummer → wa.me-Link (international). Null, wenn keine brauchbare Nummer. */
 function waFromPhone(phone: string | null, firstName?: string | null): string | null {
@@ -122,6 +123,10 @@ export default function AdminPage() {
   const [toast, setToast] = useState<string | null>(null);
   const [syncing, setSyncing] = useState(false);
   const [importing, setImporting] = useState(false);
+  const [composeFor, setComposeFor] = useState<Customer | null>(null);
+  const [cmSubject, setCmSubject] = useState("");
+  const [cmBody, setCmBody] = useState("");
+  const [cmSending, setCmSending] = useState(false);
   const [subject, setSubject] = useState("");
   const [template, setTemplate] = useState<NewsletterTemplate>("tipp");
   const [headline, setHeadline] = useState("");
@@ -208,6 +213,43 @@ export default function AdminPage() {
       setToast(e instanceof Error ? e.message : "Verlängern fehlgeschlagen.");
     } finally {
       setBusy(null);
+    }
+  };
+
+  const toggleCancel = async (c: Customer) => {
+    const cancel = !c.cancelAtPeriodEnd;
+    if (!window.confirm(cancel
+      ? `Abo von „${c.company ?? c.email}" zum Periodenende kündigen?`
+      : `Kündigung für „${c.company ?? c.email}" zurücknehmen?`)) return;
+    setBusy(c.id);
+    try {
+      await api("/api/admin/customer/subscription", { json: { ownerId: c.id, action: cancel ? "cancel" : "reactivate" } });
+      await load();
+      setToast(cancel ? "Abo gekündigt – läuft zum Periodenende aus." : "Kündigung zurückgenommen.");
+    } catch (e) {
+      setToast(e instanceof Error ? e.message : "Aktion fehlgeschlagen.");
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const openCompose = (c: Customer) => {
+    setComposeFor(c);
+    setCmSubject(MAIL_TEMPLATES[0].subject);
+    setCmBody(MAIL_TEMPLATES[0].body);
+  };
+  const sendCompose = async () => {
+    if (!composeFor) return;
+    setCmSending(true);
+    try {
+      await api("/api/admin/customer/mail", { json: { to: composeFor.email, subject: cmSubject, body: cmBody, firstName: composeFor.name?.split(" ")[0] ?? "" } });
+      markContacted(composeFor.id, true);
+      setToast("E-Mail gesendet.");
+      setComposeFor(null);
+    } catch (e) {
+      setToast(e instanceof Error ? e.message : "Versand fehlgeschlagen.");
+    } finally {
+      setCmSending(false);
     }
   };
 
@@ -350,6 +392,9 @@ export default function AdminPage() {
                       <td className="px-4 py-2.5">
                         <div className="flex flex-wrap items-center gap-1">
                           <StatusBadge s={c.status} />
+                          {c.amount != null && (c.status === "active" || c.status === "trialing") && (
+                            <span className="rounded-full bg-[var(--color-subtle)] px-2 py-0.5 text-[11px] font-semibold text-[var(--color-ink-2)] tnum">{Math.round(c.amount / 100)} €</span>
+                          )}
                           {c.banned && <span className="rounded-full bg-[var(--color-danger-tint)] px-2 py-0.5 text-[11px] font-medium text-[var(--color-danger)]">Gesperrt</span>}
                         </div>
                       </td>
@@ -370,14 +415,13 @@ export default function AdminPage() {
                           ) : (
                             <span className="text-[var(--color-faint)]">–</span>
                           )}
-                          <a
-                            href={mailtoFor(c.email, c.name?.split(" ")[0])}
-                            title="E-Mail schreiben"
-                            onClick={() => markContacted(c.id, true)}
+                          <button
+                            onClick={() => openCompose(c)}
+                            title="E-Mail mit Vorlage schreiben (über das System senden)"
                             className="grid h-7 w-7 shrink-0 place-items-center rounded-md border border-[var(--color-line-strong)] text-[var(--color-ink-2)] hover:bg-[var(--color-subtle)]"
                           >
                             <Icon name="mail" size={14} />
-                          </a>
+                          </button>
                           <button
                             onClick={() => markContacted(c.id, !c.contactedAt)}
                             title={c.contactedAt ? "Als nicht kontaktiert markieren" : "Als kontaktiert markieren"}
@@ -405,6 +449,25 @@ export default function AdminPage() {
                                   +{d}d
                                 </button>
                               ))}
+                              {(c.status === "active" || c.status === "trialing" || c.status === "past_due") && (
+                                <button
+                                  onClick={() => toggleCancel(c)}
+                                  title={c.cancelAtPeriodEnd ? "Kündigung zurücknehmen" : "Abo zum Periodenende kündigen"}
+                                  className={`rounded-md border border-[var(--color-line)] px-2 py-1 text-xs ${c.cancelAtPeriodEnd ? "text-[var(--color-brand)] hover:bg-[var(--color-brand-tint)]" : "text-[var(--color-ink-2)] hover:bg-[var(--color-subtle)]"}`}
+                                >
+                                  {c.cancelAtPeriodEnd ? "Reaktivieren" : "Kündigen"}
+                                </button>
+                              )}
+                              {c.stripeCustomerId && (
+                                <a
+                                  href={`https://dashboard.stripe.com/customers/${c.stripeCustomerId}`}
+                                  target="_blank" rel="noopener noreferrer"
+                                  title="In Stripe öffnen (Tarif, Rechnungen …)"
+                                  className="rounded-md border border-[var(--color-line)] px-2 py-1 text-xs text-[var(--color-muted)] hover:bg-[var(--color-subtle)]"
+                                >
+                                  Stripe ↗
+                                </a>
+                              )}
                               <button
                                 onClick={() => toggleBan(c)}
                                 title={c.banned ? "Sperre aufheben" : "Nutzer sperren"}
@@ -658,6 +721,42 @@ export default function AdminPage() {
           </>
         ) : null}
       </main>
+      {composeFor && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => !cmSending && setComposeFor(null)}>
+          <div className="w-full max-w-lg rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] p-5" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h3 className="text-sm font-semibold">E-Mail an {composeFor.company ?? composeFor.name ?? composeFor.email}</h3>
+                <p className="mt-0.5 text-xs text-[var(--color-muted)]">An: {composeFor.email} · wird über das System gesendet (Antworten gehen an dich).</p>
+              </div>
+              <button onClick={() => setComposeFor(null)} className="text-[var(--color-muted)] hover:text-[var(--color-ink)]"><Icon name="x" size={18} /></button>
+            </div>
+
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              {MAIL_TEMPLATES.map((t) => (
+                <button key={t.label} onClick={() => { setCmSubject(t.subject); setCmBody(t.body); }}
+                  className="rounded-lg border border-[var(--color-line-strong)] px-2.5 py-1 text-xs font-medium text-[var(--color-ink-2)] hover:bg-[var(--color-subtle)]">
+                  {t.label}
+                </button>
+              ))}
+            </div>
+
+            <input value={cmSubject} onChange={(e) => setCmSubject(e.target.value)} placeholder="Betreff"
+              className="mt-3 w-full rounded-lg border border-[var(--color-line-strong)] bg-[var(--color-canvas)] px-3 py-2 text-sm outline-none focus:border-[var(--color-brand)]" />
+            <textarea value={cmBody} onChange={(e) => setCmBody(e.target.value)} rows={9} placeholder="Nachricht …"
+              className="mt-2 w-full rounded-lg border border-[var(--color-line-strong)] bg-[var(--color-canvas)] px-3 py-2 text-sm outline-none focus:border-[var(--color-brand)]" />
+            <p className="mt-1 text-[11px] text-[var(--color-muted)]"><code>{"{{Vorname}}"}</code> wird automatisch durch den Vornamen ersetzt. Impressum kommt automatisch dazu.</p>
+
+            <div className="mt-3 flex justify-end gap-2">
+              <button onClick={() => setComposeFor(null)} className="rounded-lg border border-[var(--color-line-strong)] px-4 py-2 text-sm font-medium hover:bg-[var(--color-subtle)]">Abbrechen</button>
+              <button onClick={sendCompose} disabled={cmSending || cmSubject.trim().length < 2 || cmBody.trim().length < 5}
+                className="rounded-lg bg-[var(--color-brand)] px-4 py-2 text-sm font-semibold text-[var(--color-on-brand)] hover:bg-[var(--color-brand-ink)] disabled:opacity-50">
+                {cmSending ? "Sende …" : "Senden"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {toast && <Toast message={toast} onClose={() => setToast(null)} />}
     </div>
   );

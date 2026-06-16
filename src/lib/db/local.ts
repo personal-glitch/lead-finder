@@ -467,6 +467,7 @@ export function createLocalStore(): DataStore {
           subscriptionStatus: f?.subscriptionStatus ?? null,
           subscriptionRenewsAt: f?.subscriptionRenewsAt ?? null,
           cancelAtPeriodEnd: f?.cancelAtPeriodEnd ?? null,
+          subscriptionAmount: f?.subscriptionAmount ?? null,
         };
       });
     },
@@ -479,13 +480,14 @@ export function createLocalStore(): DataStore {
             ownerId, callGoal: null, senderImpressum: null, workspaceType: null, senderSignature: null, plan: null,
             senderName: null, senderEmail: null, smtpHost: null, smtpPort: null, smtpUser: null, smtpPass: null,
             stripeCustomerId: null, subscriptionStatus: null, subscriptionRenewsAt: null, cancelAtPeriodEnd: null,
+            subscriptionAmount: null,
           };
           s.settings.push(f);
         }
         const keys = [
           "callGoal", "senderImpressum", "workspaceType", "senderSignature", "plan",
           "senderName", "senderEmail", "smtpHost", "smtpPort", "smtpUser", "smtpPass",
-          "stripeCustomerId", "subscriptionStatus", "subscriptionRenewsAt", "cancelAtPeriodEnd",
+          "stripeCustomerId", "subscriptionStatus", "subscriptionRenewsAt", "cancelAtPeriodEnd", "subscriptionAmount",
         ] as const;
         for (const k of keys) {
           if (patch[k] !== undefined) {

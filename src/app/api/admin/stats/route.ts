@@ -24,7 +24,7 @@ export async function GET() {
 
     const { data: settings } = await admin
       .from("settings")
-      .select("owner_id, subscription_status, subscription_renews_at, cancel_at_period_end, admin_contacted_at");
+      .select("owner_id, subscription_status, subscription_renews_at, cancel_at_period_end, admin_contacted_at, subscription_amount, stripe_customer_id");
     const rows = settings ?? [];
     const byOwner = new Map(rows.map((r) => [r.owner_id, r]));
     const trialing = rows.filter((r) => r.subscription_status === "trialing").length;
@@ -50,6 +50,8 @@ export async function GET() {
             const b = (u as { banned_until?: string }).banned_until;
             return Boolean(b && new Date(b).getTime() > Date.now());
           })(),
+          amount: (st?.subscription_amount as number) ?? null,
+          stripeCustomerId: (st?.stripe_customer_id as string) ?? null,
         };
       })
       .sort((a, b) => (b.createdAt ?? "").localeCompare(a.createdAt ?? ""));

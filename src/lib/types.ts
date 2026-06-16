@@ -208,6 +208,8 @@ export interface Settings {
   subscriptionRenewsAt: string | null;
   /** true = gekündigt, läuft zum Periodenende aus. */
   cancelAtPeriodEnd: boolean | null;
+  /** Effektiver monatlicher Abo-Betrag in Cent (nach Rabatt), z. B. 1900 oder 4900. */
+  subscriptionAmount: number | null;
 }
 
 /** Welche externen Dienste konfiguriert sind – steuert die UI. */

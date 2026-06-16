@@ -59,6 +59,7 @@ function rowToSettings(r: any): Settings {
     subscriptionStatus: r?.subscription_status ?? null,
     subscriptionRenewsAt: r?.subscription_renews_at ?? null,
     cancelAtPeriodEnd: r?.cancel_at_period_end ?? null,
+    subscriptionAmount: r?.subscription_amount ?? null,
   };
 }
 function toLead(r: any): Lead {
@@ -677,6 +678,7 @@ export function createSupabaseStore(): DataStore {
       if (patch.subscriptionStatus !== undefined) row.subscription_status = patch.subscriptionStatus;
       if (patch.subscriptionRenewsAt !== undefined) row.subscription_renews_at = patch.subscriptionRenewsAt;
       if (patch.cancelAtPeriodEnd !== undefined) row.cancel_at_period_end = patch.cancelAtPeriodEnd;
+      if (patch.subscriptionAmount !== undefined) row.subscription_amount = patch.subscriptionAmount;
       const { data, error } = await db()
         .from("settings")
         .upsert(row, { onConflict: "owner_id" })

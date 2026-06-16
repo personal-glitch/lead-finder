@@ -2,7 +2,7 @@ import { jsonOk, jsonError } from "@/lib/api";
 import { AppError } from "@/lib/errors";
 import { config } from "@/lib/config";
 import { getStore } from "@/lib/db";
-import { getStripe, subPeriodEnd } from "@/lib/billing/stripe";
+import { getStripe, subPeriodEnd, subAmount } from "@/lib/billing/stripe";
 
 // Holt für alle Kunden Status + Ablaufdatum frisch aus Stripe – NUR Superadmin.
 export const maxDuration = 60;
@@ -42,6 +42,7 @@ export async function POST() {
             subscriptionRenewsAt: subPeriodEnd(sub),
             cancelAtPeriodEnd: Boolean(sub.cancel_at_period_end),
             stripeCustomerId: cust,
+            subscriptionAmount: subAmount(sub),
           });
           updated++;
         } catch { /* einzelnes Abo überspringen */ }
