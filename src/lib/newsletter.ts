@@ -160,16 +160,23 @@ async function sendWelcomeEmail(email: string, name: string | null, token: strin
       `<p style="margin:8px 0"><a href="${downloadUrl(d.file)}" style="display:inline-block;background:#16181d;color:#a8e83a;padding:11px 18px;border-radius:8px;text-decoration:none;font-weight:600">⬇ ${d.label}</a></p>`,
   ).join("");
 
-  const html = `<!doctype html><html lang="de"><body style="font-family:system-ui,Arial,sans-serif;color:#16181d;line-height:1.6;max-width:560px;margin:0 auto;padding:8px">
-<p>Hallo ${hallo},</p>
-<p>schön, dass du dabei bist! Hier sind deine <b>3 Gratis-Tools</b> zum sofort Loslegen:</p>
-${buttons}
-<p style="font-size:13px;color:#5b6470">Tipp: Fang mit dem Vorlagen-Paket an – Telefon-Leitfaden + 5 E-Mail-Vorlagen, sofort einsetzbar.</p>
-<p>Ab jetzt bekommst du außerdem regelmäßig einen umsetzbaren Tipp für mehr Neukunden, Anfragen und Umsatz.</p>
-<p style="margin:22px 0"><a href="${config.appUrl}/registrieren" style="display:inline-block;background:#a8e83a;color:#16181d;padding:12px 20px;border-radius:8px;text-decoration:none;font-weight:700">KundenRadar 3 Tage gratis testen</a></p>
-<p>Beste Grüße<br>Cihan · Seciora Solutions</p>
-<hr style="border:none;border-top:1px solid #e3e7ec;margin:24px 0">
-<p style="font-size:12px;color:#5b6470">${impressum}<br><a href="${unsub}" style="color:#5b6470">Newsletter abbestellen</a></p>
+  const html = `<!doctype html><html lang="de"><body style="margin:0;background:#f4f6f8;padding:16px">
+<div style="font-family:system-ui,Arial,sans-serif;color:#16181d;line-height:1.6;max-width:560px;margin:0 auto;background:#ffffff;border-radius:14px;overflow:hidden;border:1px solid #e3e7ec">
+  <div style="background:#16181d;padding:16px 22px">
+    <span style="font-size:18px;font-weight:700;color:#ffffff">Kunden<span style="color:#a8e83a">Radar</span></span>
+  </div>
+  <div style="padding:24px 22px">
+    <p style="margin:0 0 6px;font-size:18px;font-weight:700">Willkommen an Bord, ${hallo}! 🎁</p>
+    <p style="margin:0 0 16px">Schön, dass du dabei bist. Hier sind deine <b>3 Gratis-Tools</b> zum sofort Loslegen:</p>
+    ${buttons}
+    <p style="margin:14px 0 0;font-size:13px;color:#5b6470">Tipp: Fang mit dem Vorlagen-Paket an – Telefon-Leitfaden + 5 E-Mail-Vorlagen, sofort einsetzbar.</p>
+    <p style="margin:16px 0 0">Ab jetzt bekommst du außerdem regelmäßig einen umsetzbaren Tipp für mehr Neukunden, Anfragen und Umsatz.</p>
+    <p style="margin:22px 0"><a href="${config.appUrl}/registrieren" style="display:inline-block;background:#a8e83a;color:#16181d;padding:13px 24px;border-radius:8px;text-decoration:none;font-weight:700">KundenRadar 3 Tage gratis testen →</a></p>
+    <p style="margin:0">Beste Grüße<br><b>Team von Seciora Solutions</b></p>
+    <hr style="border:none;border-top:1px solid #e3e7ec;margin:22px 0">
+    <p style="margin:0;font-size:12px;color:#5b6470">${impressum}<br><a href="${unsub}" style="color:#5b6470">Newsletter abbestellen</a></p>
+  </div>
+</div>
 </body></html>`;
 
   const text =
@@ -177,7 +184,7 @@ ${buttons}
     FREEBIES.map((d) => `- ${d.label}: ${downloadUrl(d.file)}`).join("\n") +
     `\n\nAb jetzt bekommst du regelmäßig einen Tipp für mehr Neukunden.\n\n` +
     `KundenRadar 3 Tage gratis testen: ${config.appUrl}/registrieren\n\n` +
-    `Beste Grüße\nCihan · Seciora Solutions\n\n—\n${impressum}\nAbbestellen: ${unsub}`;
+    `Beste Grüße\nTeam von Seciora Solutions\n\n—\n${impressum}\nAbbestellen: ${unsub}`;
 
   await sendSystemEmail({ to: email, subject: "Deine 3 Gratis-Tools für mehr Neukunden 🎁", html, text });
 }
@@ -410,18 +417,30 @@ export function unsubscribeUrl(token: string): string {
 async function sendConfirmationEmail(email: string, token: string): Promise<void> {
   const link = confirmUrl(token);
   const impressum = config.resend.impressum ?? "Seciora Solutions, Inhaber Cihan Yildirim, Charlottenstraße 37, 51149 Köln";
-  const subject = "Bitte bestätige deine Newsletter-Anmeldung";
+  const subject = "Fast geschafft – bestätige deine Anmeldung 🎯";
   const text =
-    `Hallo,\n\nbitte bestätige mit einem Klick, dass du den KundenRadar-Newsletter erhalten möchtest:\n${link}\n\n` +
-    `Wenn du dich nicht angemeldet hast, ignoriere diese E-Mail einfach – ohne Bestätigung senden wir dir nichts.\n\n—\n${impressum}`;
-  const html = `<!doctype html><html lang="de"><body style="font-family:system-ui,Arial,sans-serif;color:#0f172a;line-height:1.6">
-<p>Hallo,</p>
-<p>bitte bestätige mit einem Klick, dass du den <b>KundenRadar</b>-Newsletter erhalten möchtest:</p>
-<p><a href="${link}" style="display:inline-block;background:#2563eb;color:#fff;padding:11px 18px;border-radius:8px;text-decoration:none;font-weight:600">Anmeldung bestätigen</a></p>
-<p style="font-size:13px;color:#64748b">Oder kopiere diesen Link in den Browser:<br><a href="${link}">${link}</a></p>
-<p style="font-size:13px;color:#64748b">Wenn du dich nicht angemeldet hast, ignoriere diese E-Mail einfach – ohne Bestätigung senden wir dir nichts.</p>
-<hr style="border:none;border-top:1px solid #e2e8f0;margin:24px 0">
-<p style="font-size:12px;color:#64748b">${impressum}</p>
+    `Fast geschafft!\n\n` +
+    `Bestätige kurz mit einem Klick, dass du den KundenRadar-Newsletter erhalten möchtest – danach bekommst du sofort deine 3 Gratis-Akquise-Tools (Vorlagen, Leitfaden, Tracker):\n${link}\n\n` +
+    `Kein Risiko: Ohne deine Bestätigung senden wir dir nichts. Abmeldung jederzeit.\n\n` +
+    `Wenn du dich nicht angemeldet hast, ignoriere diese E-Mail einfach.\n\n` +
+    `Beste Grüße\nTeam von Seciora Solutions\n\n—\n${impressum}`;
+  const html = `<!doctype html><html lang="de"><body style="margin:0;background:#f4f6f8;padding:16px">
+<div style="font-family:system-ui,Arial,sans-serif;color:#16181d;line-height:1.6;max-width:560px;margin:0 auto;background:#ffffff;border-radius:14px;overflow:hidden;border:1px solid #e3e7ec">
+  <div style="background:#16181d;padding:16px 22px">
+    <span style="font-size:18px;font-weight:700;color:#ffffff">Kunden<span style="color:#a8e83a">Radar</span></span>
+  </div>
+  <div style="padding:24px 22px">
+    <p style="margin:0 0 6px;font-size:18px;font-weight:700">Fast geschafft! 🎯</p>
+    <p style="margin:0 0 18px">Bestätige kurz mit einem Klick, dass du den <b>KundenRadar</b>-Newsletter erhalten möchtest – danach bekommst du sofort deine <b>3 Gratis-Akquise-Tools</b> (Vorlagen, Leitfaden, Tracker).</p>
+    <p style="margin:0 0 18px"><a href="${link}" style="display:inline-block;background:#a8e83a;color:#16181d;padding:13px 24px;border-radius:8px;text-decoration:none;font-weight:700">Anmeldung bestätigen →</a></p>
+    <div style="background:#eefad1;border-radius:8px;padding:12px 14px;font-size:13px;color:#3b6d11;margin:0 0 18px">Kein Risiko: Ohne deine Bestätigung senden wir dir nichts. Abmeldung jederzeit mit einem Klick.</div>
+    <p style="margin:0 0 6px;font-size:13px;color:#5b6470">Button geht nicht? Kopiere diesen Link in den Browser:</p>
+    <p style="margin:0 0 18px;font-size:13px;word-break:break-all"><a href="${link}" style="color:#5b6470">${link}</a></p>
+    <p style="margin:0;font-size:13px;color:#5b6470">Wenn du dich nicht angemeldet hast, ignoriere diese E-Mail einfach.</p>
+    <hr style="border:none;border-top:1px solid #e3e7ec;margin:22px 0">
+    <p style="margin:0;font-size:12px;color:#5b6470">${impressum}</p>
+  </div>
+</div>
 </body></html>`;
   await sendSystemEmail({ to: email, subject, html, text });
 }
