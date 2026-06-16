@@ -439,6 +439,7 @@ export function createSupabaseStore(): DataStore {
 
       const result: Lead[] = [];
       const toInsert: ReturnType<typeof leadInputToRow>[] = [];
+      const queuedKeys = new Set<string>();
 
       for (const input of inputs) {
         const key = dedupeKey(input);
@@ -464,7 +465,12 @@ export function createSupabaseStore(): DataStore {
           } else {
             result.push(toLead(row));
           }
+        } else if (queuedKeys.has(key)) {
+          // Doppelter Eintrag in derselben Auswahl (gleiche Firma / gleicher Schlüssel) – überspringen,
+          // statt den ganzen Speichervorgang an der Unique-Constraint scheitern zu lassen.
+          continue;
         } else {
+          queuedKeys.add(key);
           toInsert.push(leadInputToRow(ownerId, input, stageId));
         }
       }
