@@ -101,6 +101,50 @@ export async function subscribeNewsletter(input: SubscribeInput): Promise<Subscr
 }
 
 /**
+ * Lädt einen Lead aus der Pipeline per Double-Opt-In zur Mailliste ein (Superadmin).
+ * Trägt 'pending' ein und schickt eine freundliche Einladungs-Mail mit Bestätigungs-Link –
+ * aufgenommen wird nur, wer selbst bestätigt (sauber nach Erst-Kontakt/Anruf).
+ */
+export async function inviteNewsletter(input: SubscribeInput): Promise<SubscribeResult> {
+  if (!newsletterEnabled()) return { ok: false, error: "Newsletter ist nicht konfiguriert." };
+  if (!isValidEmail(input.email)) return { ok: false, error: "Ungültige E-Mail-Adresse." };
+
+  const sb = await admin();
+  const email = input.email.trim();
+  const email_norm = normEmail(email);
+
+  const { data: existing } = await sb
+    .from("newsletter_subscribers")
+    .select("id, status")
+    .eq("email_norm", email_norm)
+    .maybeSingle();
+
+  if (existing && existing.status === "confirmed") return { ok: true, state: "already_confirmed" };
+
+  const token = newToken();
+  const nowIso = new Date().toISOString();
+  const row = {
+    email,
+    email_norm,
+    status: "pending" as const,
+    token,
+    source: input.source ?? "pipeline-invite",
+    name: input.name ?? null,
+    consent_ip: input.ip ?? null,
+    consent_at: nowIso,
+    confirmed_at: null,
+    unsubscribed_at: null,
+    updated_at: nowIso,
+  };
+
+  if (existing) await sb.from("newsletter_subscribers").update(row).eq("id", existing.id);
+  else await sb.from("newsletter_subscribers").insert(row);
+
+  await sendInviteEmail(email, input.name ?? null, token);
+  return { ok: true, state: "pending" };
+}
+
+/**
  * Trägt eine bereits verifizierte Adresse (eingeloggter Nutzer) direkt als
  * 'confirmed' ein – Einwilligung per ausdrücklichem Klick im Tool, dokumentiert.
  */
@@ -412,6 +456,39 @@ export function unsubscribeUrl(token: string): string {
   const u = new URL("/newsletter/abmelden", config.appUrl);
   u.searchParams.set("token", token);
   return u.toString();
+}
+
+// Einladungs-Mail (Pipeline → Mailliste), z. B. nach einem Telefonat. DOI: Aufnahme nur nach Klick.
+async function sendInviteEmail(email: string, name: string | null, token: string): Promise<void> {
+  const link = confirmUrl(token);
+  const impressum = config.resend.impressum ?? DEFAULT_IMPRESSUM;
+  const hallo = name && name.trim() ? name.trim() : "zusammen";
+  const subject = "Schön, dass wir in Kontakt sind – bleiben wir's? 🤝";
+  const text =
+    `Hallo ${hallo},\n\n` +
+    `schön, dass wir in Kontakt sind! Wenn Sie möchten, halte ich Sie per E-Mail auf dem Laufenden – mit kurzen, umsetzbaren Tipps für mehr Neukunden und Neuigkeiten zu KundenRadar. Als Dankeschön bekommen Sie sofort 3 Gratis-Akquise-Tools.\n\n` +
+    `Mit einem Klick bestätigen:\n${link}\n\n` +
+    `Kein Klick = keine Mails. Ganz ohne Verpflichtung, Abmeldung jederzeit.\n\n` +
+    `Beste Grüße\nTeam von Seciora Solutions\n\n—\n${impressum}`;
+  const html = `<!doctype html><html lang="de"><body style="margin:0;background:#f4f6f8;padding:16px">
+<div style="font-family:system-ui,Arial,sans-serif;color:#16181d;line-height:1.6;max-width:560px;margin:0 auto;background:#ffffff;border-radius:14px;overflow:hidden;border:1px solid #e3e7ec">
+  <div style="background:#16181d;padding:16px 22px">
+    <span style="font-size:18px;font-weight:700;color:#ffffff">Kunden<span style="color:#a8e83a">Radar</span></span>
+  </div>
+  <div style="padding:24px 22px">
+    <p style="margin:0 0 6px;font-size:18px;font-weight:700">Bleiben wir in Kontakt? 🤝</p>
+    <p style="margin:0 0 16px">Hallo ${hallo}, schön, dass wir in Kontakt sind! Wenn Sie möchten, halte ich Sie per E-Mail auf dem Laufenden – mit kurzen, umsetzbaren <b>Tipps für mehr Neukunden</b> und Neuigkeiten zu KundenRadar. Als Dankeschön gibt's sofort <b>3 Gratis-Akquise-Tools</b>.</p>
+    <p style="margin:0 0 16px"><a href="${link}" style="display:inline-block;background:#a8e83a;color:#16181d;padding:13px 24px;border-radius:8px;text-decoration:none;font-weight:700">Ja, gerne – bestätigen →</a></p>
+    <div style="background:#eefad1;border-radius:8px;padding:12px 14px;font-size:13px;color:#3b6d11;margin:0 0 16px">Kein Klick = keine Mails. Ganz ohne Verpflichtung, Abmeldung jederzeit mit einem Klick.</div>
+    <p style="margin:0 0 6px;font-size:13px;color:#5b6470">Button geht nicht? Diesen Link in den Browser kopieren:</p>
+    <p style="margin:0 0 16px;font-size:13px;word-break:break-all"><a href="${link}" style="color:#5b6470">${link}</a></p>
+    <p style="margin:0">Beste Grüße<br><b>Team von Seciora Solutions</b></p>
+    <hr style="border:none;border-top:1px solid #e3e7ec;margin:22px 0">
+    <p style="margin:0;font-size:12px;color:#5b6470">${impressum}</p>
+  </div>
+</div>
+</body></html>`;
+  await sendSystemEmail({ to: email, subject, html, text });
 }
 
 async function sendConfirmationEmail(email: string, token: string): Promise<void> {

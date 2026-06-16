@@ -41,6 +41,9 @@ const STATUS_OPTS: { key: Lead["status"]; label: string; tone: string }[] = [
   { key: "verloren", label: "Verloren", tone: "var(--color-danger)" },
 ];
 
+// Superadmin-Status nur einmal pro Session laden (für den Mailliste-Einladen-Button).
+let _adminCache: boolean | null = null;
+
 function EditableField({ label, value, onSave, placeholder }: {
   label: string; value: string | null; onSave: (v: string | null) => void; placeholder?: string;
 }) {
@@ -78,7 +81,29 @@ export function LeadDetailDrawer({
   const [taskTitle, setTaskTitle] = useState("");
   const [valInput, setValInput] = useState("");
   const [confirmDel, setConfirmDel] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(_adminCache ?? false);
+  const [inviting, setInviting] = useState(false);
   const { persona } = usePersona();
+
+  useEffect(() => {
+    if (_adminCache !== null) { setIsAdmin(_adminCache); return; }
+    api<{ isAdmin: boolean }>("/api/admin/me")
+      .then((r) => { _adminCache = r.isAdmin; setIsAdmin(r.isAdmin); })
+      .catch(() => {});
+  }, []);
+
+  const inviteToList = async () => {
+    if (!lead) return;
+    setInviting(true); setMsg(null);
+    try {
+      const { state } = await api<{ state: string }>("/api/admin/leads/invite-newsletter", { json: { leadId: lead.id } });
+      setMsg(state === "already_confirmed"
+        ? `${lead.email} steht bereits bestätigt in der Mailliste.`
+        : `Einladung an ${lead.email} gesendet – wird nach Bestätigung aufgenommen.`);
+      await loadActivities(lead.id);
+    } catch (e) { setMsg(e instanceof Error ? e.message : "Einladung fehlgeschlagen."); }
+    finally { setInviting(false); }
+  };
 
   const loadActivities = async (leadId: string) => {
     try {
@@ -291,6 +316,19 @@ export function LeadDetailDrawer({
             </a>
             <Button variant="ghost" size="sm" onClick={doEnrich} disabled={enriching}>
               {enriching ? <Spinner size={13} /> : "Anreichern"}
+            </Button>
+          </div>
+        )}
+
+        {/* Superadmin: Lead per Double-Opt-In zur Mailliste einladen (z. B. nach dem Anruf) */}
+        {isAdmin && lead.email && (
+          <div className="flex items-center justify-between gap-3 rounded-xl border border-[var(--color-brand)]/30 bg-[var(--color-brand-tint)]/15 p-3">
+            <div className="min-w-0">
+              <div className="text-sm font-semibold">Zur Mailliste einladen</div>
+              <div className="text-xs text-[var(--color-muted)]">Schickt {lead.email} eine Bestätigungs-Einladung (Double-Opt-In).</div>
+            </div>
+            <Button size="sm" onClick={inviteToList} disabled={inviting}>
+              {inviting ? <Spinner size={13} /> : <><Icon name="mail" size={14} /> Einladen</>}
             </Button>
           </div>
         )}
