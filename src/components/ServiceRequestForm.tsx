@@ -8,13 +8,14 @@ import { CATEGORIES, type CustomerType } from "@/lib/marketplace-constants";
 const inputCls =
   "w-full rounded-lg border border-[var(--color-line-strong)] bg-[var(--color-surface)] px-3 py-2.5 text-sm outline-none focus:border-[var(--color-brand)]";
 
-export function ServiceRequestForm() {
+export function ServiceRequestForm({ defaultOrt = "", defaultCategory }: { defaultOrt?: string; defaultCategory?: string } = {}) {
+  const initialCat = defaultCategory && (CATEGORIES as readonly string[]).includes(defaultCategory) ? defaultCategory : CATEGORIES[0];
   const [customerType, setCustomerType] = useState<CustomerType>("privat");
-  const [category, setCategory] = useState<string>(CATEGORIES[0]);
+  const [category, setCategory] = useState<string>(initialCat);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [plz, setPlz] = useState("");
-  const [ort, setOrt] = useState("");
+  const [ort, setOrt] = useState(defaultOrt);
   const [budget, setBudget] = useState("");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");

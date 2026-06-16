@@ -62,7 +62,7 @@ export function MarketingShell({
         {" · "}
         <Link href="/gratis" className="font-semibold text-[var(--color-brand)] hover:underline">Gratis-Tools</Link>
         {" · "}
-        <Link href="/auftrag-einstellen" className="hover:text-[var(--color-ink)]">Auftragsbörse</Link>
+        <Link href="/dienstleister-finden" className="hover:text-[var(--color-ink)]">Dienstleister finden</Link>
         {" · "}
         <Link href="/newsletter" className="hover:text-[var(--color-ink)]">Newsletter</Link>
         {" · "}
