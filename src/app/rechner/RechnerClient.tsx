@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { Icon } from "@/components/icons";
 import { Kalkulator } from "@/components/Kalkulator";
+import { FreebieCta } from "@/components/landing/FreebieCta";
 
 export default function RechnerClient() {
   return (
@@ -75,6 +76,43 @@ export default function RechnerClient() {
             ))}
             <Link href="/blog" className="rounded-lg border border-[var(--color-line-strong)] px-3 py-2 text-sm font-medium text-[var(--color-ink-2)] hover:bg-[var(--color-subtle)]">Blog →</Link>
           </div>
+        </div>
+
+        {/* SEO-Inhalt: erklärt die Kalkulation, mehr Substanz + Keywords */}
+        <div className="mx-auto mt-16 max-w-3xl">
+          <h2 className="text-xl font-semibold tracking-[-0.01em]">So kalkulierst du deinen Preis richtig</h2>
+          <div className="mt-4 space-y-4 text-sm leading-relaxed text-[var(--color-ink-2)]">
+            <p>
+              Viele Dienstleister verkaufen sich unter Wert, weil sie nur ihren Lohn ansetzen. Dein
+              <strong> Stundenverrechnungssatz</strong> muss aber <em>alle</em> Kosten decken: Lohn und Lohnnebenkosten,
+              Fahrzeug und Material, Versicherungen, Werkzeug, Verwaltung – plus einen Gewinnaufschlag. Diese Summe teilst du
+              durch deine wirklich <strong>verrechenbaren Stunden</strong> (nicht alle Arbeitsstunden sind abrechenbar).
+            </p>
+            <p>
+              Für ein <strong>Angebot</strong> rechnest du anschließend: geschätzter Aufwand in Stunden × Stundensatz,
+              plus Material und Anfahrt. So kommst du auf einen <strong>Angebotspreis</strong>, der dich nicht draufzahlen
+              lässt. Genau das nehmen dir die Rechner oben ab – für Gebäudereinigung, Handwerk, Agentur, Webdesign, SEO und
+              Personalvermittlung.
+            </p>
+          </div>
+          <div className="mt-6 grid gap-3 sm:grid-cols-2">
+            {[
+              { q: "Wie hoch sollte mein Stundensatz sein?", a: "Als Faustregel liegt der Verrechnungssatz oft beim 2–3-fachen des reinen Stundenlohns – weil Nebenkosten, Ausfallzeiten und Gewinn mit hineinmüssen." },
+              { q: "Warum ist der Stundensatz höher als mein Lohn?", a: "Weil Urlaub, Krankheit, Verwaltung, Werkzeug, Versicherung und unproduktive Zeiten mitfinanziert werden müssen – sonst bleibt am Monatsende nichts übrig." },
+              { q: "Was kostet Gebäudereinigung pro m²?", a: "Das hängt von Reinigungsart, Fläche und Tariflohn ab. Der Reinigungskosten-Rechner oben rechnet dir Preis pro Einsatz, pro Monat und pro m² aus." },
+              { q: "Wie kalkuliere ich ein Angebot?", a: "Aufwand in Stunden schätzen, mit deinem Verrechnungssatz multiplizieren, Material und Anfahrt addieren – fertig ist ein belastbarer Angebotspreis." },
+            ].map((f) => (
+              <div key={f.q} className="rounded-xl border border-[var(--color-line)] bg-[var(--color-surface)] p-4">
+                <h3 className="text-sm font-semibold">{f.q}</h3>
+                <p className="mt-1 text-sm text-[var(--color-muted)]">{f.a}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Mail-Capture: Rechner-Besucher kalkulieren Preise → brauchen Kunden → Freebie passt */}
+        <div className="mx-auto mt-12 max-w-3xl">
+          <FreebieCta source="rechner" />
         </div>
 
         {/* CTA-Band: macht die Seite lebendig und führt zurück ins Angebot */}

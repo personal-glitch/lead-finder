@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Icon } from "@/components/icons";
 import { cx } from "@/components/ui";
+import { trackEvent } from "@/lib/analytics";
 
 type Mode = "login" | "signup";
 
@@ -88,6 +89,7 @@ export function AuthForm({
           },
         });
         if (error) { setError(translate(error.message)); return; }
+        trackEvent("sign_up", { method: "email" });
         // Optionales Newsletter-Abo (Double-Opt-In) – darf die Registrierung nie blockieren.
         if (newsletterOptIn) {
           try {

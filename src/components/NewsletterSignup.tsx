@@ -2,6 +2,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { api } from "@/lib/client";
+import { trackEvent } from "@/lib/analytics";
 
 interface Props {
   source?: string;
@@ -39,6 +40,7 @@ export function NewsletterSignup({
       });
       setState("done");
       setMsg(r.message);
+      trackEvent("generate_lead", { source, type: "newsletter" });
     } catch (err) {
       setState("error");
       setMsg(err instanceof Error ? err.message : "Etwas ist schiefgelaufen.");
