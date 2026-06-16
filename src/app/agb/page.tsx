@@ -34,6 +34,20 @@ export default function AgbPage() {
         Gewähr für Vollständigkeit, Richtigkeit oder ständige Verfügbarkeit dieser Drittquellen.
       </P>
 
+      <H2>§ 2a Auftragsbörse &amp; öffentliche Ausschreibungen (Vermittlung/Information)</H2>
+      <P>
+        Der Anbieter stellt zusätzlich eine Auftragsbörse bereit, über die Auftraggeber – privat oder gewerblich –
+        kostenlos und unverbindlich Anfragen für Dienstleistungen einstellen können und über die registrierte Nutzer
+        (Dienstleister) hierauf Angebote unterbreiten können.
+      </P>
+      <UL items={[
+        "Der Anbieter tritt ausschließlich als Vermittler bzw. technische Plattform auf. Verträge über die angefragten Leistungen kommen ausschließlich zwischen dem anfragenden Auftraggeber und dem jeweiligen Dienstleister zustande; der Anbieter wird nicht Vertragspartei und schuldet weder die angefragte Leistung noch deren Erbringung.",
+        "Der Anbieter übernimmt keine Gewähr für die Verfügbarkeit, Qualifikation, Zuverlässigkeit, Bonität oder Eignung der Anbieter sowie für Inhalt, Richtigkeit oder Ernsthaftigkeit der eingestellten Anfragen und abgegebenen Angebote. Eine Haftung für das Zustandekommen oder die Durchführung der vermittelten Verträge ist – im Rahmen von § 9 – ausgeschlossen.",
+        "Die Nutzung der Auftragsbörse ist für anfragende Auftraggeber kostenlos und unverbindlich; aus einer Anfrage entsteht keine Zahlungs- oder Abnahmepflicht.",
+        "Nutzer, die Angebote abgeben, sind für ihre Angebote und die Einhaltung der gesetzlichen Vorgaben (insbesondere Wettbewerbs- und Datenschutzrecht) selbst verantwortlich und kontaktieren Auftraggeber nur im Rahmen des Zulässigen.",
+        "Öffentliche Ausschreibungen werden lediglich zu Informationszwecken angezeigt. Sie stammen aus dem amtlichen Datenservice Öffentlicher Einkauf (Open Data, Lizenz CC0). Der Anbieter übernimmt keine Gewähr für deren Richtigkeit, Aktualität oder Vollständigkeit; maßgeblich sind allein die amtlichen Originalbekanntmachungen.",
+      ]} />
+
       <H2>§ 3 Vertragsschluss &amp; Registrierung</H2>
       <P>
         Zur Nutzung ist eine Registrierung mit zutreffenden Angaben erforderlich. Der Vertrag kommt mit Abschluss

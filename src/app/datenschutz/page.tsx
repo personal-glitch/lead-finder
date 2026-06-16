@@ -97,6 +97,36 @@ export default function DatenschutzPage() {
         "Für die im Tool verarbeiteten Leads ist die jeweilige Nutzerin/der Nutzer (z. B. die Reinigungsfirma) datenschutzrechtlich verantwortlich; wir handeln insoweit als Auftragsverarbeiter (Abschluss eines AV-Vertrags auf Anfrage).",
       ]} />
 
+      <H2>6a. Auftragsbörse (Dienstleistungs-Anfragen)</H2>
+      <P>
+        Über unsere Auftragsbörse (z. B. „Auftrag einstellen" bzw. „Dienstleister finden") kannst du – privat oder
+        gewerblich – kostenlos eine Anfrage einstellen. Dabei verarbeiten wir die von dir angegebenen Daten:
+        Name, E-Mail-Adresse, ggf. Telefonnummer, gewünschte Branche/Leistung, Beschreibung des Anliegens, Ort/PLZ
+        sowie die Angabe, ob du privat oder gewerblich anfragst.
+      </P>
+      <P>
+        Zweck der Verarbeitung ist die Vermittlung deiner Anfrage an passende, bei uns registrierte Dienstleister,
+        damit diese dir ein Angebot unterbreiten können. Rechtsgrundlage ist deine Einwilligung (Art. 6 Abs. 1 lit. a
+        DSGVO) sowie die Durchführung vorvertraglicher Maßnahmen auf deine Anfrage hin (Art. 6 Abs. 1 lit. b DSGVO).
+      </P>
+      <UL items={[
+        "Weitergabe: Die Beschreibung deiner Anfrage sowie Branche und Ort werden registrierten Anbietern in deiner Region im Tool angezeigt. Deine Kontaktdaten (Name, E-Mail, Telefon) werden dabei nicht öffentlich angezeigt.",
+        "Deine Kontaktdaten werden ausschließlich verwendet, um dir die Eingangsbestätigung sowie die Angebote interessierter Anbieter per E-Mail zuzustellen.",
+        "Sobald du auf ein Angebot reagierst und Kontakt zu einem Anbieter aufnimmst, erfolgt die weitere Kommunikation und Verarbeitung in der Verantwortung des jeweiligen Anbieters.",
+        "Wir treten ausschließlich als Vermittler/Plattform auf und werden nicht Vertragspartner eines etwaigen Auftrags zwischen dir und einem Dienstleister.",
+        "Speicherung in unserer Datenbank (Supabase, EU-Region). Du kannst die Löschung deiner Anfrage jederzeit verlangen; sie wird gelöscht, sobald sie erledigt ist und keine Aufbewahrungspflichten entgegenstehen.",
+      ]} />
+
+      <H2>6b. Öffentliche Ausschreibungen</H2>
+      <P>
+        Im Tool zeigen wir öffentliche Vergabe-Bekanntmachungen an, die wir aus dem amtlichen „Datenservice
+        Öffentlicher Einkauf" (Bekanntmachungsservice, oeffentlichevergabe.de) beziehen. Diese Daten stehen als
+        Open Data unter der Lizenz Creative Commons Zero (CC0) zur Verfügung und können vereinzelt Kontaktdaten von
+        Ansprechpersonen öffentlicher Vergabestellen enthalten. Zweck ist die Information unserer Nutzerinnen und
+        Nutzer über passende Ausschreibungen; Rechtsgrundlage ist unser berechtigtes Interesse (Art. 6 Abs. 1 lit. f
+        DSGVO). Betroffene Ansprechpersonen können der Anzeige jederzeit widersprechen.
+      </P>
+
       <H2>7. Kontaktaufnahme</H2>
       <P>
         Wenn du uns über das Kontaktformular oder per E-Mail kontaktierst, verarbeiten wir die angegebenen Daten
