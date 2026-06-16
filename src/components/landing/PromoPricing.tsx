@@ -47,6 +47,7 @@ export function PromoPricing() {
         <span className="text-4xl font-bold text-[var(--color-brand)]">{PROMO.price}</span>
         <span className="text-sm text-[var(--color-muted)]">/Monat</span>
       </div>
+      <p className="mt-1 text-xs text-[var(--color-faint)]">Endpreis · keine USt. (Kleinunternehmer, § 19 UStG)</p>
       <p className="mt-1.5 text-sm text-[var(--color-ink-2)]">
         Nur für die <strong>ersten {PROMO.slots} Kunden</strong> – danach dauerhaft {PROMO.price}/Monat.
       </p>

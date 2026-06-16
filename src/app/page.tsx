@@ -34,7 +34,9 @@ export const metadata: Metadata = {
     "Stundensatz Handwerk berechnen", "Stundenverrechnungssatz Handwerk", "Stundensatz Agentur",
     "Webdesign Preis berechnen", "Was kostet eine Website", "SEO Kosten", "Website-Check",
     "Personalvermittlung Provision", "Zeitarbeit Verrechnungssatz", "Firmen mit offenen Stellen finden",
-    "Angebotspreis berechnen", "Neukunden für Dienstleister", "B2B-Leads finden", "KundenRadar",
+    "Angebotspreis berechnen", "Neukunden für Dienstleister", "B2B-Leads finden",
+    "Leads generieren", "B2B-Leadgenerierung", "Entscheider finden", "Geschäftsführer-Kontakte",
+    "Ansprechpartner finden", "Firmenkontakte recherchieren", "Neukundenakquise B2B", "KundenRadar",
   ],
   alternates: { canonical: "/" },
   openGraph: {
@@ -583,6 +585,7 @@ export default function Landing() {
                 {t.highlight && <span className="absolute -top-3 left-6 rounded-full bg-[var(--color-brand)] px-2.5 py-0.5 text-xs font-semibold text-[var(--color-on-brand)]">Beliebt</span>}
                 <h3 className="font-semibold">{t.name}</h3>
                 <div className="mt-2 flex items-baseline gap-1.5"><span className="text-3xl font-semibold tnum">{t.price}</span><span className="text-sm text-[var(--color-muted)]">{t.priceNote}</span></div>
+                <p className="mt-1 text-xs text-[var(--color-faint)]">Endpreis · keine USt. (Kleinunternehmer, § 19 UStG)</p>
                 <ul className="mt-5 space-y-2.5 text-sm">
                   {t.feats.map((f) => <li key={f} className="flex gap-2"><Check />{f}</li>)}
                 </ul>
