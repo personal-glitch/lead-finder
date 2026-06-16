@@ -191,6 +191,11 @@ export function AuthForm({
             {show ? "verbergen" : "zeigen"}
           </button>
         </div>
+        {!isSignup && (
+          <div className="mt-1.5 text-right">
+            <Link href="/passwort-vergessen" className="text-xs font-medium text-[var(--color-muted)] hover:text-[var(--color-ink)]">Passwort vergessen?</Link>
+          </div>
+        )}
       </label>
 
       {isSignup && (

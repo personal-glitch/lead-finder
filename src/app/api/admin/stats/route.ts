@@ -46,6 +46,10 @@ export async function GET() {
           contactedAt: (st?.admin_contacted_at as string) ?? null,
           createdAt: u.created_at,
           confirmed: Boolean(u.email_confirmed_at),
+          banned: (() => {
+            const b = (u as { banned_until?: string }).banned_until;
+            return Boolean(b && new Date(b).getTime() > Date.now());
+          })(),
         };
       })
       .sort((a, b) => (b.createdAt ?? "").localeCompare(a.createdAt ?? ""));

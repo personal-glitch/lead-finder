@@ -24,6 +24,15 @@ interface Customer {
   contactedAt: string | null;
   createdAt: string | null;
   confirmed: boolean;
+  banned: boolean;
+}
+
+/** mailto-Link mit vorbefülltem Betreff & Anrede. */
+function mailtoFor(email: string, firstName?: string | null): string {
+  const hi = firstName ? `Hallo ${firstName},` : "Hallo,";
+  const subject = encodeURIComponent("KundenRadar");
+  const body = encodeURIComponent(`${hi}\n\nhier Cihan von KundenRadar 👋\n\n`);
+  return `mailto:${email}?subject=${subject}&body=${body}`;
 }
 
 /** Telefonnummer → wa.me-Link (international). Null, wenn keine brauchbare Nummer. */
@@ -202,6 +211,23 @@ export default function AdminPage() {
     }
   };
 
+  const toggleBan = async (c: Customer) => {
+    const ban = !c.banned;
+    if (!window.confirm(ban
+      ? `„${c.company ?? c.email}" wirklich sperren? Der Nutzer kann sich dann nicht mehr anmelden.`
+      : `Sperre für „${c.company ?? c.email}" aufheben?`)) return;
+    setBusy(c.id);
+    try {
+      await api("/api/admin/customer/ban", { json: { ownerId: c.id, ban } });
+      setStats((s) => s ? { ...s, customers: s.customers.map((x) => x.id === c.id ? { ...x, banned: ban } : x) } : s);
+      setToast(ban ? "Nutzer gesperrt." : "Sperre aufgehoben.");
+    } catch (e) {
+      setToast(e instanceof Error ? e.message : "Aktion fehlgeschlagen.");
+    } finally {
+      setBusy(null);
+    }
+  };
+
   const markContacted = async (ownerId: string, contacted: boolean) => {
     // Optimistisch aktualisieren, dann speichern.
     setStats((s) => s ? { ...s, customers: s.customers.map((c) => c.id === ownerId ? { ...c, contactedAt: contacted ? new Date().toISOString() : null } : c) } : s);
@@ -306,10 +332,10 @@ export default function AdminPage() {
                     <th className="px-4 py-2.5 font-medium">E-Mail</th>
                     <th className="px-4 py-2.5 font-medium">Telefon</th>
                     <th className="px-4 py-2.5 font-medium">Status</th>
-                    <th className="px-4 py-2.5 font-medium">Kontakt (WhatsApp)</th>
+                    <th className="px-4 py-2.5 font-medium">Kontakt</th>
                     <th className="px-4 py-2.5 font-medium">Registriert</th>
                     <th className="px-4 py-2.5 font-medium">Test-Ablauf / Kündigung</th>
-                    <th className="px-4 py-2.5 font-medium text-right">Test verlängern</th>
+                    <th className="px-4 py-2.5 font-medium text-right">Aktionen</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -321,7 +347,12 @@ export default function AdminPage() {
                       <td className="px-4 py-2.5">{c.name ?? "–"}</td>
                       <td className="px-4 py-2.5 text-[var(--color-muted)]">{c.email}</td>
                       <td className="px-4 py-2.5 text-[var(--color-muted)] tnum">{c.phone ?? "–"}</td>
-                      <td className="px-4 py-2.5"><StatusBadge s={c.status} /></td>
+                      <td className="px-4 py-2.5">
+                        <div className="flex flex-wrap items-center gap-1">
+                          <StatusBadge s={c.status} />
+                          {c.banned && <span className="rounded-full bg-[var(--color-danger-tint)] px-2 py-0.5 text-[11px] font-medium text-[var(--color-danger)]">Gesperrt</span>}
+                        </div>
+                      </td>
                       <td className="px-4 py-2.5">
                         <div className="flex items-center gap-1.5">
                           {waFromPhone(c.phone, c.name?.split(" ")[0]) ? (
@@ -339,6 +370,14 @@ export default function AdminPage() {
                           ) : (
                             <span className="text-[var(--color-faint)]">–</span>
                           )}
+                          <a
+                            href={mailtoFor(c.email, c.name?.split(" ")[0])}
+                            title="E-Mail schreiben"
+                            onClick={() => markContacted(c.id, true)}
+                            className="grid h-7 w-7 shrink-0 place-items-center rounded-md border border-[var(--color-line-strong)] text-[var(--color-ink-2)] hover:bg-[var(--color-subtle)]"
+                          >
+                            <Icon name="mail" size={14} />
+                          </a>
                           <button
                             onClick={() => markContacted(c.id, !c.contactedAt)}
                             title={c.contactedAt ? "Als nicht kontaktiert markieren" : "Als kontaktiert markieren"}
@@ -355,16 +394,25 @@ export default function AdminPage() {
                           {busy === c.id ? (
                             <Spinner size={14} />
                           ) : (
-                            [7, 14, 30].map((d) => (
+                            <>
+                              {[7, 14, 30].map((d) => (
+                                <button
+                                  key={d}
+                                  onClick={() => extendTrial(c.id, d)}
+                                  className="rounded-md border border-[var(--color-line)] px-2 py-1 text-xs text-[var(--color-muted)] hover:border-[var(--color-brand)] hover:text-[var(--color-brand)]"
+                                  title={`Testphase um ${d} Tage verlängern`}
+                                >
+                                  +{d}d
+                                </button>
+                              ))}
                               <button
-                                key={d}
-                                onClick={() => extendTrial(c.id, d)}
-                                className="rounded-md border border-[var(--color-line)] px-2 py-1 text-xs text-[var(--color-muted)] hover:border-[var(--color-brand)] hover:text-[var(--color-brand)]"
-                                title={`Testphase um ${d} Tage verlängern`}
+                                onClick={() => toggleBan(c)}
+                                title={c.banned ? "Sperre aufheben" : "Nutzer sperren"}
+                                className={`rounded-md border border-[var(--color-line)] px-2 py-1 text-xs ${c.banned ? "text-[var(--color-success)] hover:bg-[var(--color-success-tint)]" : "text-[var(--color-danger)] hover:bg-[var(--color-danger-tint)]"}`}
                               >
-                                +{d}d
+                                {c.banned ? "Entsperren" : "Sperren"}
                               </button>
-                            ))
+                            </>
                           )}
                         </div>
                       </td>
