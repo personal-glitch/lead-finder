@@ -4,6 +4,7 @@ import { MarketingShell, JsonLd } from "@/components/landing/MarketingShell";
 import { ServiceRequestForm } from "@/components/ServiceRequestForm";
 import { Icon, type IconName } from "@/components/icons";
 import { SERVICE_CITIES } from "@/lib/service-cities";
+import { SERVICE_TYPES } from "@/lib/service-types";
 
 export const metadata: Metadata = {
   title: "Dienstleister finden & kostenlos Angebote einholen | KundenRadar",
@@ -25,17 +26,6 @@ const BENEFITS: { icon: IconName; t: string; d: string }[] = [
   { icon: "pin", t: "Anbieter aus deiner Region", d: "Deine Anfrage geht an passende Dienstleister in deiner Stadt und im Umkreis – nicht an irgendwen quer durch Deutschland." },
   { icon: "search", t: "Angebote vergleichen", d: "Statt selbst zehn Firmen zu googeln und anzurufen, kommen die Angebote zu dir – in Ruhe vergleichen, dann beauftragen." },
   { icon: "clock", t: "Schnell", d: "Eine Anfrage in 2 Minuten, oft erste Rückmeldungen innerhalb von 1–2 Tagen – direkt per E-Mail." },
-];
-
-const SERVICES: { label: string; note: string }[] = [
-  { label: "Gebäudereinigung", note: "Unterhalts-, Glas- & Grundreinigung für Büro, Praxis, Treppenhaus" },
-  { label: "Hausmeisterservice", note: "Objektbetreuung, Winterdienst, kleine Reparaturen" },
-  { label: "Maler & Lackierer", note: "Innen- & Außenanstrich, Tapezieren, Fassade" },
-  { label: "Elektriker", note: "Installation, Reparatur, Smart-Home" },
-  { label: "Sanitär & Heizung", note: "Bad, Heizung, Rohrbruch, Wartung" },
-  { label: "Garten- & Landschaftsbau", note: "Gartenpflege, Baumschnitt, Außenanlagen" },
-  { label: "Umzug & Transport", note: "Privat- & Firmenumzug, Entrümpelung" },
-  { label: "Tischler & Schreiner", note: "Möbel, Einbauten, Reparaturen" },
 ];
 
 const FAQ = [
@@ -112,16 +102,19 @@ export default function DienstleisterHubPage() {
         </div>
       </section>
 
-      {/* Beliebte Dienstleistungen */}
+      {/* Branchen (verlinkt auf eigene Landingpages) */}
       <section className="mt-16">
         <h2 className="text-2xl font-semibold tracking-[-0.01em]">Beliebte Dienstleistungen</h2>
-        <p className="mt-2 text-sm text-[var(--color-muted)]">Für diese Leistungen findest du besonders schnell passende Anbieter:</p>
+        <p className="mt-2 text-sm text-[var(--color-muted)]">Wähle, was du brauchst – oder stell direkt oben deine Anfrage:</p>
         <div className="mt-5 grid gap-3 sm:grid-cols-2">
-          {SERVICES.map((s) => (
-            <div key={s.label} className="rounded-xl border border-[var(--color-line)] bg-[var(--color-surface)] p-4">
-              <div className="text-sm font-semibold">{s.label}</div>
-              <div className="mt-0.5 text-sm text-[var(--color-muted)]">{s.note}</div>
-            </div>
+          {SERVICE_TYPES.map((s) => (
+            <Link key={s.slug} href={`/dienstleister/${s.slug}`} className="group rounded-xl border border-[var(--color-line)] bg-[var(--color-surface)] p-4 hover:border-[var(--color-brand)]/40 hover:bg-[var(--color-subtle)]">
+              <div className="flex items-center justify-between">
+                <div className="text-sm font-semibold group-hover:text-[var(--color-brand)]">{s.keyword} finden</div>
+                <Icon name="chevronRight" size={15} />
+              </div>
+              <div className="mt-0.5 text-sm text-[var(--color-muted)]">{s.leistungen.slice(0, 3).join(" · ")}</div>
+            </Link>
           ))}
         </div>
       </section>

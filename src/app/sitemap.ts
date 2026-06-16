@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { config } from "@/lib/config";
 import { CITIES } from "@/lib/cities";
 import { SERVICE_CITIES } from "@/lib/service-cities";
+import { SERVICE_TYPES } from "@/lib/service-types";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const base = config.appUrl;
@@ -12,6 +13,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: "/auftrag-einstellen", priority: 0.85 },
     { path: "/dienstleister-finden", priority: 0.85 },
     ...SERVICE_CITIES.map((c) => ({ path: `/dienstleister-finden/${c.slug}`, priority: 0.8 })),
+    ...SERVICE_TYPES.map((s) => ({ path: `/dienstleister/${s.slug}`, priority: 0.82 })),
     ...CITIES.map((c) => ({ path: `/neukunden-finden/${c.slug}`, priority: 0.75 })),
     { path: "/rechner", priority: 0.7 },
     { path: "/rechner/gebaeudereinigung", priority: 0.8 },
