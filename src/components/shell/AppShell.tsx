@@ -26,6 +26,7 @@ const NAV: { href: string; label: string; icon: IconName; match: (p: string) => 
   { href: "/kontakte", label: "Kontakte", icon: "user", match: (p) => p.startsWith("/kontakte") },
   { href: "/agenten", label: "Agenten", icon: "agents", match: (p) => p.startsWith("/agenten") },
   { href: "/suche", label: "Suche", icon: "search", match: (p) => p.startsWith("/suche") },
+  { href: "/auftraege", label: "Aufträge", icon: "cart", match: (p) => p.startsWith("/auftraege") },
   { href: "/kalkulator", label: "Kalkulator", icon: "calculator", match: (p) => p.startsWith("/kalkulator") },
   { href: "/gratis", label: "Gratis-Tools", icon: "box", match: (p) => p.startsWith("/gratis") },
   { href: "/aufgaben", label: "Aufgaben", icon: "tasks", match: (p) => p.startsWith("/aufgaben") },
