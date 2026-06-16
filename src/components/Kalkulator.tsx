@@ -5,6 +5,7 @@ import { Icon, type IconName } from "@/components/icons";
 import { Card, cx } from "@/components/ui";
 import { api } from "@/lib/client";
 import { ReinigungWizard } from "@/components/ReinigungWizard";
+import { RechnerLeadForm } from "@/components/RechnerLeadForm";
 import {
   calcReinigung, calcHandwerk, calcAgentur, eur, type KalkModus,
   LEISTUNGEN, REINIGUNG_ABRECHNUNG, VERSCHMUTZUNG, LOHNBASIS, FREQUENZEN,
@@ -406,27 +407,13 @@ export function Kalkulator({ teaser = false, compact = false, defaultModus }: { 
         )}
 
         {teaser ? (
-          compact ? (
-            <div className="text-center">
-              <Link href="/registrieren" className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[var(--color-brand)] px-5 py-3 text-sm font-semibold text-[var(--color-on-brand)] hover:bg-[var(--color-brand-ink)]">
-                Ergebnis & Angebots-PDF sichern <Icon name="chevronRight" size={15} />
-              </Link>
-              <p className="mt-1.5 text-[11px] text-[var(--color-muted)]">Kostenlos starten · 3 Tage gratis · jederzeit kündbar</p>
-            </div>
-          ) : (
-            <Card className="border-[var(--color-brand)]/30 bg-[var(--color-brand-tint)]/15 p-4 text-center">
-              <p className="text-sm font-medium">Kostenlos sichern & weiter:</p>
-              <ul className="mx-auto mt-2 max-w-xs space-y-1 text-left text-xs text-[var(--color-muted)]">
-                <li className="flex items-start gap-1.5"><Icon name="check" size={13} className="mt-0.5 shrink-0 text-[var(--color-brand)]" /> Kalkulation speichern & als Angebot exportieren</li>
-                <li className="flex items-start gap-1.5"><Icon name="check" size={13} className="mt-0.5 shrink-0 text-[var(--color-brand)]" /> Passende Firmen in deiner Nähe finden & anrufen</li>
-                <li className="flex items-start gap-1.5"><Icon name="check" size={13} className="mt-0.5 shrink-0 text-[var(--color-brand)]" /> Pipeline, Aufgaben & E-Mail an einem Ort</li>
-              </ul>
-              <Link href="/registrieren" className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[var(--color-brand)] px-5 py-3 text-sm font-semibold text-[var(--color-on-brand)] hover:bg-[var(--color-brand-ink)]">
-                Kostenlos starten <Icon name="chevronRight" size={15} />
-              </Link>
-              <p className="mt-1.5 text-[11px] text-[var(--color-muted)]">3 Tage gratis · keine Vorab-Zahlung · jederzeit kündbar</p>
-            </Card>
-          )
+          <>
+            <RechnerLeadForm modus={modus} headlineLabel={out.headline.label} headlineValue={out.headline.value} sub={out.sub} breakdown={out.breakdown} />
+            <p className="mt-2 text-center text-[11px] text-[var(--color-muted)]">
+              Oder direkt im Tool:{" "}
+              <Link href="/registrieren" className="font-medium text-[var(--color-brand)] hover:underline">Angebots-PDF erstellen &amp; Kunden finden →</Link>
+            </p>
+          </>
         ) : (
           <p className="px-1 text-[11px] text-[var(--color-faint)]">Richtwerte (u. a. Tariflohn 2026, RAL-Flächenleistungen) – ersetzt keine individuelle Kalkulation. Ohne Gewähr.</p>
         )}

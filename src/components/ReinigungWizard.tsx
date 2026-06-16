@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Icon } from "@/components/icons";
 import { Card, cx } from "@/components/ui";
 import { LEISTUNGEN, VERSCHMUTZUNG, FREQUENZEN, eur } from "@/lib/kalkulator";
+import { RechnerLeadForm } from "@/components/RechnerLeadForm";
 
 // Vereinfachte Optionen für Laien.
 const WIZ_LEISTUNGEN = LEISTUNGEN;
@@ -207,12 +208,24 @@ export function ReinigungWizard({ teaser = false }: { teaser?: boolean }) {
           </div>
 
           {teaser ? (
-            <div className="mt-3 text-center">
-              <Link href="/registrieren" className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[var(--color-brand)] px-5 py-3 text-sm font-semibold text-[var(--color-on-brand)] hover:bg-[var(--color-brand-ink)]">
-                Angebots-PDF erstellen & Kunden finden <Icon name="chevronRight" size={15} />
-              </Link>
-              <p className="mt-1.5 text-[11px] text-[var(--color-muted)]">Kostenlos starten · 3 Tage gratis · jederzeit kündbar</p>
-            </div>
+            <>
+              <RechnerLeadForm
+                modus="reinigung"
+                headlineLabel="Dein Angebotspreis pro Einsatz"
+                headlineValue={`${eur(res.preis * 0.9)} – ${eur(res.preis * 1.1)}`}
+                sub={`≈ ${eur(res.proMonat)} / Monat · ${res.stundenEinsatz.toFixed(1)} h Arbeit${res.proM2 > 0 ? ` · ${eur(res.proM2)}/m²` : ""}`}
+                breakdown={[
+                  { label: "Empfohlener Preis/Einsatz", value: eur(res.empfPreis) },
+                  { label: "≈ pro Monat", value: eur(res.proMonat) },
+                  { label: "Arbeitszeit/Einsatz", value: `${res.stundenEinsatz.toFixed(1)} h` },
+                  { label: "Marktüblich", value: `${eur(res.min)}–${eur(res.max)}${res.unit}` },
+                ]}
+              />
+              <p className="mt-2 text-center text-[11px] text-[var(--color-muted)]">
+                Oder direkt im Tool:{" "}
+                <Link href="/registrieren" className="font-medium text-[var(--color-brand)] hover:underline">Angebots-PDF erstellen &amp; Kunden finden →</Link>
+              </p>
+            </>
           ) : null}
 
           <button type="button" onClick={reset} className="mt-3 inline-flex items-center gap-1.5 text-xs text-[var(--color-muted)] hover:text-[var(--color-ink)]">
