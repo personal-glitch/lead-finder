@@ -5,6 +5,7 @@ import { CSS } from "@dnd-kit/utilities";
 import type { Lead, PipelineStage } from "@/lib/types";
 import { AGENT_COLORS, Icon } from "./icons";
 import { Badge, Button, IconButton, TextInput, cx } from "./ui";
+import { useConfirm } from "@/components/ConfirmProvider";
 
 function initials(name: string | null): string {
   if (!name) return "–";
@@ -104,6 +105,7 @@ function Column({
   onDelete: (id: string) => void;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: `stage:${stage.id}`, data: { kind: "stage", stageId: stage.id } });
+  const confirm = useConfirm();
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(stage.name);
 
@@ -141,8 +143,8 @@ function Column({
           </span>
         </div>
         <IconButton icon="trash" label="Stage löschen" className="opacity-0 group-hover/board:opacity-100"
-          onClick={() => {
-            if (confirm(`Stage „${stage.name}" löschen? Leads darin verlieren ihre Stage.`)) onDelete(stage.id);
+          onClick={async () => {
+            if (await confirm({ message: `Stage „${stage.name}" löschen? Leads darin verlieren ihre Stage.`, confirmLabel: "Löschen" })) onDelete(stage.id);
           }} />
       </div>
       <div

@@ -7,6 +7,7 @@ import { Icon } from "@/components/icons";
 import { Badge, Button, Card, cx, Field, IconButton, Spinner, TextInput, Textarea, Toast } from "@/components/ui";
 import { PLANS, planOf, TRIAL_DAYS } from "@/lib/plans";
 import { PERSONAS } from "@/lib/personas";
+import { useConfirm } from "@/components/ConfirmProvider";
 
 // Häufige Anbieter – Auswahl füllt Server & Port automatisch.
 const SMTP_PRESETS: Record<string, { host: string; port: number }> = {
@@ -177,6 +178,7 @@ export default function EinstellungenPage() {
   };
 
   // ── Stages ──
+  const confirm = useConfirm();
   const addStage = async () => {
     if (!newStage.trim()) return;
     const { stage } = await api<{ stage: PipelineStage }>("/api/stages", { json: { name: newStage.trim() } });
@@ -187,7 +189,7 @@ export default function EinstellungenPage() {
     await api(`/api/stages/${id}`, { method: "PATCH", json: { name } });
   };
   const deleteStage = async (id: string) => {
-    if (!confirm("Stage löschen? Leads darin verlieren ihre Stage.")) return;
+    if (!(await confirm({ message: "Stage löschen? Leads darin verlieren ihre Stage.", confirmLabel: "Löschen" }))) return;
     setStages((p) => p.filter((s) => s.id !== id));
     await api(`/api/stages/${id}`, { method: "DELETE" });
   };

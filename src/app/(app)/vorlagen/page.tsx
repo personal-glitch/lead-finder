@@ -7,6 +7,7 @@ import { TEMPLATE_LIBRARY } from "@/lib/email/library";
 import { PageHeader } from "@/components/shell/AppShell";
 import { Icon } from "@/components/icons";
 import { Badge, Button, Card, Field, Spinner, TextInput, Textarea, Toast, cx } from "@/components/ui";
+import { useConfirm } from "@/components/ConfirmProvider";
 
 type Tab = "templates" | "suppressions";
 
@@ -41,6 +42,7 @@ export default function VorlagenPage() {
 }
 
 function Templates({ notify }: { notify: (m: string) => void }) {
+  const confirm = useConfirm();
   const [list, setList] = useState<EmailTemplate[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [name, setName] = useState("");
@@ -77,7 +79,7 @@ function Templates({ notify }: { notify: (m: string) => void }) {
     finally { setSaving(false); }
   };
   const del = async () => {
-    if (!selectedId || !confirm("Vorlage löschen?")) return;
+    if (!selectedId || !(await confirm({ message: "Vorlage löschen?", confirmLabel: "Löschen" }))) return;
     await api(`/api/templates/${selectedId}`, { method: "DELETE" });
     const rest = list.filter((t) => t.id !== selectedId);
     setList(rest); loadInto(rest[0] ?? null);

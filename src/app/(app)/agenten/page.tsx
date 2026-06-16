@@ -7,6 +7,7 @@ import { PageHeader } from "@/components/shell/AppShell";
 import { AgentDialog } from "@/components/agents/AgentDialog";
 import { AgentAvatar, Icon } from "@/components/icons";
 import { Button, Card, EmptyState, IconButton, Spinner, Toast, cx } from "@/components/ui";
+import { useConfirm } from "@/components/ConfirmProvider";
 
 function fmtDate(iso: string | null): string {
   if (!iso) return "noch nie gelaufen";
@@ -14,6 +15,7 @@ function fmtDate(iso: string | null): string {
 }
 
 function AgentCard({ agent, onOpen, onDelete }: { agent: Agent; onOpen: () => void; onDelete: () => void }) {
+  const confirm = useConfirm();
   return (
     <Card
       className={cx(
@@ -28,7 +30,7 @@ function AgentCard({ agent, onOpen, onDelete }: { agent: Agent; onOpen: () => vo
             icon="trash"
             label="Agent löschen"
             className="opacity-0 group-hover:opacity-100"
-            onClick={(e) => { e.stopPropagation(); if (confirm(`Agent „${agent.name}" löschen?`)) onDelete(); }}
+            onClick={async (e) => { e.stopPropagation(); if (await confirm({ message: `Agent „${agent.name}" löschen?`, confirmLabel: "Löschen" })) onDelete(); }}
           />
         </div>
         <h3 className="mt-3 text-[15px] font-semibold tracking-[-0.01em]">{agent.name}</h3>
