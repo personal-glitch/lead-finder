@@ -2,6 +2,16 @@ import Link from "next/link";
 import { Icon } from "@/components/icons";
 import { NewsletterSignup } from "@/components/NewsletterSignup";
 import { WhatsAppWidget } from "@/components/WhatsAppWidget";
+import { MobileMenu } from "@/components/landing/MobileMenu";
+
+const MARKETING_NAV = [
+  { href: "/#funktionen", label: "Funktionen" },
+  { href: "/#preise", label: "Preise" },
+  { href: "/rechner", label: "Rechner" },
+  { href: "/dienstleister-finden", label: "Dienstleister finden" },
+  { href: "/gratis", label: "Gratis-Tools" },
+  { href: "/blog", label: "Blog" },
+];
 
 /** Gemeinsame Hülle (Header + Footer + CTA) für Blog & weitere SEO-Landingpages. */
 export function MarketingShell({
@@ -32,8 +42,9 @@ export function MarketingShell({
             <Link href="/blog" className="hover:text-[var(--color-ink)]">Blog</Link>
           </nav>
           <div className="flex items-center gap-2">
-            <Link href="/login" className="rounded-lg border border-[var(--color-line-strong)] px-3 py-2 text-sm font-medium text-[var(--color-ink-2)] hover:bg-[var(--color-subtle)] hover:text-[var(--color-ink)]">Anmelden</Link>
+            <Link href="/login" className="hidden rounded-lg border border-[var(--color-line-strong)] px-3 py-2 text-sm font-medium text-[var(--color-ink-2)] hover:bg-[var(--color-subtle)] hover:text-[var(--color-ink)] lg:inline-flex">Anmelden</Link>
             <Link href="/registrieren" className="rounded-lg bg-[var(--color-brand)] px-3.5 py-2 text-sm font-semibold text-[var(--color-on-brand)] hover:bg-[var(--color-brand-ink)]">Starten</Link>
+            <MobileMenu links={MARKETING_NAV} />
           </div>
         </div>
       </header>

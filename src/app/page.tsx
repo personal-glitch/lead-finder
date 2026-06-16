@@ -10,6 +10,18 @@ import { NewsletterSignup } from "@/components/NewsletterSignup";
 import { WhatsAppWidget } from "@/components/WhatsAppWidget";
 import { CheckWidget } from "@/components/landing/CheckWidget";
 import { PromoBar } from "@/components/landing/PromoBar";
+import { MobileMenu } from "@/components/landing/MobileMenu";
+
+const HOME_NAV = [
+  { href: "#funktionen", label: "Funktionen" },
+  { href: "#zielgruppe", label: "Für wen?" },
+  { href: "#preise", label: "Preise" },
+  { href: "/rechner", label: "Rechner" },
+  { href: "/dienstleister-finden", label: "Dienstleister finden" },
+  { href: "/gratis", label: "Gratis-Tools" },
+  { href: "/blog", label: "Blog" },
+  { href: "#faq", label: "FAQ" },
+];
 import { PromoPricing } from "@/components/landing/PromoPricing";
 import { CITIES } from "@/lib/cities";
 import { Reveal, GrowBar, CountUp } from "@/components/landing/anim";
@@ -261,8 +273,9 @@ export default function Landing() {
             <a href="#faq" className="hover:text-[var(--color-ink)]">FAQ</a>
           </nav>
           <div className="flex items-center gap-3">
-            <Link href={loginHref} className="rounded-lg border border-[var(--color-line-strong)] px-3 py-2 text-sm font-medium text-[var(--color-ink-2)] hover:bg-[var(--color-subtle)] hover:text-[var(--color-ink)]">Anmelden</Link>
+            <Link href={loginHref} className="hidden rounded-lg border border-[var(--color-line-strong)] px-3 py-2 text-sm font-medium text-[var(--color-ink-2)] hover:bg-[var(--color-subtle)] hover:text-[var(--color-ink)] lg:inline-flex">Anmelden</Link>
             <Link href={signupHref} className="rounded-lg bg-[var(--color-brand)] px-3.5 py-2 text-sm font-semibold text-[var(--color-on-brand)] hover:bg-[var(--color-brand-ink)]"><span className="sm:hidden">Starten</span><span className="hidden sm:inline">Kostenlos starten</span></Link>
+            <MobileMenu links={HOME_NAV} />
           </div>
         </div>
       </header>
