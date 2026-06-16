@@ -3,28 +3,35 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { MarketingShell, JsonLd } from "@/components/landing/MarketingShell";
 import { ServiceRequestForm } from "@/components/ServiceRequestForm";
+import { Icon, type IconName } from "@/components/icons";
 import { config } from "@/lib/config";
-import { CITIES, cityBySlug } from "@/lib/cities";
+import { SERVICE_CITIES, serviceCityBySlug } from "@/lib/service-cities";
 
 export function generateStaticParams() {
-  return CITIES.map((c) => ({ stadt: c.slug }));
+  return SERVICE_CITIES.map((c) => ({ stadt: c.slug }));
 }
 
-// Beliebte, lokal gesuchte Dienstleistungen (Stadt-Keyword wird angehängt).
+const BENEFITS: { icon: IconName; t: string; d: string }[] = [
+  { icon: "check", t: "100% kostenlos", d: "Als Auftraggeber zahlst du nichts und gehst keine Verpflichtung ein." },
+  { icon: "pin", t: "Anbieter aus der Region", d: "Deine Anfrage geht an passende Dienstleister vor Ort – nicht quer durch Deutschland." },
+  { icon: "search", t: "Angebote vergleichen", d: "Die Angebote kommen zu dir. In Ruhe vergleichen, dann selbst entscheiden." },
+  { icon: "clock", t: "Schnell", d: "Anfrage in 2 Minuten, oft erste Rückmeldungen in 1–2 Tagen." },
+];
+
 const SERVICES: { label: string; note: string }[] = [
   { label: "Gebäudereinigung", note: "Unterhalts-, Glas- & Grundreinigung für Büro, Praxis & Treppenhaus" },
-  { label: "Hausmeisterservice", note: "Hausmeister, Winterdienst & Objektbetreuung" },
+  { label: "Hausmeisterservice", note: "Objektbetreuung, Winterdienst & kleine Reparaturen" },
   { label: "Maler & Lackierer", note: "Innen- & Außenanstrich, Tapezieren, Fassade" },
   { label: "Elektriker", note: "Installation, Reparatur & Smart-Home" },
   { label: "Sanitär & Heizung", note: "Bad, Heizung, Rohrbruch & Wartung" },
   { label: "Garten- & Landschaftsbau", note: "Gartenpflege, Baumschnitt & Außenanlagen" },
   { label: "Umzug & Transport", note: "Privat- & Firmenumzug, Entrümpelung" },
-  { label: "Tischler & Schreiner", note: "Möbel, Einbau & Reparatur" },
+  { label: "Tischler & Schreiner", note: "Möbel, Einbauten & Reparaturen" },
 ];
 
 export async function generateMetadata({ params }: { params: Promise<{ stadt: string }> }): Promise<Metadata> {
   const { stadt } = await params;
-  const city = cityBySlug(stadt);
+  const city = serviceCityBySlug(stadt);
   if (!city) return {};
   const title = `Dienstleister finden ${city.artikel} – kostenlos Angebote einholen | KundenRadar`;
   const desc = `Reinigungsfirma, Handwerker oder Dienstleister ${city.artikel} gesucht? Stell kostenlos deine Anfrage – geprüfte Anbieter aus ${city.name} und Umgebung senden dir unverbindliche Angebote. Privat & gewerblich, ohne Anmeldung.`;
@@ -35,8 +42,8 @@ export async function generateMetadata({ params }: { params: Promise<{ stadt: st
     keywords: [
       `Dienstleister finden ${city.name}`, `Dienstleister gesucht ${city.name}`, `Reinigungsfirma ${city.name}`,
       `Gebäudereinigung ${city.name}`, `Reinigung ${city.name}`, `Handwerker ${city.name}`, `Maler ${city.name}`,
-      `Elektriker ${city.name}`, `Hausmeisterservice ${city.name}`, `Sanitär ${city.name}`,
-      `Garten- und Landschaftsbau ${city.name}`, `Angebote einholen ${city.name}`,
+      `Elektriker ${city.name}`, `Hausmeisterservice ${city.name}`, `Sanitär Heizung ${city.name}`,
+      `Garten- und Landschaftsbau ${city.name}`, `Umzug ${city.name}`, `Angebote einholen ${city.name}`,
     ],
     openGraph: { title, description: desc, url: `/dienstleister-finden/${city.slug}`, type: "website" },
   };
@@ -44,17 +51,18 @@ export async function generateMetadata({ params }: { params: Promise<{ stadt: st
 
 export default async function DienstleisterCityPage({ params }: { params: Promise<{ stadt: string }> }) {
   const { stadt } = await params;
-  const city = cityBySlug(stadt);
+  const city = serviceCityBySlug(stadt);
   if (!city) notFound();
 
   const url = `${config.appUrl}/dienstleister-finden/${city.slug}`;
-  const others = CITIES.filter((c) => c.slug !== city.slug);
+  const others = SERVICE_CITIES.filter((c) => c.slug !== city.slug);
 
   const faq = [
     { q: `Was kostet eine Anfrage ${city.artikel}?`, a: "Für dich als Auftraggeber ist die Anfrage komplett kostenlos und unverbindlich. Du gehst keine Verpflichtung ein und entscheidest selbst, welches Angebot du annimmst." },
     { q: `Wie schnell bekomme ich Angebote ${city.artikel}?`, a: `Das hängt von Branche und Umfang ab – oft melden sich erste Anbieter aus ${city.name} und Umgebung innerhalb von 1–2 Tagen direkt bei dir per E-Mail.` },
     { q: `Welche Dienstleister finde ich ${city.artikel}?`, a: "Gebäudereinigung, Hausmeisterservice, Maler, Elektriker, Sanitär & Heizung, Garten- & Landschaftsbau, Umzug, Tischler und mehr – privat wie gewerblich." },
     { q: "Werden auch Umlandorte erfasst?", a: `Ja. Gib einfach deine PLZ und ${city.name} an – Anbieter aus ${city.name} und dem Umland können dir Angebote senden.` },
+    { q: "Muss ich ein Angebot annehmen?", a: "Nein. Du vergleichst in Ruhe und entscheidest völlig frei, ob und wen du beauftragst." },
   ];
 
   return (
@@ -76,14 +84,38 @@ export default async function DienstleisterCityPage({ params }: { params: Promis
         </h1>
         <p className="mt-4 text-base leading-relaxed text-[var(--color-muted)]">
           Du suchst {city.artikel} eine zuverlässige Reinigungsfirma, einen Handwerker oder einen anderen Dienstleister?
-          Stell in 2 Minuten kostenlos deine Anfrage – geprüfte Anbieter aus {city.name} und Umgebung melden sich mit
-          unverbindlichen Angeboten. Privat oder gewerblich, ohne Anmeldung.
+          Stell in 2 Minuten kostenlos deine Anfrage – geprüfte Anbieter aus {city.name} ({city.region}) und Umgebung
+          melden sich mit unverbindlichen Angeboten. Privat oder gewerblich, ohne Anmeldung.
         </p>
+        <div className="mt-4 flex flex-wrap gap-2">
+          {["100% kostenlos", "unverbindlich", "ohne Anmeldung", "Anbieter aus der Region"].map((t) => (
+            <span key={t} className="inline-flex items-center gap-1 rounded-full bg-[var(--color-brand-tint)]/40 px-3 py-1 text-xs font-medium text-[var(--color-brand)]">
+              <Icon name="check" size={13} /> {t}
+            </span>
+          ))}
+        </div>
 
         <div className="mt-8">
           <ServiceRequestForm defaultOrt={city.name} />
         </div>
 
+        {/* Vorteile */}
+        <section className="mt-14">
+          <h2 className="text-2xl font-semibold tracking-[-0.01em]">Warum über KundenRadar?</h2>
+          <div className="mt-5 grid gap-3 sm:grid-cols-2">
+            {BENEFITS.map((b) => (
+              <div key={b.t} className="flex gap-3 rounded-xl border border-[var(--color-line)] bg-[var(--color-surface)] p-4">
+                <span className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-[var(--color-brand-tint)] text-[var(--color-brand)]"><Icon name={b.icon} size={18} /></span>
+                <div>
+                  <div className="text-sm font-semibold">{b.t}</div>
+                  <div className="mt-0.5 text-sm text-[var(--color-muted)]">{b.d}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Beliebte Dienstleistungen vor Ort (Service + Stadt-Keyword) */}
         <section className="mt-14">
           <h2 className="text-2xl font-semibold tracking-[-0.01em]">Beliebte Dienstleistungen {city.artikel}</h2>
           <p className="mt-2 text-sm text-[var(--color-muted)]">Für diese Leistungen findest du {city.artikel} schnell passende Anbieter:</p>
@@ -97,6 +129,7 @@ export default async function DienstleisterCityPage({ params }: { params: Promis
           </div>
         </section>
 
+        {/* So funktioniert's */}
         <section className="mt-14">
           <h2 className="text-2xl font-semibold tracking-[-0.01em]">So funktioniert's</h2>
           <ol className="mt-4 space-y-3 text-sm leading-relaxed text-[var(--color-ink-2)]">
@@ -106,6 +139,31 @@ export default async function DienstleisterCityPage({ params }: { params: Promis
           </ol>
         </section>
 
+        {/* Ratgeber lokal */}
+        <section className="mt-14">
+          <h2 className="text-2xl font-semibold tracking-[-0.01em]">So findest du den richtigen Dienstleister {city.artikel}</h2>
+          <div className="mt-4 space-y-4 text-sm leading-relaxed text-[var(--color-ink-2)]">
+            <p>
+              Einen guten <strong>Dienstleister {city.artikel} zu finden</strong> muss nicht stundenlanges Googeln und
+              Telefonieren bedeuten. Beschreibe dein Anliegen einmal – ob <strong>Reinigung {city.name}</strong>,
+              <strong> Handwerker {city.name}</strong> oder Hausmeisterservice – und passende Betriebe aus {city.name} und
+              Umgebung melden sich mit Angeboten.
+            </p>
+            <p>
+              <strong>Je konkreter deine Anfrage, desto besser die Angebote.</strong> Gib Umfang, Häufigkeit, Größe oder
+              Fläche, Wunschtermin und den Ort ({city.name}) an. So bekommst du belastbare Preise statt grober Schätzungen –
+              und kannst die Anbieter fair vergleichen.
+            </p>
+            <p>
+              Achte beim Vergleich nicht nur auf den Preis, sondern auch auf Erreichbarkeit, Termintreue und Referenzen.
+              Was eine Leistung kosten sollte, kannst du vorab mit unserem{" "}
+              <Link href="/rechner" className="text-[var(--color-brand)] hover:underline">kostenlosen Preis-Rechner</Link>{" "}
+              einschätzen.
+            </p>
+          </div>
+        </section>
+
+        {/* FAQ */}
         <section className="mt-14">
           <h2 className="text-2xl font-semibold tracking-[-0.01em]">Häufige Fragen – Dienstleister {city.artikel}</h2>
           <div className="mt-4 space-y-4">
@@ -118,15 +176,25 @@ export default async function DienstleisterCityPage({ params }: { params: Promis
           </div>
         </section>
 
+        {/* Weitere Städte */}
         <section className="mt-14">
           <h2 className="text-xl font-semibold tracking-[-0.01em]">Dienstleister finden in weiteren Städten</h2>
           <div className="mt-3 flex flex-wrap gap-2">
             {others.map((c) => (
-              <Link key={c.slug} href={`/dienstleister-finden/${c.slug}`} className="rounded-lg border border-[var(--color-line-strong)] px-3 py-2 text-sm font-medium text-[var(--color-ink-2)] hover:bg-[var(--color-subtle)]">
+              <Link key={c.slug} href={`/dienstleister-finden/${c.slug}`} className="rounded-lg border border-[var(--color-line-strong)] px-3 py-1.5 text-sm font-medium text-[var(--color-ink-2)] hover:bg-[var(--color-subtle)]">
                 {c.name}
               </Link>
             ))}
           </div>
+        </section>
+
+        {/* Abschluss-CTA */}
+        <section className="mt-14 rounded-2xl border border-[var(--color-brand)]/30 bg-[var(--color-brand-tint)]/15 p-7 text-center">
+          <h2 className="text-lg font-semibold">Jetzt kostenlos Angebote {city.artikel} einholen</h2>
+          <p className="mx-auto mt-2 max-w-xl text-sm text-[var(--color-muted)]">Beschreibe in 2 Minuten, was du brauchst – passende Dienstleister aus {city.name} melden sich bei dir.</p>
+          <Link href="/auftrag-einstellen" className="mt-4 inline-flex items-center gap-2 rounded-lg bg-[var(--color-brand)] px-5 py-3 text-sm font-semibold text-[var(--color-on-brand)] hover:bg-[var(--color-brand-ink)]">
+            Anfrage stellen <Icon name="chevronRight" size={15} />
+          </Link>
         </section>
       </article>
     </MarketingShell>
