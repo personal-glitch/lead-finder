@@ -9,6 +9,7 @@ const MARKETING_NAV = [
   { href: "/#preise", label: "Preise" },
   { href: "/rechner", label: "Rechner" },
   { href: "/dienstleister-finden", label: "Dienstleister finden" },
+  { href: "/firma-eintragen", label: "Firma eintragen" },
   { href: "/gratis", label: "Gratis-Tools" },
   { href: "/blog", label: "Blog" },
 ];
@@ -81,6 +82,10 @@ export function MarketingShell({
         <Link href="/gratis" className="font-semibold text-[var(--color-brand)] hover:underline">Gratis-Tools</Link>
         {" · "}
         <Link href="/dienstleister-finden" className="hover:text-[var(--color-ink)]">Dienstleister finden</Link>
+        {" · "}
+        <Link href="/firmenverzeichnis" className="hover:text-[var(--color-ink)]">Verzeichnis</Link>
+        {" · "}
+        <Link href="/firma-eintragen" className="hover:text-[var(--color-ink)]">Firma eintragen</Link>
         {" · "}
         <Link href="/newsletter" className="hover:text-[var(--color-ink)]">Newsletter</Link>
         {" · "}

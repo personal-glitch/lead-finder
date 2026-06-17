@@ -3,17 +3,22 @@ import { config } from "@/lib/config";
 import { CITIES } from "@/lib/cities";
 import { SERVICE_CITIES } from "@/lib/service-cities";
 import { SERVICE_TYPES } from "@/lib/service-types";
+import { listActiveCompanySlugs } from "@/lib/catalog";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = config.appUrl;
+  const companySlugs = await listActiveCompanySlugs().catch(() => [] as string[]);
   const entries: { path: string; priority: number }[] = [
     { path: "/", priority: 1 },
     { path: "/check", priority: 0.8 },
     { path: "/gratis", priority: 0.8 },
     { path: "/auftrag-einstellen", priority: 0.85 },
     { path: "/dienstleister-finden", priority: 0.85 },
+    { path: "/firma-eintragen", priority: 0.85 },
+    { path: "/firmenverzeichnis", priority: 0.8 },
     ...SERVICE_CITIES.map((c) => ({ path: `/dienstleister-finden/${c.slug}`, priority: 0.8 })),
     ...SERVICE_TYPES.map((s) => ({ path: `/dienstleister/${s.slug}`, priority: 0.82 })),
+    ...companySlugs.map((s) => ({ path: `/firma/${s}`, priority: 0.7 })),
     ...CITIES.map((c) => ({ path: `/neukunden-finden/${c.slug}`, priority: 0.75 })),
     { path: "/rechner", priority: 0.7 },
     { path: "/rechner/gebaeudereinigung", priority: 0.8 },

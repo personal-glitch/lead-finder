@@ -3,9 +3,13 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { MarketingShell, JsonLd } from "@/components/landing/MarketingShell";
 import { ServiceRequestForm } from "@/components/ServiceRequestForm";
+import { CompanyCards } from "@/components/landing/CompanyCards";
 import { Icon, type IconName } from "@/components/icons";
 import { config } from "@/lib/config";
 import { SERVICE_CITIES, serviceCityBySlug } from "@/lib/service-cities";
+import { listPublicCompanies } from "@/lib/catalog";
+
+export const revalidate = 600;
 
 export function generateStaticParams() {
   return SERVICE_CITIES.map((c) => ({ stadt: c.slug }));
@@ -56,6 +60,7 @@ export default async function DienstleisterCityPage({ params }: { params: Promis
 
   const url = `${config.appUrl}/dienstleister-finden/${city.slug}`;
   const others = SERVICE_CITIES.filter((c) => c.slug !== city.slug);
+  const companies = await listPublicCompanies({ ort: city.name, limit: 6 });
 
   const faq = [
     { q: `Was kostet eine Anfrage ${city.artikel}?`, a: "Für dich als Auftraggeber ist die Anfrage komplett kostenlos und unverbindlich. Du gehst keine Verpflichtung ein und entscheidest selbst, welches Angebot du annimmst." },
@@ -98,6 +103,18 @@ export default async function DienstleisterCityPage({ params }: { params: Promis
         <div className="mt-8">
           <ServiceRequestForm defaultOrt={city.name} />
         </div>
+
+        {/* Lokale Anbieter aus dem Verzeichnis */}
+        {companies.length > 0 && (
+          <section className="mt-14">
+            <div className="flex items-end justify-between gap-4">
+              <h2 className="text-2xl font-semibold tracking-[-0.01em]">Anbieter {city.artikel}</h2>
+              <Link href="/firmenverzeichnis" className="shrink-0 text-sm font-medium text-[var(--color-brand)] hover:underline">Alle anzeigen →</Link>
+            </div>
+            <p className="mt-2 text-sm text-[var(--color-muted)]">Diese Dienstleister sind {city.artikel} im Verzeichnis – direkt kontaktieren oder oben eine Anfrage stellen.</p>
+            <div className="mt-5"><CompanyCards companies={companies} /></div>
+          </section>
+        )}
 
         {/* Vorteile */}
         <section className="mt-14">

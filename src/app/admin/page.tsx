@@ -5,6 +5,7 @@ import { api } from "@/lib/client";
 import { Icon } from "@/components/icons";
 import { Spinner, Toast } from "@/components/ui";
 import { useConfirm } from "@/components/ConfirmProvider";
+import { CatalogModeration } from "@/components/admin/CatalogModeration";
 import { renderNewsletterHtml, type NewsletterTemplate } from "@/lib/email/newsletter-template";
 
 const TEMPLATES: { id: NewsletterTemplate; label: string; emoji: string }[] = [
@@ -387,6 +388,8 @@ export default function AdminPage() {
                 </div>
               ))}
             </div>
+
+            <div className="mt-10"><CatalogModeration /></div>
 
             {(() => {
               const soon = stats.customers.filter((c) => {
