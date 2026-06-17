@@ -262,13 +262,12 @@ export default function Landing() {
             <span className="grid h-8 w-8 place-items-center rounded-lg bg-[var(--color-brand)] text-[var(--color-on-brand)]"><Icon name="agents" size={16} strokeWidth={2.2} /></span>
             <span className="font-semibold">KundenRadar</span>
           </div>
-          <nav className="hidden items-center gap-6 text-sm text-[var(--color-ink-2)] lg:flex">
+          <nav className="hidden items-center gap-5 whitespace-nowrap text-sm text-[var(--color-ink-2)] lg:flex">
             <a href="#funktionen" className="hover:text-[var(--color-ink)]">Funktionen</a>
-            <a href="#zielgruppe" className="hover:text-[var(--color-ink)]">Für wen?</a>
             <a href="#preise" className="hover:text-[var(--color-ink)]">Preise</a>
             <a href="/rechner" className="hover:text-[var(--color-ink)]">Rechner</a>
             <a href="/dienstleister-finden" className="hover:text-[var(--color-ink)]">Dienstleister finden</a>
-            <a href="/firmenverzeichnis" className="font-semibold text-[var(--color-brand)] hover:underline">Firmen-Katalog</a>
+            <a href="/firmenverzeichnis" className="font-semibold text-[var(--color-brand)] hover:underline">Katalog</a>
             <a href="/gratis" className="hover:text-[var(--color-ink)]">Gratis-Tools</a>
             <a href="/blog" className="hover:text-[var(--color-ink)]">Blog</a>
           </nav>

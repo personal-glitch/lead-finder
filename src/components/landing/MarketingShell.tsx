@@ -35,12 +35,12 @@ export function MarketingShell({
             </span>
             <span className="text-sm font-semibold">KundenRadar</span>
           </Link>
-          <nav className="hidden items-center gap-5 text-sm text-[var(--color-ink-2)] lg:flex">
+          <nav className="hidden items-center gap-5 whitespace-nowrap text-sm text-[var(--color-ink-2)] lg:flex">
             <Link href="/#funktionen" className="hover:text-[var(--color-ink)]">Funktionen</Link>
             <Link href="/#preise" className="hover:text-[var(--color-ink)]">Preise</Link>
             <Link href="/rechner" className="hover:text-[var(--color-ink)]">Rechner</Link>
             <Link href="/dienstleister-finden" className="hover:text-[var(--color-ink)]">Dienstleister finden</Link>
-            <Link href="/firmenverzeichnis" className="font-semibold text-[var(--color-brand)] hover:underline">Firmen-Katalog</Link>
+            <Link href="/firmenverzeichnis" className="font-semibold text-[var(--color-brand)] hover:underline">Katalog</Link>
             <Link href="/gratis" className="hover:text-[var(--color-ink)]">Gratis-Tools</Link>
             <Link href="/blog" className="hover:text-[var(--color-ink)]">Blog</Link>
           </nav>
