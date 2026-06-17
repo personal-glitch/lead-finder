@@ -313,6 +313,20 @@ export async function countActiveCompanies(): Promise<number> {
   return count ?? 0;
 }
 
+/** Anzahl aktiver Firmen je Branche (für Branchen-Kacheln). */
+export async function countActiveByCategory(): Promise<Record<string, number>> {
+  if (!catalogEnabled()) return {};
+  try {
+    const sb = await admin();
+    const { data } = await sb.from("companies").select("category").eq("status", "active").limit(5000);
+    const m: Record<string, number> = {};
+    for (const r of (data ?? []) as { category: string }[]) m[r.category] = (m[r.category] ?? 0) + 1;
+    return m;
+  } catch {
+    return {};
+  }
+}
+
 // --- Admin / Moderation ------------------------------------------------------
 
 /** Firma inkl. Maillisten-Status (für die Superadmin-Übersicht). */
