@@ -3,7 +3,7 @@
 // Server-seitig, Zugriff über den Service-Role-Client (wie marketplace.ts).
 import { config } from "@/lib/config";
 import { sendSystemEmail } from "@/lib/email/system";
-import { isValidEmail, normEmail, subscribeNewsletter, type SubscriberStatus } from "@/lib/newsletter";
+import { isValidEmail, normEmail, ensurePendingSubscriber, type SubscriberStatus } from "@/lib/newsletter";
 import { CATEGORIES } from "@/lib/marketplace-constants";
 import { geocode } from "@/lib/osm/geocode";
 
@@ -206,14 +206,16 @@ export async function createCompany(
   const { error } = await sb.from("companies").insert(row).select("id").single();
   if (error) return { ok: false, error: "Eintrag konnte nicht gespeichert werden." };
 
-  // Opt-in: in die Mailliste aufnehmen (Double-Opt-In – Bestätigungsmail wird verschickt).
+  // Opt-in: als 'pending' eintragen und den Bestätigungslink holen (keine separate Mail –
+  // der Link wird unten direkt in die Eintrags-Bestätigung eingebettet = höhere Quote).
+  let newsletterConfirmUrl: string | null = null;
   if (input.newsletter) {
-    await subscribeNewsletter({
+    newsletterConfirmUrl = await ensurePendingSubscriber({
       email: row.contact_email,
       name: row.contact_name,
       source: "firmen_katalog",
       ip: input.ip ?? null,
-    }).catch(() => {});
+    }).catch(() => null);
   }
 
   // Bestätigung an die Firma (transaktional – selbst angefordert).
@@ -224,10 +226,11 @@ export async function createCompany(
       `<p style="margin:0 0 6px;font-size:18px;font-weight:700">Danke für deinen Eintrag ✅</p>
        <p style="margin:0 0 14px">Hallo${row.contact_name ? " " + esc(row.contact_name) : ""}, <b>${esc(row.name)}</b> wurde kostenlos für unser Dienstleister-Verzeichnis vorgemerkt (${esc(category)}). Wir prüfen den Eintrag kurz und schalten ihn dann frei – danach bist du über deine eigene Profilseite auffindbar.</p>
        <p style="margin:0 0 14px">Dein öffentliches Profil zeigt Adresse, Telefon, Website &amp; Öffnungszeiten – wie in einem Branchenbuch. Deine <b>E-Mail bleibt privat</b>; Anfragen über das Kontaktformular leiten wir direkt an dich weiter.</p>
+       ${newsletterConfirmUrl ? `<div style="background:#eefad1;border-radius:8px;padding:14px 16px;margin:0 0 14px;text-align:center"><p style="margin:0 0 10px;font-size:14px;color:#16181d"><b>Noch ein Klick:</b> Bestätige, dass wir dir kostenlose Akquise-Tipps schicken dürfen – du bekommst sofort <b>3 Gratis-Tools</b> (Vorlagen, Leitfaden, Tracker).</p><a href="${newsletterConfirmUrl}" style="display:inline-block;background:#a8e83a;color:#16181d;padding:11px 22px;border-radius:8px;text-decoration:none;font-weight:700">Ja, bestätigen &amp; Tools sichern →</a></div>` : ""}
        <p style="margin:14px 0 0;font-size:13px;color:#5b6470">Du suchst selbst aktiv neue Kunden? Mit dem KundenRadar-Tool findest du passende Firmen in deiner Region und kannst sie direkt kontaktieren – <a href="${config.appUrl}/check" style="color:#3b6d11;font-weight:600">kostenlos testen</a>.</p>`,
     ),
     text:
-      `Hallo${row.contact_name ? " " + row.contact_name : ""},\n\n${row.name} wurde kostenlos für unser Dienstleister-Verzeichnis vorgemerkt (${category}). Wir prüfen den Eintrag und schalten ihn dann frei.\n\nAnfragen leiten wir direkt an dich weiter; deine Kontaktdaten bleiben nicht öffentlich.\n\nKundenRadar-Tool kostenlos testen: ${config.appUrl}/check\n\n—\n${IMPRESSUM}`,
+      `Hallo${row.contact_name ? " " + row.contact_name : ""},\n\n${row.name} wurde kostenlos für unser Dienstleister-Verzeichnis vorgemerkt (${category}). Wir prüfen den Eintrag und schalten ihn dann frei.\n\nAnfragen leiten wir direkt an dich weiter; deine Kontaktdaten bleiben nicht öffentlich.\n${newsletterConfirmUrl ? `\nBestätige für kostenlose Tipps + 3 Gratis-Tools: ${newsletterConfirmUrl}\n` : ""}\nKundenRadar-Tool kostenlos testen: ${config.appUrl}/check\n\n—\n${IMPRESSUM}`,
   }).catch(() => {});
 
   // Interne Benachrichtigung an den Superadmin (Moderation).

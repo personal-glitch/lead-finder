@@ -101,6 +101,35 @@ export async function subscribeNewsletter(input: SubscribeInput): Promise<Subscr
 }
 
 /**
+ * Trägt 'pending' ein (Double-Opt-In) OHNE eigene Mail und liefert den Bestätigungs-Link
+ * zurück – zum Einbetten in eine andere Transaktionsmail (z. B. Katalog-Eintrag).
+ * Liefert null, wenn bereits bestätigt oder nicht konfiguriert.
+ */
+export async function ensurePendingSubscriber(input: SubscribeInput): Promise<string | null> {
+  if (!newsletterEnabled() || !isValidEmail(input.email)) return null;
+  const sb = await admin();
+  const email = input.email.trim();
+  const email_norm = normEmail(email);
+  const { data: existing } = await sb
+    .from("newsletter_subscribers")
+    .select("id, status, token")
+    .eq("email_norm", email_norm)
+    .maybeSingle();
+  if (existing && existing.status === "confirmed") return null;
+  const token = (existing?.token as string) || newToken();
+  const nowIso = new Date().toISOString();
+  const row = {
+    email, email_norm, status: "pending" as const, token,
+    source: input.source ?? "firmen_katalog", name: input.name ?? null,
+    consent_ip: input.ip ?? null, consent_at: nowIso,
+    confirmed_at: null, unsubscribed_at: null, updated_at: nowIso,
+  };
+  if (existing) await sb.from("newsletter_subscribers").update(row).eq("id", existing.id);
+  else await sb.from("newsletter_subscribers").insert(row);
+  return confirmUrl(token);
+}
+
+/**
  * Lädt einen Lead aus der Pipeline per Double-Opt-In zur Mailliste ein (Superadmin).
  * Trägt 'pending' ein und schickt eine freundliche Einladungs-Mail mit Bestätigungs-Link –
  * aufgenommen wird nur, wer selbst bestätigt (sauber nach Erst-Kontakt/Anruf).
