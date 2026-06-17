@@ -19,6 +19,7 @@ interface AdminCompany {
   contactName: string | null;
   contactEmail: string;
   contactPhone: string | null;
+  logoUrl: string | null;
   status: Status;
   subscriber: "pending" | "confirmed" | "unsubscribed" | null;
 }
@@ -99,7 +100,12 @@ export function CatalogModeration() {
             {list.map((c) => (
               <li key={c.id} className="rounded-xl border border-[var(--color-line)] bg-[var(--color-surface)] p-4">
                 <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div className="min-w-0">
+                  <div className="flex min-w-0 gap-3">
+                    {c.logoUrl && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={c.logoUrl} alt="" className="h-12 w-12 shrink-0 rounded-lg border border-[var(--color-line)] bg-white object-contain" />
+                    )}
+                    <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="text-sm font-semibold">{c.name}</span>
                       <Badge tone="slate">{c.category}</Badge>
@@ -114,6 +120,7 @@ export function CatalogModeration() {
                       {c.status === "active" ? <> · <a href={`/firma/${c.slug}`} target="_blank" rel="noopener noreferrer" className="hover:underline">Profil ↗</a></> : null}
                     </div>
                     {c.description && <p className="mt-2 line-clamp-3 text-xs leading-relaxed text-[var(--color-ink-2)]">{c.description}</p>}
+                    </div>
                   </div>
                   <div className="flex shrink-0 flex-wrap gap-2">
                     {tab !== "active" && (

@@ -127,6 +127,7 @@ export interface CreateCompanyInput {
   contactName?: string | null;
   contactEmail: string;
   contactPhone?: string | null;
+  logoUrl?: string | null;
   newsletter?: boolean;
   ip?: string | null;
 }
@@ -166,7 +167,7 @@ export async function createCompany(
     contact_name: input.contactName?.trim().slice(0, 120) || null,
     contact_email: input.contactEmail.trim(),
     contact_phone: input.contactPhone?.trim().slice(0, 40) || null,
-    logo_url: null,
+    logo_url: input.logoUrl?.trim() || null,
     status: "pending" as const,
     source: "registration",
     consent_at: nowIso,
@@ -234,6 +235,54 @@ export async function listPublicCompanies(
     );
   }
   return rows.map((r) => toPublic(toCompany(r)));
+}
+
+function sanitizeQ(q: string): string {
+  // Zeichen entfernen, die die PostgREST-or()-Grammatik brechen würden.
+  return q.replace(/[,()%*.:]/g, " ").replace(/\s+/g, " ").trim().slice(0, 80);
+}
+
+export interface SearchResult {
+  items: PublicCompany[];
+  total: number;
+  page: number;
+  perPage: number;
+  pages: number;
+}
+
+/** Serverseitige Suche/Filter/Pagination für den öffentlichen Katalog (skaliert auf viele Tausend). */
+export async function searchPublicCompanies(opts: {
+  q?: string | null;
+  category?: string | null;
+  ort?: string | null;
+  page?: number;
+  perPage?: number;
+} = {}): Promise<SearchResult> {
+  const perPage = Math.min(Math.max(opts.perPage ?? 24, 1), 60);
+  const page = Math.max(opts.page ?? 1, 1);
+  const empty: SearchResult = { items: [], total: 0, page, perPage, pages: 0 };
+  if (!catalogEnabled()) return empty;
+  const sb = await admin();
+
+  let query = sb.from("companies").select("*", { count: "exact" }).eq("status", "active");
+  if (opts.category && (CATEGORIES as readonly string[]).includes(opts.category)) query = query.eq("category", opts.category);
+  if (opts.ort && opts.ort.trim()) query = query.ilike("ort", `%${opts.ort.trim().slice(0, 60)}%`);
+  const q = opts.q ? sanitizeQ(opts.q) : "";
+  if (q) query = query.or(`name.ilike.%${q}%,description.ilike.%${q}%,ort.ilike.%${q}%,category.ilike.%${q}%,street.ilike.%${q}%`);
+
+  const from = (page - 1) * perPage;
+  query = query.order("created_at", { ascending: false }).range(from, from + perPage - 1);
+
+  const { data, count, error } = await query;
+  if (error) return empty;
+  const total = count ?? 0;
+  return {
+    items: ((data ?? []) as RawCompany[]).map((r) => toPublic(toCompany(r))),
+    total,
+    page,
+    perPage,
+    pages: Math.max(1, Math.ceil(total / perPage)),
+  };
 }
 
 /** Eine freigeschaltete Firma per Slug (für die Profilseite). */

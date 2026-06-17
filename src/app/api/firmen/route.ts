@@ -17,6 +17,7 @@ const CreateBody = z.object({
   contactName: z.string().max(120).optional(),
   contactEmail: z.string().email(),
   contactPhone: z.string().max(40).optional(),
+  logoUrl: z.string().url().max(400).optional(),
   consent: z.boolean(),
   newsletter: z.boolean().optional(),
   website_hp: z.string().optional(), // Honeypot
@@ -41,6 +42,7 @@ export async function POST(req: NextRequest) {
       contactName: b.contactName ?? null,
       contactEmail: b.contactEmail,
       contactPhone: b.contactPhone ?? null,
+      logoUrl: b.logoUrl ?? null,
       newsletter: b.newsletter ?? false,
       ip,
     });

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { MarketingShell, JsonLd } from "@/components/landing/MarketingShell";
 import { CompanyContactForm } from "@/components/CompanyContactForm";
+import { CompanyLogo } from "@/components/landing/CompanyLogo";
 import { Icon } from "@/components/icons";
 import { config } from "@/lib/config";
 import { getPublicCompany } from "@/lib/catalog";
@@ -69,16 +70,19 @@ export default async function CompanyProfilePage({ params }: Props) {
       </nav>
 
       {/* Header */}
-      <div className="mt-4">
-        <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-brand-tint)]/40 px-3 py-1 text-xs font-medium text-[var(--color-brand)]">
-          <Icon name="building" size={13} /> {c.category}
-        </span>
-        <h1 className="mt-3 text-3xl font-semibold leading-[1.12] tracking-[-0.02em] sm:text-4xl">{c.name}</h1>
-        {ortLabel && (
-          <p className="mt-2 inline-flex items-center gap-1.5 text-sm text-[var(--color-muted)]">
-            <Icon name="pin" size={15} /> {ortLabel}{c.region ? ` · ${c.region}` : ""}
-          </p>
-        )}
+      <div className="mt-4 flex items-start gap-4">
+        <CompanyLogo name={c.name} logoUrl={c.logoUrl} size={72} />
+        <div className="min-w-0">
+          <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-brand-tint)]/40 px-3 py-1 text-xs font-medium text-[var(--color-brand)]">
+            <Icon name="building" size={13} /> {c.category}
+          </span>
+          <h1 className="mt-2 text-3xl font-semibold leading-[1.12] tracking-[-0.02em] sm:text-4xl">{c.name}</h1>
+          {ortLabel && (
+            <p className="mt-2 inline-flex items-center gap-1.5 text-sm text-[var(--color-muted)]">
+              <Icon name="pin" size={15} /> {ortLabel}{c.region ? ` · ${c.region}` : ""}
+            </p>
+          )}
+        </div>
       </div>
 
       <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_400px]">

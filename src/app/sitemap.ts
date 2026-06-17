@@ -18,6 +18,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { path: "/firmenverzeichnis", priority: 0.8 },
     ...SERVICE_CITIES.map((c) => ({ path: `/dienstleister-finden/${c.slug}`, priority: 0.8 })),
     ...SERVICE_TYPES.map((s) => ({ path: `/dienstleister/${s.slug}`, priority: 0.82 })),
+    ...SERVICE_TYPES.flatMap((s) => SERVICE_CITIES.map((c) => ({ path: `/firmenverzeichnis/${s.slug}/${c.slug}`, priority: 0.74 }))),
     ...companySlugs.map((s) => ({ path: `/firma/${s}`, priority: 0.7 })),
     ...CITIES.map((c) => ({ path: `/neukunden-finden/${c.slug}`, priority: 0.75 })),
     { path: "/rechner", priority: 0.7 },

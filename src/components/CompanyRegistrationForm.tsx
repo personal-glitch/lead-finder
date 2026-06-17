@@ -24,16 +24,37 @@ export function CompanyRegistrationForm({ defaultOrt = "", defaultCategory }: { 
   const [consent, setConsent] = useState(false);
   const [newsletter, setNewsletter] = useState(true);
   const [hp, setHp] = useState("");
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [logoFile, setLogoFile] = useState<File | null>(null);
   const [state, setState] = useState<"idle" | "loading" | "done" | "error">("idle");
   const [msg, setMsg] = useState("");
+
+  function onLogoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const f = e.target.files?.[0] ?? null;
+    if (!f) { setLogoFile(null); setLogoPreview(null); return; }
+    if (!["image/png", "image/jpeg", "image/webp"].includes(f.type)) { setState("error"); setMsg("Logo: nur PNG, JPG oder WebP."); return; }
+    if (f.size > 1_500_000) { setState("error"); setMsg("Logo: max. 1,5 MB."); return; }
+    setLogoFile(f); setLogoPreview(URL.createObjectURL(f)); setState("idle"); setMsg("");
+  }
+
+  async function uploadLogo(): Promise<string | null> {
+    if (!logoFile) return null;
+    const fd = new FormData();
+    fd.append("file", logoFile);
+    const res = await fetch("/api/firmen/logo", { method: "POST", body: fd });
+    const json = await res.json().catch(() => null);
+    if (!res.ok || !json?.url) throw new Error(json?.error?.message || "Logo-Upload fehlgeschlagen.");
+    return json.url as string;
+  }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!consent) { setState("error"); setMsg("Bitte stimme der Verarbeitung zu."); return; }
     setState("loading"); setMsg("");
     try {
+      const logoUrl = await uploadLogo();
       await api("/api/firmen", {
-        json: { name, category, street, plz, ort, openingHours, description, website, contactName, contactEmail, contactPhone, consent, newsletter, website_hp: hp },
+        json: { name, category, street, plz, ort, openingHours, description, website, contactName, contactEmail, contactPhone, logoUrl: logoUrl ?? undefined, consent, newsletter, website_hp: hp },
       });
       trackEvent("sign_up", { source: "firmen_katalog", type: "company_registration" });
       setState("done");
@@ -75,6 +96,25 @@ export function CompanyRegistrationForm({ defaultOrt = "", defaultCategory }: { 
             {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
           </select>
         </label>
+      </div>
+
+      <div className="flex items-center gap-4">
+        {logoPreview ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={logoPreview} alt="Logo-Vorschau" className="h-16 w-16 rounded-xl border border-[var(--color-line)] bg-white object-contain" />
+        ) : (
+          <span className="grid h-16 w-16 shrink-0 place-items-center rounded-xl border border-dashed border-[var(--color-line-strong)] text-[var(--color-muted)]">Logo</span>
+        )}
+        <div className="text-xs text-[var(--color-muted)]">
+          <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-[var(--color-line-strong)] px-3 py-1.5 font-medium text-[var(--color-ink-2)] hover:bg-[var(--color-subtle)]">
+            <input type="file" accept="image/png,image/jpeg,image/webp" onChange={onLogoChange} className="hidden" />
+            Logo hochladen
+          </label>
+          {logoPreview && (
+            <button type="button" onClick={() => { setLogoFile(null); setLogoPreview(null); }} className="ml-2 text-[var(--color-danger)] hover:underline">entfernen</button>
+          )}
+          <p className="mt-1">PNG, JPG oder WebP · max. 1,5 MB. Erscheint nach Freigabe in deinem Profil.</p>
+        </div>
       </div>
 
       <label className="block">
