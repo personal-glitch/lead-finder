@@ -137,6 +137,7 @@ export default function AdminPage() {
   const [toast, setToast] = useState<string | null>(null);
   const [syncing, setSyncing] = useState(false);
   const [importing, setImporting] = useState(false);
+  const [reminding, setReminding] = useState(false);
   const [composeFor, setComposeFor] = useState<Customer | null>(null);
   const [cmTemplate, setCmTemplate] = useState<NewsletterTemplate>("tipp");
   const [cmSubject, setCmSubject] = useState("");
@@ -188,6 +189,22 @@ export default function AdminPage() {
     }
   };
 
+  const remindPending = async () => {
+    const n = news?.pending ?? 0;
+    if (n === 0) { setToast("Keine ausstehenden Bestätigungen."); return; }
+    if (!(await confirm({ title: "Bestätigung erneut senden?", message: `An ${n} noch nicht bestätigte Abonnenten die Bestätigungs-Mail (Double-Opt-in) erneut senden?`, confirmLabel: "Erneut senden", danger: false }))) return;
+    setReminding(true);
+    try {
+      const r = await api<{ recipients?: number; sent?: number; failed?: number; error?: string | null }>("/api/admin/newsletter/resend-pending", { json: {} });
+      setToast(r.failed ? `Erinnert: ${r.sent}/${r.recipients} · ${r.failed} fehlgeschlagen${r.error ? ` — Grund: ${r.error}` : ""}` : `Erinnerung versendet: ${r.sent}/${r.recipients}`);
+      reloadNews();
+    } catch (e) {
+      setToast(e instanceof Error ? e.message : "Erinnerung fehlgeschlagen.");
+    } finally {
+      setReminding(false);
+    }
+  };
+
   const sendNewsletter = async () => {
     if (!news) return;
     if (news.confirmed === 0) { setToast("Noch keine bestätigten Abonnenten."); return; }
@@ -199,11 +216,17 @@ export default function AdminPage() {
     if (!(await confirm({ title: "Newsletter senden?", message: ask, confirmLabel: planned ? "Einplanen" : "Senden", danger: false }))) return;
     setSending(true);
     try {
-      const r = await api<{ recipients?: number; sent?: number; failed?: number; scheduled?: boolean; scheduledFor?: string }>(
+      const r = await api<{ recipients?: number; sent?: number; failed?: number; error?: string | null; scheduled?: boolean; scheduledFor?: string }>(
         "/api/admin/newsletter/send",
         { json: { subject, template, headline, body: mailBody, ctaLabel, ctaUrl, imageUrl, rawHtml: useRawHtml, scheduledFor: planned ? new Date(scheduledFor).toISOString() : "" } },
       );
-      setToast(r.scheduled ? `Eingeplant für ${when} Uhr.` : `Versendet: ${r.sent}/${r.recipients}${r.failed ? ` · ${r.failed} fehlgeschlagen` : ""}`);
+      setToast(
+        r.scheduled
+          ? `Eingeplant für ${when} Uhr.`
+          : r.failed
+            ? `Versendet: ${r.sent}/${r.recipients} · ${r.failed} fehlgeschlagen${r.error ? ` — Grund: ${r.error}` : ""}`
+            : `Versendet: ${r.sent}/${r.recipients}`,
+      );
       setSubject(""); setHeadline(""); setMailBody(""); setCtaLabel(""); setCtaUrl(""); setImageUrl(""); setScheduledFor("");
       reloadNews();
     } catch (e) {
@@ -561,6 +584,16 @@ export default function AdminPage() {
                 >
                   <Icon name="user" size={13} /> {importing ? "Übernehme …" : "Kunden übernehmen"}
                 </button>
+                {news && news.pending > 0 && (
+                  <button
+                    onClick={remindPending}
+                    disabled={reminding}
+                    title="Bestätigungs-Mail (Double-Opt-in) an alle noch nicht bestätigten Abonnenten erneut senden"
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--color-warn)]/40 bg-[var(--color-warn-tint)]/30 px-3 py-1.5 text-xs font-medium text-[var(--color-warn)] hover:bg-[var(--color-warn-tint)]/50 disabled:opacity-60"
+                  >
+                    <Icon name="mail" size={13} /> {reminding ? "Sende …" : `Bestätigung erinnern (${news.pending})`}
+                  </button>
+                )}
                 {news && news.total > 0 && (
                   <a
                     href="/api/admin/newsletter/export"

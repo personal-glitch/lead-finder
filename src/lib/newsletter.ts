@@ -270,6 +270,34 @@ export async function unsubscribeNewsletter(token: string): Promise<string | nul
   return data.email;
 }
 
+/** Bestätigungs-Mail an alle noch nicht bestätigten Abonnenten erneut senden (Erinnerung). */
+export async function resendPendingConfirmations(): Promise<CampaignResult> {
+  if (!newsletterEnabled()) return { recipients: 0, sent: 0, failed: 0, error: "Newsletter ist nicht konfiguriert." };
+  const sb = await admin();
+  const { data } = await sb
+    .from("newsletter_subscribers")
+    .select("email, token")
+    .eq("status", "pending")
+    .limit(2000);
+  const rows = (data ?? []) as { email: string; token: string }[];
+  let sent = 0, failed = 0;
+  let firstError: string | null = null;
+  for (const r of rows) {
+    if (!r.token) { failed++; continue; }
+    try {
+      await sendConfirmationEmail(r.email, r.token);
+      sent++;
+    } catch (e) {
+      failed++;
+      const m = e instanceof Error ? e.message : String(e);
+      if (!firstError) firstError = m;
+      console.error("[newsletter] Erinnerung fehlgeschlagen an", r.email, "→", m);
+    }
+    await new Promise((res) => setTimeout(res, 350)); // sanftes Throttling
+  }
+  return { recipients: rows.length, sent, failed, error: firstError };
+}
+
 /** Vollständige Liste (für die Superadmin-Übersicht). */
 export async function listSubscribers(): Promise<NewsletterSubscriber[]> {
   if (!newsletterEnabled()) return [];
@@ -293,7 +321,7 @@ export async function listSubscribers(): Promise<NewsletterSubscriber[]> {
 
 // ── Kampagnen-Versand an bestätigte Abonnenten ──
 
-export interface CampaignResult { recipients: number; sent: number; failed: number; }
+export interface CampaignResult { recipients: number; sent: number; failed: number; error?: string | null; }
 export interface NewsletterCampaign {
   id: string; subject: string; recipients: number; sent: number; failed: number; createdAt: string;
   status: string; scheduledFor: string | null;
@@ -326,6 +354,7 @@ function buildCampaignEmail(content: NewsletterContent, token: string): { html: 
 async function deliverToConfirmed(input: CampaignInput): Promise<CampaignResult> {
   const recipients = await listConfirmed();
   let sent = 0, failed = 0;
+  let firstError: string | null = null;
   for (const r of recipients) {
     try {
       const personalized = {
@@ -345,12 +374,15 @@ async function deliverToConfirmed(input: CampaignInput): Promise<CampaignResult>
         },
       });
       sent++;
-    } catch {
+    } catch (e) {
       failed++;
+      const m = e instanceof Error ? e.message : String(e);
+      if (!firstError) firstError = m;
+      console.error("[newsletter] Versand fehlgeschlagen an", r.email, "→", m);
     }
     await new Promise((res) => setTimeout(res, 350)); // sanftes Throttling (IONOS-Limits)
   }
-  return { recipients: recipients.length, sent, failed };
+  return { recipients: recipients.length, sent, failed, error: firstError };
 }
 
 function campaignRow(input: CampaignInput) {
