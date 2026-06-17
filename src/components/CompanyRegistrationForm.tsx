@@ -130,12 +130,12 @@ export function CompanyRegistrationForm({ defaultOrt = "", defaultCategory }: { 
 
       <div className="grid gap-4 sm:grid-cols-3">
         <label className="block">
-          <span className="mb-1 block text-xs font-medium text-[var(--color-muted)]">PLZ</span>
-          <input value={plz} onChange={(e) => setPlz(e.target.value)} placeholder="50667" className={inputCls} />
+          <span className="mb-1 block text-xs font-medium text-[var(--color-muted)]">PLZ *</span>
+          <input required inputMode="numeric" value={plz} onChange={(e) => setPlz(e.target.value)} placeholder="50667" className={inputCls} />
         </label>
         <label className="block sm:col-span-2">
-          <span className="mb-1 block text-xs font-medium text-[var(--color-muted)]">Ort / Einsatzgebiet</span>
-          <input value={ort} onChange={(e) => setOrt(e.target.value)} placeholder="Köln" className={inputCls} />
+          <span className="mb-1 block text-xs font-medium text-[var(--color-muted)]">Ort / Einsatzgebiet *</span>
+          <input required value={ort} onChange={(e) => setOrt(e.target.value)} placeholder="Köln" className={inputCls} />
         </label>
       </div>
 

@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { api } from "@/lib/client";
 import { Badge, Button, Card, Spinner, cx } from "@/components/ui";
+import { Icon } from "@/components/icons";
 import { useConfirm } from "@/components/ConfirmProvider";
 
 type Status = "pending" | "active" | "rejected";
@@ -77,6 +78,14 @@ export function CatalogModeration() {
           <h2 className="text-base font-semibold">Firmen-Katalog · Moderation</h2>
           <p className="mt-0.5 text-xs text-[var(--color-muted)]">Neue Einträge prüfen, freigeben oder ablehnen. Freigeschaltete Firmen erscheinen im Verzeichnis.</p>
         </div>
+        <div className="flex items-center gap-2">
+        <a
+          href="/api/admin/catalog/export"
+          title="Alle eingetragenen Firmen inkl. E-Mail als CSV exportieren"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--color-line-strong)] px-3 py-1.5 text-xs font-medium text-[var(--color-ink-2)] hover:bg-[var(--color-subtle)]"
+        >
+          <Icon name="mail" size={13} /> E-Mails (CSV)
+        </a>
         <div className="inline-flex rounded-lg border border-[var(--color-line)] bg-[var(--color-surface)] p-1">
           {TABS.map((t) => (
             <button key={t.key} onClick={() => setTab(t.key)}
@@ -85,6 +94,7 @@ export function CatalogModeration() {
               {t.label}{tab === t.key && list.length ? ` (${list.length})` : ""}
             </button>
           ))}
+        </div>
         </div>
       </div>
 
