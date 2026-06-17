@@ -26,13 +26,13 @@ export default async function VerzeichnisPage() {
   return (
     <MarketingShell newsletter={false}>
       <div className="text-center">
-        <span className="eyebrow rounded-full border border-[var(--color-line-strong)] px-3 py-1">Dienstleister-Verzeichnis</span>
+        <span className="eyebrow rounded-full border border-[var(--color-line-strong)] px-3 py-1">Firmen-Katalog</span>
         <h1 className="mx-auto mt-4 max-w-2xl text-3xl font-semibold leading-[1.12] tracking-[-0.02em] sm:text-4xl">
-          Dienstleister im Verzeichnis – <span className="text-[var(--color-brand)]">direkt kontaktieren</span>
+          Firmen-Katalog – <span className="text-[var(--color-brand)]">Dienstleister finden &amp; direkt kontaktieren</span>
         </h1>
         <p className="mx-auto mt-4 max-w-xl text-base text-[var(--color-muted)]">
-          Geprüfte Anbieter aus ganz Deutschland. Wähle eine Firma und kontaktiere sie kostenlos und unverbindlich – der
-          Kontakt läuft sicher über KundenRadar.
+          Das öffentliche Branchenbuch von KundenRadar: geprüfte Anbieter aus ganz Deutschland mit Adresse, Telefon &amp;
+          Öffnungszeiten. Firma wählen und direkt kontaktieren – per Telefon oder kostenlos über uns.
         </p>
         <div className="mt-5 flex flex-wrap justify-center gap-3">
           <Link href="/dienstleister-finden" className="inline-flex items-center gap-2 rounded-lg bg-[var(--color-brand)] px-5 py-2.5 text-sm font-semibold text-[var(--color-on-brand)] hover:bg-[var(--color-brand-ink)]">

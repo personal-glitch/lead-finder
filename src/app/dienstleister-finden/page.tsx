@@ -2,13 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { MarketingShell, JsonLd } from "@/components/landing/MarketingShell";
 import { ServiceRequestForm } from "@/components/ServiceRequestForm";
-import { CompanyCards } from "@/components/landing/CompanyCards";
 import { Icon, type IconName } from "@/components/icons";
 import { SERVICE_CITIES } from "@/lib/service-cities";
 import { SERVICE_TYPES } from "@/lib/service-types";
-import { listPublicCompanies } from "@/lib/catalog";
-
-export const revalidate = 600;
 
 export const metadata: Metadata = {
   title: "Dienstleister finden & kostenlos Angebote einholen | KundenRadar",
@@ -41,8 +37,7 @@ const FAQ = [
   { q: "Wie genau sollte ich meine Anfrage beschreiben?", a: "Je konkreter, desto besser die Angebote: Was soll gemacht werden, wie oft, welche Größe/Fläche, Wunschtermin und Ort. So bekommst du belastbare Preise statt grober Schätzungen." },
 ];
 
-export default async function DienstleisterHubPage() {
-  const companies = await listPublicCompanies({ limit: 8 });
+export default function DienstleisterHubPage() {
   return (
     <MarketingShell newsletter={false}>
       <JsonLd data={{
@@ -72,18 +67,6 @@ export default async function DienstleisterHubPage() {
       <div className="mt-8">
         <ServiceRequestForm />
       </div>
-
-      {/* Eingetragene Anbieter (Katalog) */}
-      {companies.length > 0 && (
-        <section className="mt-16">
-          <div className="flex items-end justify-between gap-4">
-            <h2 className="text-2xl font-semibold tracking-[-0.01em]">Anbieter im Verzeichnis</h2>
-            <Link href="/firmenverzeichnis" className="shrink-0 text-sm font-medium text-[var(--color-brand)] hover:underline">Alle anzeigen →</Link>
-          </div>
-          <p className="mt-2 text-sm text-[var(--color-muted)]">Kontaktiere gelistete Dienstleister direkt – oder stell oben eine Anfrage und lass dich finden.</p>
-          <div className="mt-5"><CompanyCards companies={companies} /></div>
-        </section>
-      )}
 
       {/* Für Anbieter: kostenlos eintragen */}
       <section className="mt-16 rounded-2xl border border-[var(--color-line)] bg-[var(--color-subtle)] p-6 sm:flex sm:items-center sm:justify-between sm:gap-6">

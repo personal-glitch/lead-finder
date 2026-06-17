@@ -8,8 +8,10 @@ import { createCompany, listPublicCompanies } from "@/lib/catalog";
 const CreateBody = z.object({
   name: z.string().min(2).max(140),
   category: z.string().min(1),
+  street: z.string().max(160).optional(),
   plz: z.string().max(10).optional(),
   ort: z.string().max(120).optional(),
+  openingHours: z.string().max(400).optional(),
   description: z.string().max(2000).optional(),
   website: z.string().max(200).optional(),
   contactName: z.string().max(120).optional(),
@@ -30,8 +32,10 @@ export async function POST(req: NextRequest) {
     const res = await createCompany({
       name: b.name,
       category: b.category,
+      street: b.street ?? null,
       plz: b.plz ?? null,
       ort: b.ort ?? null,
+      openingHours: b.openingHours ?? null,
       description: b.description ?? null,
       website: b.website ?? null,
       contactName: b.contactName ?? null,

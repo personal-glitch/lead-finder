@@ -18,9 +18,9 @@ const HOME_NAV = [
   { href: "#preise", label: "Preise" },
   { href: "/rechner", label: "Rechner" },
   { href: "/dienstleister-finden", label: "Dienstleister finden" },
+  { href: "/firmenverzeichnis", label: "Firmen-Katalog" },
   { href: "/gratis", label: "Gratis-Tools" },
   { href: "/blog", label: "Blog" },
-  { href: "#faq", label: "FAQ" },
 ];
 import { PromoPricing } from "@/components/landing/PromoPricing";
 import { CITIES } from "@/lib/cities";
@@ -268,9 +268,9 @@ export default function Landing() {
             <a href="#preise" className="hover:text-[var(--color-ink)]">Preise</a>
             <a href="/rechner" className="hover:text-[var(--color-ink)]">Rechner</a>
             <a href="/dienstleister-finden" className="hover:text-[var(--color-ink)]">Dienstleister finden</a>
-            <a href="/gratis" className="font-semibold text-[var(--color-brand)] hover:underline">Gratis-Tools</a>
+            <a href="/firmenverzeichnis" className="font-semibold text-[var(--color-brand)] hover:underline">Firmen-Katalog</a>
+            <a href="/gratis" className="hover:text-[var(--color-ink)]">Gratis-Tools</a>
             <a href="/blog" className="hover:text-[var(--color-ink)]">Blog</a>
-            <a href="#faq" className="hover:text-[var(--color-ink)]">FAQ</a>
           </nav>
           <div className="flex items-center gap-3">
             <Link href={loginHref} className="hidden rounded-lg border border-[var(--color-line-strong)] px-3 py-2 text-sm font-medium text-[var(--color-ink-2)] hover:bg-[var(--color-subtle)] hover:text-[var(--color-ink)] lg:inline-flex">Anmelden</Link>
@@ -328,6 +328,9 @@ export default function Landing() {
             </Link>
             <Link href="/check" className="inline-flex items-center gap-2 rounded-lg border border-[var(--color-line-strong)] px-5 py-3 text-sm font-medium text-[var(--color-ink-2)] hover:bg-[var(--color-subtle)]">
               <Icon name="search" size={15} /> Neukunden gratis prüfen
+            </Link>
+            <Link href="/firmenverzeichnis" className="inline-flex items-center gap-2 rounded-lg border border-[var(--color-line-strong)] px-5 py-3 text-sm font-medium text-[var(--color-ink-2)] hover:bg-[var(--color-subtle)]">
+              <Icon name="building" size={15} /> Firmen-Katalog
             </Link>
           </div>
           <p className="mt-4 text-xs text-[var(--color-faint)]">3 Tage gratis testen · DSGVO-konform · Daten aus öffentlichen Quellen</p>

@@ -33,6 +33,8 @@ export default async function CompanyProfilePage({ params }: Props) {
   if (!c) notFound();
 
   const ortLabel = [c.plz, c.ort].filter(Boolean).join(" ");
+  const fullAddress = [c.street, ortLabel].filter(Boolean).join(", ");
+  const mapsHref = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([c.name, fullAddress].filter(Boolean).join(", "))}`;
 
   return (
     <MarketingShell newsletter={false}>
@@ -42,7 +44,10 @@ export default async function CompanyProfilePage({ params }: Props) {
         name: c.name,
         description: c.description ?? undefined,
         url: `${config.appUrl}/firma/${c.slug}`,
-        address: c.ort ? { "@type": "PostalAddress", postalCode: c.plz ?? undefined, addressLocality: c.ort, addressCountry: "DE" } : undefined,
+        telephone: c.phone ?? undefined,
+        address: (c.street || c.ort) ? { "@type": "PostalAddress", streetAddress: c.street ?? undefined, postalCode: c.plz ?? undefined, addressLocality: c.ort ?? undefined, addressCountry: "DE" } : undefined,
+        openingHours: c.openingHours ?? undefined,
+        sameAs: c.website ?? undefined,
         areaServed: c.ort ?? c.region ?? "Deutschland",
       }} />
       <JsonLd data={{
@@ -87,16 +92,45 @@ export default async function CompanyProfilePage({ params }: Props) {
           )}
 
           <section className="rounded-xl border border-[var(--color-line)] bg-[var(--color-surface)] p-5">
-            <h2 className="text-sm font-semibold">Eckdaten</h2>
-            <dl className="mt-3 grid gap-2 text-sm">
-              <div className="flex justify-between gap-4"><dt className="text-[var(--color-muted)]">Branche</dt><dd className="font-medium">{c.category}</dd></div>
-              {c.ort && <div className="flex justify-between gap-4"><dt className="text-[var(--color-muted)]">Ort / Einsatzgebiet</dt><dd className="font-medium">{c.ort}</dd></div>}
-              {c.region && <div className="flex justify-between gap-4"><dt className="text-[var(--color-muted)]">Region</dt><dd className="font-medium">{c.region}</dd></div>}
+            <h2 className="text-sm font-semibold">Kontakt &amp; Eckdaten</h2>
+            <dl className="mt-3 grid gap-3 text-sm">
+              <div className="flex items-start gap-2.5">
+                <Icon name="building" size={16} className="mt-0.5 shrink-0 text-[var(--color-muted)]" />
+                <div><dt className="text-xs text-[var(--color-muted)]">Branche</dt><dd className="font-medium">{c.category}</dd></div>
+              </div>
+              {fullAddress && (
+                <div className="flex items-start gap-2.5">
+                  <Icon name="pin" size={16} className="mt-0.5 shrink-0 text-[var(--color-muted)]" />
+                  <div>
+                    <dt className="text-xs text-[var(--color-muted)]">Adresse</dt>
+                    <dd className="font-medium">{fullAddress}</dd>
+                    <a href={mapsHref} target="_blank" rel="noopener noreferrer" className="text-xs text-[var(--color-brand)] hover:underline">Auf Karte ansehen ↗</a>
+                  </div>
+                </div>
+              )}
+              {c.phone && (
+                <div className="flex items-start gap-2.5">
+                  <Icon name="phone" size={16} className="mt-0.5 shrink-0 text-[var(--color-muted)]" />
+                  <div><dt className="text-xs text-[var(--color-muted)]">Telefon</dt>
+                    <dd><a href={`tel:${c.phone.replace(/\s+/g, "")}`} className="font-medium text-[var(--color-brand)] hover:underline">{c.phone}</a></dd>
+                  </div>
+                </div>
+              )}
+              {c.website && (
+                <div className="flex items-start gap-2.5">
+                  <Icon name="globe" size={16} className="mt-0.5 shrink-0 text-[var(--color-muted)]" />
+                  <div><dt className="text-xs text-[var(--color-muted)]">Website</dt>
+                    <dd><a href={c.website} target="_blank" rel="noopener noreferrer" className="font-medium text-[var(--color-brand)] hover:underline">{c.website.replace(/^https?:\/\//, "")}</a></dd>
+                  </div>
+                </div>
+              )}
+              {c.openingHours && (
+                <div className="flex items-start gap-2.5">
+                  <Icon name="clock" size={16} className="mt-0.5 shrink-0 text-[var(--color-muted)]" />
+                  <div><dt className="text-xs text-[var(--color-muted)]">Öffnungszeiten</dt><dd className="whitespace-pre-wrap font-medium">{c.openingHours}</dd></div>
+                </div>
+              )}
             </dl>
-            <p className="mt-3 text-xs text-[var(--color-muted)]">
-              🔒 Der Kontakt läuft sicher über KundenRadar. Fülle einfach das Formular aus – wir leiten deine Anfrage direkt
-              an den Anbieter weiter.
-            </p>
           </section>
 
           <section className="rounded-xl border border-[var(--color-line)] bg-[var(--color-subtle)] p-5">

@@ -18,7 +18,8 @@ export function CompanyCards({ companies }: { companies: PublicCompany[] }) {
               <div className="truncate text-sm font-semibold group-hover:text-[var(--color-brand)]">{c.name}</div>
               <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-[var(--color-muted)]">
                 <span className="inline-flex items-center gap-1"><Icon name="building" size={12} /> {c.category}</span>
-                {c.ort && <span className="inline-flex items-center gap-1"><Icon name="pin" size={12} /> {c.ort}</span>}
+                {(c.street || c.ort) && <span className="inline-flex items-center gap-1"><Icon name="pin" size={12} /> {[c.street, c.ort].filter(Boolean).join(", ")}</span>}
+                {c.phone && <span className="inline-flex items-center gap-1"><Icon name="phone" size={12} /> {c.phone}</span>}
               </div>
             </div>
             <Icon name="chevronRight" size={15} />

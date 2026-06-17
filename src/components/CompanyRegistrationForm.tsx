@@ -12,8 +12,10 @@ export function CompanyRegistrationForm({ defaultOrt = "", defaultCategory }: { 
   const initialCat = defaultCategory && (CATEGORIES as readonly string[]).includes(defaultCategory) ? defaultCategory : CATEGORIES[0];
   const [name, setName] = useState("");
   const [category, setCategory] = useState<string>(initialCat);
+  const [street, setStreet] = useState("");
   const [plz, setPlz] = useState("");
   const [ort, setOrt] = useState(defaultOrt);
+  const [openingHours, setOpeningHours] = useState("");
   const [description, setDescription] = useState("");
   const [website, setWebsite] = useState("");
   const [contactName, setContactName] = useState("");
@@ -31,7 +33,7 @@ export function CompanyRegistrationForm({ defaultOrt = "", defaultCategory }: { 
     setState("loading"); setMsg("");
     try {
       await api("/api/firmen", {
-        json: { name, category, plz, ort, description, website, contactName, contactEmail, contactPhone, consent, newsletter, website_hp: hp },
+        json: { name, category, street, plz, ort, openingHours, description, website, contactName, contactEmail, contactPhone, consent, newsletter, website_hp: hp },
       });
       trackEvent("sign_up", { source: "firmen_katalog", type: "company_registration" });
       setState("done");
@@ -81,6 +83,11 @@ export function CompanyRegistrationForm({ defaultOrt = "", defaultCategory }: { 
           placeholder="Was bietet ihr an? Leistungen, Einsatzgebiet, Besonderheiten – das sehen potenzielle Kunden auf deiner Profilseite." className={inputCls} />
       </label>
 
+      <label className="block">
+        <span className="mb-1 block text-xs font-medium text-[var(--color-muted)]">Straße &amp; Hausnr.</span>
+        <input value={street} onChange={(e) => setStreet(e.target.value)} placeholder="Musterstraße 12" className={inputCls} />
+      </label>
+
       <div className="grid gap-4 sm:grid-cols-3">
         <label className="block">
           <span className="mb-1 block text-xs font-medium text-[var(--color-muted)]">PLZ</span>
@@ -93,26 +100,34 @@ export function CompanyRegistrationForm({ defaultOrt = "", defaultCategory }: { 
       </div>
 
       <label className="block">
-        <span className="mb-1 block text-xs font-medium text-[var(--color-muted)]">Website (optional)</span>
-        <input value={website} onChange={(e) => setWebsite(e.target.value)} placeholder="www.deine-firma.de" className={inputCls} />
+        <span className="mb-1 block text-xs font-medium text-[var(--color-muted)]">Öffnungszeiten (optional)</span>
+        <input value={openingHours} onChange={(e) => setOpeningHours(e.target.value)} placeholder="Mo–Fr 8–17 Uhr, Sa nach Absprache" className={inputCls} />
       </label>
 
-      <div className="rounded-lg bg-[var(--color-subtle)] px-3.5 py-2.5 text-xs text-[var(--color-muted)]">
-        🔒 Deine Kontaktdaten werden <b>nicht öffentlich</b> angezeigt. Anfragen von Interessenten leiten wir direkt an dich weiter.
-      </div>
-
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2">
         <label className="block">
-          <span className="mb-1 block text-xs font-medium text-[var(--color-muted)]">Ansprechpartner</span>
-          <input value={contactName} onChange={(e) => setContactName(e.target.value)} placeholder="Vor- &amp; Nachname" className={inputCls} />
-        </label>
-        <label className="block">
-          <span className="mb-1 block text-xs font-medium text-[var(--color-muted)]">E-Mail *</span>
-          <input required type="email" value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} placeholder="kontakt@firma.de" className={inputCls} />
+          <span className="mb-1 block text-xs font-medium text-[var(--color-muted)]">Website (optional)</span>
+          <input value={website} onChange={(e) => setWebsite(e.target.value)} placeholder="www.deine-firma.de" className={inputCls} />
         </label>
         <label className="block">
           <span className="mb-1 block text-xs font-medium text-[var(--color-muted)]">Telefon (optional)</span>
           <input value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} placeholder="0221 …" className={inputCls} />
+        </label>
+      </div>
+
+      <div className="rounded-lg bg-[var(--color-subtle)] px-3.5 py-2.5 text-xs text-[var(--color-muted)]">
+        📣 Firmenname, Adresse, Telefon, Website &amp; Öffnungszeiten erscheinen <b>öffentlich</b> in deinem Katalog-Profil
+        (wie im Branchenbuch). Deine <b>E-Mail bleibt privat</b> – darüber leiten wir nur Anfragen an dich weiter.
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <label className="block">
+          <span className="mb-1 block text-xs font-medium text-[var(--color-muted)]">Ansprechpartner (optional)</span>
+          <input value={contactName} onChange={(e) => setContactName(e.target.value)} placeholder="Vor- &amp; Nachname" className={inputCls} />
+        </label>
+        <label className="block">
+          <span className="mb-1 block text-xs font-medium text-[var(--color-muted)]">E-Mail (privat) *</span>
+          <input required type="email" value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} placeholder="kontakt@firma.de" className={inputCls} />
         </label>
       </div>
 

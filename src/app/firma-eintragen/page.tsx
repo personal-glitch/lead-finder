@@ -20,16 +20,16 @@ export const metadata: Metadata = {
 const TRUST = ["100% kostenlos", "in 2 Minuten", "Anfragen direkt zu dir", "jederzeit löschbar"];
 
 const BENEFITS: { icon: IconName; t: string; d: string }[] = [
-  { icon: "search", t: "Von Kunden gefunden werden", d: "Dein Unternehmen erscheint im Verzeichnis und auf einer eigenen Profilseite – auffindbar über Google und unsere Auftragsbörse." },
-  { icon: "mail", t: "Anfragen direkt ins Postfach", d: "Interessenten kontaktieren dich über dein Profil. Wir leiten jede Anfrage direkt an dich weiter – kostenlos." },
-  { icon: "key", t: "Deine Daten bleiben privat", d: "Telefonnummer und E-Mail werden nicht öffentlich angezeigt. Du entscheidest, auf welche Anfrage du reagierst." },
+  { icon: "search", t: "Von Kunden gefunden werden", d: "Dein Unternehmen erscheint im öffentlichen Katalog und auf einer eigenen Profilseite – auffindbar über Google und unsere Auftragsbörse." },
+  { icon: "building", t: "Vollständiges Profil wie im Branchenbuch", d: "Adresse, Telefon, Website & Öffnungszeiten öffentlich sichtbar – so finden und kontaktieren dich Kunden direkt." },
+  { icon: "mail", t: "Anfragen auch übers Formular", d: "Zusätzlich erreichen dich Anfragen über ein Kontaktformular – deine E-Mail bleibt dabei privat." },
   { icon: "check", t: "Wirklich kostenlos", d: "Der Eintrag ist und bleibt gratis – keine versteckten Kosten, keine Vertragsbindung, jederzeit löschbar." },
 ];
 
 const FAQ = [
   { q: "Ist der Eintrag wirklich kostenlos?", a: "Ja. Der Grundeintrag im Verzeichnis ist komplett kostenlos – ohne versteckte Kosten und ohne Vertragsbindung." },
-  { q: "Werden meine Kontaktdaten öffentlich angezeigt?", a: "Nein. Firmenname, Branche, Ort und Beschreibung sind öffentlich, deine Telefonnummer und E-Mail jedoch nicht. Anfragen leiten wir direkt an dich weiter." },
-  { q: "Wie kommen Anfragen zu mir?", a: "Interessenten füllen auf deiner Profilseite ein kurzes Kontaktformular aus. Die Anfrage geht über uns direkt per E-Mail an dich – du antwortest dann selbst." },
+  { q: "Welche Daten sind öffentlich sichtbar?", a: "Wie in einem Branchenbuch: Firmenname, Branche, Adresse, Telefon, Website, Öffnungszeiten und deine Beschreibung. Nur deine E-Mail bleibt privat – darüber leiten wir Anfragen an dich weiter." },
+  { q: "Wie kommen Anfragen zu mir?", a: "Kunden rufen dich direkt an oder füllen auf deiner Profilseite ein kurzes Kontaktformular aus. Formular-Anfragen gehen über uns direkt per E-Mail an dich – du antwortest dann selbst." },
   { q: "Wie schnell bin ich gelistet?", a: "Wir prüfen jeden Eintrag kurz (Spam-Schutz) und schalten ihn dann frei. In der Regel innerhalb von 1–2 Werktagen." },
   { q: "Kann ich den Eintrag wieder löschen?", a: "Ja, jederzeit. Eine kurze E-Mail genügt und wir entfernen deinen Eintrag." },
   { q: "Was bringt mir das gegenüber dem KundenRadar-Tool?", a: "Das Verzeichnis bringt dir passiv Anfragen. Wenn du aktiv neue Kunden suchen willst, findest du mit dem KundenRadar-Tool gezielt Firmen in deiner Region und sprichst sie direkt an." },

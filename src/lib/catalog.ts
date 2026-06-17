@@ -14,28 +14,33 @@ export interface Company {
   slug: string;
   name: string;
   category: string;
+  street: string | null;
   plz: string | null;
   ort: string | null;
   region: string | null;
+  openingHours: string | null;
   description: string | null;
   website: string | null;
   contactName: string | null;
-  contactEmail: string;   // privat – nie öffentlich rendern
-  contactPhone: string | null; // privat – nie öffentlich rendern
+  contactEmail: string;   // privat – nie öffentlich rendern (Kontakt nur über Formular)
+  contactPhone: string | null; // öffentlich im Profil (11880-Stil)
   logoUrl: string | null;
   status: CompanyStatus;
 }
 
-/** Öffentlich anzeigbare Felder – ohne private Kontaktdaten. */
+/** Öffentlich anzeigbare Felder (Katalog-Profil). E-Mail bleibt privat. */
 export interface PublicCompany {
   slug: string;
   name: string;
   category: string;
+  street: string | null;
   plz: string | null;
   ort: string | null;
   region: string | null;
+  openingHours: string | null;
   description: string | null;
   website: string | null;
+  phone: string | null;
   logoUrl: string | null;
   createdAt: string;
 }
@@ -84,7 +89,8 @@ function normWebsite(raw: string | null | undefined): string | null {
 
 interface RawCompany {
   id: string; created_at: string; slug: string; name: string; category: string;
-  plz: string | null; ort: string | null; region: string | null; description: string | null;
+  street: string | null; plz: string | null; ort: string | null; region: string | null;
+  opening_hours: string | null; description: string | null;
   website: string | null; contact_name: string | null; contact_email: string;
   contact_phone: string | null; logo_url: string | null; status: string;
 }
@@ -92,7 +98,8 @@ interface RawCompany {
 function toCompany(r: RawCompany): Company {
   return {
     id: r.id, createdAt: r.created_at, slug: r.slug, name: r.name, category: r.category,
-    plz: r.plz, ort: r.ort, region: r.region, description: r.description, website: r.website,
+    street: r.street ?? null, plz: r.plz, ort: r.ort, region: r.region,
+    openingHours: r.opening_hours ?? null, description: r.description, website: r.website,
     contactName: r.contact_name, contactEmail: r.contact_email, contactPhone: r.contact_phone,
     logoUrl: r.logo_url,
     status: (r.status === "active" ? "active" : r.status === "rejected" ? "rejected" : "pending"),
@@ -101,17 +108,20 @@ function toCompany(r: RawCompany): Company {
 
 function toPublic(c: Company): PublicCompany {
   return {
-    slug: c.slug, name: c.name, category: c.category, plz: c.plz, ort: c.ort, region: c.region,
-    description: c.description, website: c.website, logoUrl: c.logoUrl, createdAt: c.createdAt,
+    slug: c.slug, name: c.name, category: c.category, street: c.street, plz: c.plz, ort: c.ort,
+    region: c.region, openingHours: c.openingHours, description: c.description, website: c.website,
+    phone: c.contactPhone, logoUrl: c.logoUrl, createdAt: c.createdAt,
   };
 }
 
 export interface CreateCompanyInput {
   name: string;
   category: string;
+  street?: string | null;
   plz?: string | null;
   ort?: string | null;
   region?: string | null;
+  openingHours?: string | null;
   description?: string | null;
   website?: string | null;
   contactName?: string | null;
@@ -146,9 +156,11 @@ export async function createCompany(
     slug,
     name: input.name.trim().slice(0, 140),
     category,
+    street: input.street?.trim().slice(0, 160) || null,
     plz: input.plz?.trim() || null,
     ort: input.ort?.trim() || null,
     region: input.region?.trim() || null,
+    opening_hours: input.openingHours?.trim().slice(0, 400) || null,
     description: input.description?.trim().slice(0, 2000) || null,
     website: normWebsite(input.website),
     contact_name: input.contactName?.trim().slice(0, 120) || null,
@@ -180,7 +192,7 @@ export async function createCompany(
     html: shell(
       `<p style="margin:0 0 6px;font-size:18px;font-weight:700">Danke für deinen Eintrag ✅</p>
        <p style="margin:0 0 14px">Hallo${row.contact_name ? " " + esc(row.contact_name) : ""}, <b>${esc(row.name)}</b> wurde kostenlos für unser Dienstleister-Verzeichnis vorgemerkt (${esc(category)}). Wir prüfen den Eintrag kurz und schalten ihn dann frei – danach bist du über deine eigene Profilseite auffindbar.</p>
-       <p style="margin:0 0 14px">Anfragen von Interessenten leiten wir direkt an dich weiter. Deine Telefonnummer und E-Mail bleiben dabei <b>nicht öffentlich</b> sichtbar.</p>
+       <p style="margin:0 0 14px">Dein öffentliches Profil zeigt Adresse, Telefon, Website &amp; Öffnungszeiten – wie in einem Branchenbuch. Deine <b>E-Mail bleibt privat</b>; Anfragen über das Kontaktformular leiten wir direkt an dich weiter.</p>
        <p style="margin:14px 0 0;font-size:13px;color:#5b6470">Du suchst selbst aktiv neue Kunden? Mit dem KundenRadar-Tool findest du passende Firmen in deiner Region und kannst sie direkt kontaktieren – <a href="${config.appUrl}/check" style="color:#3b6d11;font-weight:600">kostenlos testen</a>.</p>`,
     ),
     text:
