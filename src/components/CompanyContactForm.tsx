@@ -39,8 +39,8 @@ export function CompanyContactForm({ slug, companyName }: { slug: string; compan
         <div className="text-2xl">✅</div>
         <h2 className="mt-2 text-lg font-semibold">Anfrage gesendet!</h2>
         <p className="mx-auto mt-2 max-w-md text-sm text-[var(--color-muted)]">
-          Wir haben deine Anfrage an {companyName} weitergeleitet. Der Anbieter meldet sich direkt bei dir. Eine
-          Bestätigung liegt in deinem Postfach.
+          Wir haben deine Anfrage zu {companyName} erhalten und leiten sie an den Anbieter weiter. Du bekommst in der
+          Regel innerhalb von 1–2 Werktagen eine Rückmeldung. Eine Bestätigung liegt in deinem Postfach.
         </p>
       </div>
     );

@@ -416,41 +416,136 @@ export async function createCompanyContact(
   const { error } = await sb.from("company_contacts").insert({
     company_id: company.id,
     name, email, phone, message,
-    status: "weitergeleitet",
+    status: "neu",
     consent_at: nowIso,
     consent_ip: input.ip ?? null,
   });
   if (error) return { ok: false, error: "Anfrage konnte nicht gespeichert werden." };
 
-  // Weiterleitung an die Firma (private Kontaktadresse) – Antwort geht an den Interessenten.
+  // Lead läuft ÜBER UNS: Benachrichtigung an den Superadmin (nicht an die Firma).
+  // Du verteilst die Anfrage selbst im Admin (mit „An Firma weiterleiten").
+  if (config.admin.email) {
+    await sendSystemEmail({
+      to: config.admin.email,
+      subject: `Neuer Katalog-Lead: ${company.name} (${company.category})`,
+      html: shell(
+        `<p style="margin:0 0 6px;font-size:18px;font-weight:700">Neuer Lead 🎯</p>
+         <p style="margin:0 0 12px">Anfrage über das Profil von <b>${esc(company.name)}</b> (${esc(company.category)}${company.ort ? " · " + esc(company.ort) : ""}):</p>
+         <div style="background:#f4f6f8;border-radius:8px;padding:12px 14px;font-size:14px;white-space:pre-wrap">${esc(message)}</div>
+         <p style="margin:14px 0 0"><b>Interessent:</b> ${esc(name)} · <a href="mailto:${esc(email)}" style="color:#3b6d11;font-weight:600">${esc(email)}</a>${phone ? " · " + esc(phone) : ""}</p>
+         <p style="margin:8px 0 0"><b>Firma (privat):</b> ${esc(company.contactEmail)}${company.contactPhone ? " · " + esc(company.contactPhone) : ""}</p>
+         <p style="margin:14px 0 0;font-size:13px;color:#5b6470">Im <a href="${config.appUrl}/admin" style="color:#3b6d11;font-weight:600">Admin</a> kannst du den Lead an die Firma weiterleiten oder selbst bearbeiten.</p>`,
+      ),
+      text:
+        `Neuer Katalog-Lead für ${company.name} (${company.category}):\n\n${message}\n\nInteressent: ${name} · ${email}${phone ? " · " + phone : ""}\nFirma (privat): ${company.contactEmail}${company.contactPhone ? " · " + company.contactPhone : ""}\n\nAdmin: ${config.appUrl}/admin`,
+      headers: { "Reply-To": email },
+    }).catch(() => {});
+  }
+
+  // Bestätigung an den Interessenten (neutral – wir verteilen den Lead selbst).
+  await sendSystemEmail({
+    to: email,
+    subject: `Deine Anfrage ist eingegangen ✅ – KundenRadar`,
+    html: shell(
+      `<p style="margin:0 0 6px;font-size:18px;font-weight:700">Anfrage eingegangen ✅</p>
+       <p style="margin:0 0 14px">Hallo ${esc(name)}, wir haben deine Anfrage zu <b>${esc(company.name)}</b> erhalten und leiten sie an den passenden Anbieter weiter. Du bekommst in der Regel innerhalb von 1–2 Werktagen eine Rückmeldung.</p>
+       <div style="background:#f4f6f8;border-radius:8px;padding:12px 14px;font-size:14px;white-space:pre-wrap">${esc(message)}</div>
+       <p style="margin:14px 0 0;font-size:13px;color:#5b6470">Tipp: Über unsere <a href="${config.appUrl}/dienstleister-finden" style="color:#3b6d11;font-weight:600">Auftragsbörse</a> kannst du auch mehrere Angebote auf einmal einholen.</p>`,
+    ),
+    text:
+      `Hallo ${name},\n\nwir haben deine Anfrage zu ${company.name} erhalten und leiten sie an den passenden Anbieter weiter. Rückmeldung meist in 1–2 Werktagen.\n\nDeine Nachricht:\n${message}\n\n—\n${IMPRESSUM}`,
+  }).catch(() => {});
+
+  return { ok: true };
+}
+
+// --- Lead-Verwaltung (Admin verteilt selbst) ---------------------------------
+
+export type LeadStatus = "neu" | "weitergeleitet" | "geschlossen";
+
+export interface AdminLead {
+  id: string;
+  createdAt: string;
+  status: LeadStatus;
+  name: string;
+  email: string;
+  phone: string | null;
+  message: string;
+  companyId: string;
+  companyName: string;
+  companySlug: string;
+  companyCategory: string;
+  companyEmail: string;   // privat – zum Weiterleiten
+  companyPhone: string | null;
+}
+
+interface RawContact {
+  id: string; created_at: string; status: string; name: string; email: string;
+  phone: string | null; message: string; company_id: string;
+}
+
+export async function listLeadsAdmin(status?: LeadStatus): Promise<AdminLead[]> {
+  if (!catalogEnabled()) return [];
+  const sb = await admin();
+  let q = sb.from("company_contacts").select("*").order("created_at", { ascending: false }).limit(500);
+  if (status) q = q.eq("status", status);
+  const { data } = await q;
+  const rows = (data ?? []) as RawContact[];
+  if (rows.length === 0) return [];
+
+  const ids = Array.from(new Set(rows.map((r) => r.company_id)));
+  const { data: comps } = await sb.from("companies").select("*").in("id", ids);
+  const cmap = new Map<string, Company>();
+  for (const c of (comps ?? []) as RawCompany[]) cmap.set(c.id, toCompany(c));
+
+  return rows.map((r) => {
+    const c = cmap.get(r.company_id);
+    return {
+      id: r.id, createdAt: r.created_at,
+      status: (r.status === "weitergeleitet" ? "weitergeleitet" : r.status === "geschlossen" ? "geschlossen" : "neu"),
+      name: r.name, email: r.email, phone: r.phone, message: r.message,
+      companyId: r.company_id,
+      companyName: c?.name ?? "—", companySlug: c?.slug ?? "", companyCategory: c?.category ?? "—",
+      companyEmail: c?.contactEmail ?? "", companyPhone: c?.contactPhone ?? null,
+    };
+  });
+}
+
+export async function setLeadStatus(id: string, status: LeadStatus): Promise<{ ok: true } | { ok: false; error: string }> {
+  if (!catalogEnabled()) return { ok: false, error: "Katalog nicht konfiguriert." };
+  const sb = await admin();
+  const { error } = await sb.from("company_contacts").update({ status }).eq("id", id);
+  if (error) return { ok: false, error: "Status konnte nicht geändert werden." };
+  return { ok: true };
+}
+
+/** Lead an die Firma weiterleiten (du entscheidest wann) + auf „weitergeleitet" setzen. */
+export async function forwardLead(id: string): Promise<{ ok: true } | { ok: false; error: string }> {
+  if (!catalogEnabled()) return { ok: false, error: "Katalog nicht konfiguriert." };
+  const sb = await admin();
+  const { data: row } = await sb.from("company_contacts").select("*").eq("id", id).maybeSingle();
+  if (!row) return { ok: false, error: "Lead nicht gefunden." };
+  const r = row as RawContact;
+  const { data: comp } = await sb.from("companies").select("*").eq("id", r.company_id).maybeSingle();
+  if (!comp) return { ok: false, error: "Firma nicht gefunden." };
+  const company = toCompany(comp as RawCompany);
+  const phone = r.phone ? esc(r.phone) : null;
+
   await sendSystemEmail({
     to: company.contactEmail,
     subject: `Neue Kundenanfrage über KundenRadar – ${company.name}`,
     html: shell(
       `<p style="margin:0 0 6px;font-size:18px;font-weight:700">Neue Anfrage 🎉</p>
        <p style="margin:0 0 14px">Über dein Profil bei KundenRadar hat dich ein Interessent kontaktiert:</p>
-       <div style="background:#f4f6f8;border-radius:8px;padding:12px 14px;font-size:14px;white-space:pre-wrap">${esc(message)}</div>
-       <p style="margin:14px 0 0"><b>Kontakt:</b> ${esc(name)} · <a href="mailto:${esc(email)}" style="color:#3b6d11;font-weight:600">${esc(email)}</a>${phone ? " · " + esc(phone) : ""}</p>
+       <div style="background:#f4f6f8;border-radius:8px;padding:12px 14px;font-size:14px;white-space:pre-wrap">${esc(r.message)}</div>
+       <p style="margin:14px 0 0"><b>Kontakt:</b> ${esc(r.name)} · <a href="mailto:${esc(r.email)}" style="color:#3b6d11;font-weight:600">${esc(r.email)}</a>${phone ? " · " + phone : ""}</p>
        <p style="margin:14px 0 0;font-size:13px;color:#5b6470">Antworte einfach direkt auf diese E-Mail – sie geht an den Interessenten.</p>`,
     ),
     text:
-      `Neue Anfrage über KundenRadar für ${company.name}:\n\n${message}\n\nKontakt: ${name} · ${email}${phone ? " · " + phone : ""}\n\nAntworte direkt an: ${email}\n\n—\n${IMPRESSUM}`,
-    headers: { "Reply-To": email },
+      `Neue Anfrage über KundenRadar für ${company.name}:\n\n${r.message}\n\nKontakt: ${r.name} · ${r.email}${r.phone ? " · " + r.phone : ""}\n\nAntworte direkt an: ${r.email}\n\n—\n${IMPRESSUM}`,
+    headers: { "Reply-To": r.email },
   }).catch(() => {});
 
-  // Bestätigung an den Interessenten.
-  await sendSystemEmail({
-    to: email,
-    subject: `Deine Anfrage an ${company.name} ist raus ✅`,
-    html: shell(
-      `<p style="margin:0 0 6px;font-size:18px;font-weight:700">Anfrage gesendet ✅</p>
-       <p style="margin:0 0 14px">Hallo ${esc(name)}, wir haben deine Anfrage an <b>${esc(company.name)}</b> weitergeleitet. Der Anbieter meldet sich direkt bei dir per E-Mail${phone ? " oder Telefon" : ""}.</p>
-       <div style="background:#f4f6f8;border-radius:8px;padding:12px 14px;font-size:14px;white-space:pre-wrap">${esc(message)}</div>
-       <p style="margin:14px 0 0;font-size:13px;color:#5b6470">Tipp: Über unsere <a href="${config.appUrl}/dienstleister-finden" style="color:#3b6d11;font-weight:600">Auftragsbörse</a> kannst du auch mehrere Angebote auf einmal einholen.</p>`,
-    ),
-    text:
-      `Hallo ${name},\n\nwir haben deine Anfrage an ${company.name} weitergeleitet. Der Anbieter meldet sich direkt bei dir.\n\nDeine Nachricht:\n${message}\n\n—\n${IMPRESSUM}`,
-  }).catch(() => {});
-
+  await sb.from("company_contacts").update({ status: "weitergeleitet" }).eq("id", id);
   return { ok: true };
 }

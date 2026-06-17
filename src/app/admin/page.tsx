@@ -6,6 +6,7 @@ import { Icon } from "@/components/icons";
 import { Spinner, Toast } from "@/components/ui";
 import { useConfirm } from "@/components/ConfirmProvider";
 import { CatalogModeration } from "@/components/admin/CatalogModeration";
+import { LeadsInbox } from "@/components/admin/LeadsInbox";
 import { renderNewsletterHtml, type NewsletterTemplate } from "@/lib/email/newsletter-template";
 
 const TEMPLATES: { id: NewsletterTemplate; label: string; emoji: string }[] = [
@@ -389,6 +390,7 @@ export default function AdminPage() {
               ))}
             </div>
 
+            <div className="mt-10"><LeadsInbox /></div>
             <div className="mt-10"><CatalogModeration /></div>
 
             {(() => {
