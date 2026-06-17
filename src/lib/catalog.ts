@@ -233,10 +233,10 @@ export async function createCompany(
       `Hallo${row.contact_name ? " " + row.contact_name : ""},\n\n${row.name} wurde kostenlos für unser Dienstleister-Verzeichnis vorgemerkt (${category}). Wir prüfen den Eintrag und schalten ihn dann frei.\n\nAnfragen leiten wir direkt an dich weiter; deine Kontaktdaten bleiben nicht öffentlich.\n${newsletterConfirmUrl ? `\nBestätige für kostenlose Tipps + 3 Gratis-Tools: ${newsletterConfirmUrl}\n` : ""}\nKundenRadar-Tool kostenlos testen: ${config.appUrl}/check\n\n—\n${IMPRESSUM}`,
   }).catch(() => {});
 
-  // Interne Benachrichtigung an den Superadmin (Moderation).
-  if (config.admin.email) {
+  // Interne Benachrichtigung an das Kontakt-Postfach (Moderation).
+  if (config.admin.notifyEmail) {
     await sendSystemEmail({
-      to: config.admin.email,
+      to: config.admin.notifyEmail,
       subject: `Neuer Katalog-Eintrag: ${row.name} (${category})`,
       html: shell(`<p>Neuer Eintrag wartet auf Freigabe:</p><p><b>${esc(row.name)}</b> · ${esc(category)}<br>${esc(row.plz ?? "")} ${esc(row.ort ?? "")}<br>${esc(row.contact_name ?? "—")} · ${esc(row.contact_email)} · ${esc(row.contact_phone ?? "—")}<br>${row.website ? `<a href="${row.website}">${esc(row.website)}</a>` : "—"}</p><p>${esc(row.description ?? "")}</p><p><a href="${config.appUrl}/admin" style="font-weight:600">→ Im Admin freigeben</a></p>`),
       text: `Neuer Katalog-Eintrag: ${row.name} (${category})\n${row.contact_name ?? "—"} · ${row.contact_email} · ${row.contact_phone ?? "—"}\n${row.website ?? "—"}\n\n${row.description ?? ""}\n\nFreigeben: ${config.appUrl}/admin`,
@@ -505,9 +505,9 @@ export async function createCompanyContact(
 
   // Lead läuft ÜBER UNS: Benachrichtigung an den Superadmin (nicht an die Firma).
   // Du verteilst die Anfrage selbst im Admin (mit „An Firma weiterleiten").
-  if (config.admin.email) {
+  if (config.admin.notifyEmail) {
     await sendSystemEmail({
-      to: config.admin.email,
+      to: config.admin.notifyEmail,
       subject: `Neuer Katalog-Lead: ${company.name} (${company.category})`,
       html: shell(
         `<p style="margin:0 0 6px;font-size:18px;font-weight:700">Neuer Lead 🎯</p>

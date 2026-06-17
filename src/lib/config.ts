@@ -85,7 +85,13 @@ export const config = {
   },
 
   // Nur diese E-Mail sieht die Superadmin-Übersicht (/admin).
-  admin: { email: superAdminEmail?.toLowerCase() ?? null },
+  // notifyEmail = Postfach, das interne Benachrichtigungen (neue Katalog-Einträge,
+  // Leads, Marktplatz-Anfragen) empfängt. Standard: kontakt@seciora-solutions.de,
+  // überschreibbar via ADMIN_NOTIFY_EMAIL. Entkoppelt vom Login (SUPER_ADMIN_EMAIL).
+  admin: {
+    email: superAdminEmail?.toLowerCase() ?? null,
+    notifyEmail: env("ADMIN_NOTIFY_EMAIL") ?? "kontakt@seciora-solutions.de",
+  },
 
   // Tagesziel für Anrufe (Fortschritt in Sidebar/Dashboard).
   targets: {

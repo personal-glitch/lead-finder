@@ -107,10 +107,10 @@ export async function createServiceRequest(input: CreateRequestInput): Promise<{
       `Hallo ${row.name},\n\ndeine Anfrage „${row.title}" (${category}) ist eingegangen. Passende Dienstleister können dir jetzt Angebote per E-Mail senden.\n\nDeine Anfrage:\n${row.description.slice(0, 600)}\n\n—\n${IMPRESSUM}`,
   }).catch(() => {});
 
-  // Interne Benachrichtigung an den Superadmin.
-  if (config.admin.email) {
+  // Interne Benachrichtigung an das Kontakt-Postfach.
+  if (config.admin.notifyEmail) {
     await sendSystemEmail({
-      to: config.admin.email,
+      to: config.admin.notifyEmail,
       subject: `Neue Auftragsanfrage: ${row.title} (${category})`,
       html: shell(`<p>Neue Anfrage über die Auftragsbörse:</p><p><b>${row.title}</b> · ${category} · ${row.customer_type}<br>${row.plz ?? ""} ${row.ort ?? ""}<br>${row.name} · ${row.email} · ${row.phone ?? "—"}</p><p>${row.description.replace(/</g, "&lt;").slice(0, 800)}</p>`),
       text: `Neue Anfrage: ${row.title} (${category}, ${row.customer_type})\n${row.name} · ${row.email} · ${row.phone ?? "—"}\n${row.plz ?? ""} ${row.ort ?? ""}\n\n${row.description.slice(0, 800)}`,
