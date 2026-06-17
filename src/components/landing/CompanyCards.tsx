@@ -18,7 +18,12 @@ export function CompanyCards({ companies }: { companies: PublicCompany[] }) {
           <div className="min-w-0 flex-1">
             <div className="flex items-start justify-between gap-2">
               <div className="truncate text-sm font-semibold group-hover:text-[var(--color-brand)]">{c.name}</div>
-              <Icon name="chevronRight" size={15} className="mt-0.5 shrink-0" />
+              <div className="flex shrink-0 items-center gap-1.5">
+                {c.distanceKm != null && (
+                  <span className="rounded-full bg-[var(--color-brand-tint)] px-2 py-0.5 text-[11px] font-semibold text-[var(--color-brand)] tnum">{c.distanceKm} km</span>
+                )}
+                <Icon name="chevronRight" size={15} className="mt-0.5" />
+              </div>
             </div>
             <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-[var(--color-muted)]">
               <span className="inline-flex items-center gap-1"><Icon name="building" size={12} /> {c.category}</span>

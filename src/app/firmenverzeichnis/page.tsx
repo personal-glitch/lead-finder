@@ -59,15 +59,17 @@ export default async function VerzeichnisPage({ searchParams }: { searchParams: 
   const q = one(sp.q).slice(0, 80);
   const category = one(sp.branche);
   const ort = one(sp.ort).slice(0, 60);
+  const plz = one(sp.plz).replace(/[^0-9]/g, "").slice(0, 5);
+  const radiusKm = parseInt(one(sp.umkreis) || "0", 10) || 0;
   const page = Math.max(parseInt(one(sp.page) || "1", 10) || 1, 1);
-  const hasFilter = Boolean(q || category || ort);
+  const hasFilter = Boolean(q || category || ort || plz);
 
   const [res, total, byCat] = await Promise.all([
-    searchPublicCompanies({ q, category, ort, page, perPage: 24 }),
+    searchPublicCompanies({ q, category, ort, plz, radiusKm, page, perPage: 24 }),
     countActiveCompanies(),
     countActiveByCategory(),
   ]);
-  const base = { q, branche: category, ort };
+  const base = { q, branche: category, ort, plz, umkreis: radiusKm ? String(radiusKm) : "" };
 
   return (
     <MarketingShell newsletter={false}>
@@ -95,15 +97,24 @@ export default async function VerzeichnisPage({ searchParams }: { searchParams: 
 
       {/* Suche */}
       <form action="/firmenverzeichnis" method="get" className="mt-7 rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] p-3 sm:p-4">
-        <div className="grid gap-2.5 sm:grid-cols-[1.3fr_1fr_220px_auto]">
+        <div className="grid gap-2.5 sm:grid-cols-[1.3fr_120px_150px_200px_auto]">
           <input name="q" defaultValue={q} placeholder="Was? z. B. Reinigung, Maler …" className={inputCls} aria-label="Suchbegriff" />
-          <input name="ort" defaultValue={ort} placeholder="Wo? z. B. Köln" className={inputCls} aria-label="Ort" />
+          <input name="plz" defaultValue={plz} inputMode="numeric" placeholder="PLZ" className={inputCls} aria-label="Postleitzahl" />
+          <select name="umkreis" defaultValue={radiusKm ? String(radiusKm) : "25"} className={inputCls} aria-label="Umkreis">
+            <option value="0">Umkreis: egal</option>
+            <option value="5">+ 5 km</option>
+            <option value="10">+ 10 km</option>
+            <option value="25">+ 25 km</option>
+            <option value="50">+ 50 km</option>
+            <option value="100">+ 100 km</option>
+          </select>
           <select name="branche" defaultValue={category} className={inputCls} aria-label="Branche">
             <option value="">Alle Branchen</option>
             {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
           </select>
           <button type="submit" className="rounded-lg bg-[var(--color-brand)] px-5 py-2.5 text-sm font-semibold text-[var(--color-on-brand)] hover:bg-[var(--color-brand-ink)]">Suchen</button>
         </div>
+        <p className="mt-2 text-center text-xs text-[var(--color-muted)]">PLZ eingeben → Anbieter nach Entfernung sortiert. Im Umkreis nichts dabei? Wir zeigen automatisch die Nächsten.</p>
       </form>
 
       {!hasFilter && (

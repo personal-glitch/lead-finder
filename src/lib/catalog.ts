@@ -5,6 +5,7 @@ import { config } from "@/lib/config";
 import { sendSystemEmail } from "@/lib/email/system";
 import { isValidEmail, normEmail, subscribeNewsletter, type SubscriberStatus } from "@/lib/newsletter";
 import { CATEGORIES } from "@/lib/marketplace-constants";
+import { geocode } from "@/lib/osm/geocode";
 
 export type CompanyStatus = "pending" | "active" | "rejected";
 
@@ -25,6 +26,8 @@ export interface Company {
   contactEmail: string;   // privat – nie öffentlich rendern (Kontakt nur über Formular)
   contactPhone: string | null; // öffentlich im Profil (11880-Stil)
   logoUrl: string | null;
+  lat: number | null;
+  lng: number | null;
   status: CompanyStatus;
 }
 
@@ -42,6 +45,9 @@ export interface PublicCompany {
   website: string | null;
   phone: string | null;
   logoUrl: string | null;
+  lat: number | null;
+  lng: number | null;
+  distanceKm: number | null; // gesetzt bei PLZ/Umkreis-Suche
   createdAt: string;
 }
 
@@ -92,7 +98,8 @@ interface RawCompany {
   street: string | null; plz: string | null; ort: string | null; region: string | null;
   opening_hours: string | null; description: string | null;
   website: string | null; contact_name: string | null; contact_email: string;
-  contact_phone: string | null; logo_url: string | null; status: string;
+  contact_phone: string | null; logo_url: string | null;
+  lat: number | null; lng: number | null; status: string;
 }
 
 function toCompany(r: RawCompany): Company {
@@ -102,6 +109,7 @@ function toCompany(r: RawCompany): Company {
     openingHours: r.opening_hours ?? null, description: r.description, website: r.website,
     contactName: r.contact_name, contactEmail: r.contact_email, contactPhone: r.contact_phone,
     logoUrl: r.logo_url,
+    lat: r.lat ?? null, lng: r.lng ?? null,
     status: (r.status === "active" ? "active" : r.status === "rejected" ? "rejected" : "pending"),
   };
 }
@@ -110,8 +118,17 @@ function toPublic(c: Company): PublicCompany {
   return {
     slug: c.slug, name: c.name, category: c.category, street: c.street, plz: c.plz, ort: c.ort,
     region: c.region, openingHours: c.openingHours, description: c.description, website: c.website,
-    phone: c.contactPhone, logoUrl: c.logoUrl, createdAt: c.createdAt,
+    phone: c.contactPhone, logoUrl: c.logoUrl, lat: c.lat, lng: c.lng, distanceKm: null, createdAt: c.createdAt,
   };
+}
+
+/** Haversine-Distanz in km. */
+function distanceKm(aLat: number, aLng: number, bLat: number, bLng: number): number {
+  const R = 6371;
+  const dLat = ((bLat - aLat) * Math.PI) / 180;
+  const dLng = ((bLng - aLng) * Math.PI) / 180;
+  const s = Math.sin(dLat / 2) ** 2 + Math.cos((aLat * Math.PI) / 180) * Math.cos((bLat * Math.PI) / 180) * Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(s), Math.sqrt(1 - s));
 }
 
 export interface CreateCompanyInput {
@@ -152,6 +169,17 @@ export async function createCompany(
     slug = `${base}-${i}`;
   }
 
+  // Koordinaten aus PLZ/Ort (best effort – für die Umkreis-Suche).
+  let lat: number | null = null;
+  let lng: number | null = null;
+  const geoQuery = [input.plz?.trim(), input.ort?.trim()].filter(Boolean).join(" ");
+  if (geoQuery) {
+    try {
+      const p = await geocode(`${geoQuery}, Deutschland`);
+      if (p) { lat = p.lat; lng = p.lon; }
+    } catch { /* ohne Koordinaten weiter */ }
+  }
+
   const nowIso = new Date().toISOString();
   const row = {
     slug,
@@ -168,6 +196,8 @@ export async function createCompany(
     contact_email: input.contactEmail.trim(),
     contact_phone: input.contactPhone?.trim().slice(0, 40) || null,
     logo_url: input.logoUrl?.trim() || null,
+    lat,
+    lng,
     status: "pending" as const,
     source: "registration",
     consent_at: nowIso,
@@ -251,10 +281,26 @@ export interface SearchResult {
 }
 
 /** Serverseitige Suche/Filter/Pagination für den öffentlichen Katalog (skaliert auf viele Tausend). */
+/** Geocodiert fehlende Koordinaten nach (best effort, begrenzt) und speichert sie. */
+async function backfillCoords(sb: Awaited<ReturnType<typeof admin>>, rows: RawCompany[]): Promise<void> {
+  const missing = rows.filter((r) => (r.lat == null || r.lng == null) && (r.plz || r.ort)).slice(0, 8);
+  for (const r of missing) {
+    try {
+      const p = await geocode(`${[r.plz, r.ort].filter(Boolean).join(" ")}, Deutschland`);
+      if (p) {
+        r.lat = p.lat; r.lng = p.lon;
+        await sb.from("companies").update({ lat: p.lat, lng: p.lon }).eq("id", r.id);
+      }
+    } catch { /* ignorieren */ }
+  }
+}
+
 export async function searchPublicCompanies(opts: {
   q?: string | null;
   category?: string | null;
   ort?: string | null;
+  plz?: string | null;
+  radiusKm?: number | null;
   page?: number;
   perPage?: number;
 } = {}): Promise<SearchResult> {
@@ -264,11 +310,43 @@ export async function searchPublicCompanies(opts: {
   if (!catalogEnabled()) return empty;
   try {
     const sb = await admin();
+    const q = opts.q ? sanitizeQ(opts.q) : "";
+    const plz = opts.plz?.trim().replace(/[^0-9]/g, "").slice(0, 5) || "";
 
+    // Umkreis-Suche: Zentrum aus PLZ geocodieren, nach Entfernung sortieren.
+    if (plz.length >= 4) {
+      const center = await geocode(`${plz}, Deutschland`).catch(() => null);
+      if (center) {
+        let cq = sb.from("companies").select("*").eq("status", "active").limit(1000);
+        if (opts.category && (CATEGORIES as readonly string[]).includes(opts.category)) cq = cq.eq("category", opts.category);
+        if (q) cq = cq.or(`name.ilike.%${q}%,description.ilike.%${q}%,ort.ilike.%${q}%,category.ilike.%${q}%,street.ilike.%${q}%`);
+        const { data } = await cq;
+        const rows = (data ?? []) as RawCompany[];
+        await backfillCoords(sb, rows);
+
+        const withGeo = rows
+          .filter((r) => r.lat != null && r.lng != null)
+          .map((r) => ({ c: toPublic(toCompany(r)), d: distanceKm(center.lat, center.lon, r.lat!, r.lng!) }))
+          .sort((a, b) => a.d - b.d);
+
+        const radius = opts.radiusKm && opts.radiusKm > 0 ? opts.radiusKm : null;
+        let chosen = withGeo;
+        if (radius) {
+          const within = withGeo.filter((x) => x.d <= radius);
+          // Fallback „nächster, egal wie weit": gibt es im Umkreis nichts, zeige die Nächsten.
+          chosen = within.length > 0 ? within : withGeo.slice(0, perPage);
+        }
+        const total = chosen.length;
+        const fromI = (page - 1) * perPage;
+        const items = chosen.slice(fromI, fromI + perPage).map((x) => ({ ...x.c, distanceKm: Math.round(x.d * 10) / 10 }));
+        return { items, total, page, perPage, pages: Math.max(1, Math.ceil(total / perPage)) };
+      }
+    }
+
+    // Standard: SQL-Filter + Pagination.
     let query = sb.from("companies").select("*", { count: "exact" }).eq("status", "active");
     if (opts.category && (CATEGORIES as readonly string[]).includes(opts.category)) query = query.eq("category", opts.category);
     if (opts.ort && opts.ort.trim()) query = query.ilike("ort", `%${opts.ort.trim().slice(0, 60)}%`);
-    const q = opts.q ? sanitizeQ(opts.q) : "";
     if (q) query = query.or(`name.ilike.%${q}%,description.ilike.%${q}%,ort.ilike.%${q}%,category.ilike.%${q}%,street.ilike.%${q}%`);
 
     const from = (page - 1) * perPage;

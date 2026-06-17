@@ -9,6 +9,23 @@ import { CatalogModeration } from "@/components/admin/CatalogModeration";
 import { LeadsInbox } from "@/components/admin/LeadsInbox";
 import { renderNewsletterHtml, type NewsletterTemplate } from "@/lib/email/newsletter-template";
 
+// Vorschau der Bestätigungs-/Erinnerungs-Mail (Double-Opt-in) – nur zur Ansicht.
+const REMINDER_EMAIL_HTML = `<!doctype html><html lang="de"><body style="margin:0;background:#f4f6f8;padding:16px">
+<div style="font-family:system-ui,Arial,sans-serif;color:#16181d;line-height:1.6;max-width:560px;margin:0 auto;background:#ffffff;border-radius:14px;overflow:hidden;border:1px solid #e3e7ec">
+  <div style="background:#16181d;padding:16px 22px"><span style="font-size:18px;font-weight:700;color:#ffffff">Kunden<span style="color:#a8e83a">Radar</span></span></div>
+  <div style="padding:24px 22px">
+    <p style="margin:0 0 6px;font-size:18px;font-weight:700">Fast geschafft! 🎯</p>
+    <p style="margin:0 0 18px">Bestätige kurz mit einem Klick, dass du den <b>KundenRadar</b>-Newsletter erhalten möchtest – danach bekommst du sofort deine <b>3 Gratis-Akquise-Tools</b> (Vorlagen, Leitfaden, Tracker).</p>
+    <p style="margin:0 0 18px"><a href="#" style="display:inline-block;background:#a8e83a;color:#16181d;padding:13px 24px;border-radius:8px;text-decoration:none;font-weight:700">Anmeldung bestätigen →</a></p>
+    <div style="background:#eefad1;border-radius:8px;padding:12px 14px;font-size:13px;color:#3b6d11;margin:0 0 18px">Kein Risiko: Ohne deine Bestätigung senden wir dir nichts. Abmeldung jederzeit mit einem Klick.</div>
+    <p style="margin:0 0 6px;font-size:13px;color:#5b6470">Button geht nicht? Kopiere diesen Link in den Browser:</p>
+    <p style="margin:0 0 18px;font-size:13px;word-break:break-all"><a href="#" style="color:#5b6470">https://seciora-solutions.de/newsletter/bestaetigen?token=…</a></p>
+    <p style="margin:0;font-size:13px;color:#5b6470">Wenn du dich nicht angemeldet hast, ignoriere diese E-Mail einfach.</p>
+    <hr style="border:none;border-top:1px solid #e3e7ec;margin:22px 0">
+    <p style="margin:0;font-size:12px;color:#5b6470">Seciora Solutions, Inhaber Cihan Yildirim, Charlottenstraße 37, 51149 Köln</p>
+  </div>
+</div></body></html>`;
+
 const TEMPLATES: { id: NewsletterTemplate; label: string; emoji: string }[] = [
   { id: "tipp", label: "Tipp der Woche", emoji: "💡" },
   { id: "angebot", label: "Aktion / Angebot", emoji: "🔥" },
@@ -138,6 +155,7 @@ export default function AdminPage() {
   const [syncing, setSyncing] = useState(false);
   const [importing, setImporting] = useState(false);
   const [reminding, setReminding] = useState(false);
+  const [reminderPreview, setReminderPreview] = useState(false);
   const [composeFor, setComposeFor] = useState<Customer | null>(null);
   const [cmTemplate, setCmTemplate] = useState<NewsletterTemplate>("tipp");
   const [cmSubject, setCmSubject] = useState("");
@@ -594,6 +612,13 @@ export default function AdminPage() {
                     <Icon name="mail" size={13} /> {reminding ? "Sende …" : `Bestätigung erinnern (${news.pending})`}
                   </button>
                 )}
+                <button
+                  onClick={() => setReminderPreview(true)}
+                  title="Vorschau der Bestätigungs-/Erinnerungs-Mail"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--color-line-strong)] px-3 py-1.5 text-xs font-medium text-[var(--color-ink-2)] hover:bg-[var(--color-subtle)]"
+                >
+                  <Icon name="search" size={13} /> Vorschau
+                </button>
                 {news && news.total > 0 && (
                   <a
                     href="/api/admin/newsletter/export"
@@ -816,6 +841,20 @@ export default function AdminPage() {
           </>
         ) : null}
       </main>
+      {reminderPreview && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setReminderPreview(false)}>
+          <div className="max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] p-5" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h3 className="text-sm font-semibold">Vorschau: Bestätigungs-Mail</h3>
+                <p className="mt-0.5 text-xs text-[var(--color-muted)]">Genau diese Double-Opt-in-Mail bekommen Ausstehende beim Klick auf „Bestätigung erinnern".</p>
+              </div>
+              <button onClick={() => setReminderPreview(false)} className="text-[var(--color-muted)] hover:text-[var(--color-ink)]"><Icon name="x" size={18} /></button>
+            </div>
+            <iframe title="Vorschau Bestätigungs-Mail" srcDoc={REMINDER_EMAIL_HTML} className="mt-3 h-[60vh] w-full rounded-lg border border-[var(--color-line)] bg-white" />
+          </div>
+        </div>
+      )}
       {composeFor && (() => {
         const pName = composeFor.name?.split(" ")[0] || "Vorname";
         const pz = (s: string) => s.replace(/\{\{\s*vorname\s*\}\}/gi, pName);
