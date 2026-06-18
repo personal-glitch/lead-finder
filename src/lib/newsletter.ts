@@ -218,8 +218,16 @@ export const FREEBIES = [
   { label: "Akquise-Tracker (Excel)", file: "Akquise-Tracker.xlsx" },
 ] as const;
 
-export function downloadUrl(file: string): string {
-  return new URL(`/downloads/${file}`, config.appUrl).toString();
+/**
+ * Geschützter Download-Link: funktioniert nur mit dem persönlichen Token des
+ * (bestätigten) Abonnenten. Es gibt KEINE offenen /downloads-Links mehr –
+ * die Tools bekommt nur, wer seine E-Mail bestätigt hat.
+ */
+export function downloadUrl(file: string, token: string): string {
+  const u = new URL("/api/freebie", config.appUrl);
+  u.searchParams.set("f", file);
+  u.searchParams.set("t", token);
+  return u.toString();
 }
 
 // Automatische Willkommens-Mail nach Bestätigung / Opt-in – mit den 3 Gratis-Tools.
@@ -230,7 +238,7 @@ async function sendWelcomeEmail(email: string, name: string | null, token: strin
 
   const buttons = FREEBIES.map(
     (d) =>
-      `<p style="margin:8px 0"><a href="${downloadUrl(d.file)}" style="display:inline-block;background:#16181d;color:#a8e83a;padding:11px 18px;border-radius:8px;text-decoration:none;font-weight:600">⬇ ${d.label}</a></p>`,
+      `<p style="margin:8px 0"><a href="${downloadUrl(d.file, token)}" style="display:inline-block;background:#16181d;color:#a8e83a;padding:11px 18px;border-radius:8px;text-decoration:none;font-weight:600">⬇ ${d.label}</a></p>`,
   ).join("");
 
   const html = `<!doctype html><html lang="de"><body style="margin:0;background:#f4f6f8;padding:16px">
@@ -254,7 +262,7 @@ async function sendWelcomeEmail(email: string, name: string | null, token: strin
 
   const text =
     `Hallo ${hallo},\n\nschön, dass du dabei bist! Hier sind deine 3 Gratis-Tools:\n\n` +
-    FREEBIES.map((d) => `- ${d.label}: ${downloadUrl(d.file)}`).join("\n") +
+    FREEBIES.map((d) => `- ${d.label}: ${downloadUrl(d.file, token)}`).join("\n") +
     `\n\nAb jetzt bekommst du regelmäßig einen Tipp für mehr Neukunden.\n\n` +
     `KundenRadar 3 Tage gratis testen: ${config.appUrl}/registrieren\n\n` +
     `Beste Grüße\nTeam von Seciora Solutions\n\n—\n${impressum}\nAbbestellen: ${unsub}`;
